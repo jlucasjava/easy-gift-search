@@ -49,7 +49,7 @@ function renderSugestao(sugestao, produtosRelacionados = [], start = 0, limit = 
         <img src="${prod.imagem}" alt="${prod.nome}" loading="lazy">
         <h3>${prod.nome}</h3>
         <p>R$ ${prod.preco}</p>
-        <a href="${prod.url}" target="_blank">${t('ver_marketplace')}</a>
+        <a href="${prod.url}" target="_blank" rel="noopener noreferrer">${t('ver_marketplace')}</a>
         <button onclick="favoritarProduto('${prod.id}', '${prod.nome.replace(/'/g, '')}')">${t('favoritar')}</button>
       `;
       grid.appendChild(card);
@@ -91,10 +91,11 @@ async function carregarRecomendacao(refazer = false) {
   if (refazer) {
     sugestaoIndex = 0;
   }
-  const { sugestao, produtosRelacionados } = await recomendarPresente(perfil);
-  sugestaoProdutos = produtosRelacionados || [];
-  sugestaoTexto = sugestao || '';
-  renderSugestao(sugestaoTexto, sugestaoProdutos, sugestaoIndex, SUGESTAO_LIMIT);
+  recomendarPresente(perfil).then(({ sugestao, produtosRelacionados }) => {
+    sugestaoProdutos = produtosRelacionados || [];
+    sugestaoTexto = sugestao || '';
+    renderSugestao(sugestaoTexto, sugestaoProdutos, sugestaoIndex, SUGESTAO_LIMIT);
+  });
 }
 
 // Renderiza grid de produtos
@@ -325,5 +326,3 @@ btnLang.onclick = () => {
   const lang = localStorage.getItem('lang') === 'en' ? 'pt' : 'en';
   atualizarIdioma(lang);
 };
-/ /   F o r ç a n d o   r e d e p l o y   V e r c e l   e m   2 0 2 5 - 0 5 - 2 9  
- 
