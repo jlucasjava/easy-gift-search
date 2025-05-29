@@ -6,7 +6,7 @@ WORKDIR /app
 COPY backend/package*.json ./
 RUN npm install --production
 
-COPY backend .
+COPY . .
 
 # Copia o .env se existir (ou use variáveis no ambiente de produção)
 # COPY backend/.env .
