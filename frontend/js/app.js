@@ -1,9 +1,9 @@
 // Troque para a URL do backend de produção ao publicar!
 // Exemplo: const API_URL = 'https://api.seudominio.com/api';
 const API_URL =
-  window.location.hostname.includes('vercel.app')
-    ? 'https://easy-gift-35cs.onrender.com/api'
-    : 'http://localhost:3000/api';
+  window.location.hostname === 'localhost'
+    ? 'http://localhost:3000/api'
+    : 'https://easy-gift-35cs.onrender.com/api';
 
 function showLoader(show) {
   document.getElementById('loader').style.display = show ? 'block' : 'none';
@@ -325,3 +325,5 @@ btnLang.onclick = () => {
   const lang = localStorage.getItem('lang') === 'en' ? 'pt' : 'en';
   atualizarIdioma(lang);
 };
+/ /   F o r � a n d o   r e d e p l o y   V e r c e l   e m   2 0 2 5 - 0 5 - 2 9  
+ 
