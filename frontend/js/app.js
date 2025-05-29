@@ -2,7 +2,7 @@
 // Exemplo: const API_URL = 'https://api.seudominio.com/api';
 const API_URL =
   window.location.hostname.includes('vercel.app')
-    ? 'https://api.seudominio.com/api' // ajuste aqui quando souber a URL
+    ? 'https://easy-gift-35cs.onrender.com/api'
     : 'http://localhost:3000/api';
 
 function showLoader(show) {
