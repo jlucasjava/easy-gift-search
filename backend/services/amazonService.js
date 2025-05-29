@@ -19,13 +19,18 @@ exports.buscarProdutosAmazon = async (filtros) => {
       'X-RapidAPI-Host': 'amazon24.p.rapidapi.com'
     }
   };
-  const { data } = await axios.request(options);
-  return data.docs?.map(item => ({
-    id: item.asin,
-    nome: item.product_title,
-    preco: item.product_price,
-    imagem: item.product_photo,
-    url: item.product_url,
-    marketplace: 'Amazon'
-  })) || [];
+  try {
+    const { data } = await axios.request(options);
+    return data.docs?.map(item => ({
+      id: item.asin,
+      nome: item.product_title,
+      preco: item.product_price,
+      imagem: item.product_photo,
+      url: item.product_url,
+      marketplace: 'Amazon'
+    })) || [];
+  } catch (err) {
+    console.error('Erro Amazon:', err.response?.data || err.message);
+    return [];
+  }
 };

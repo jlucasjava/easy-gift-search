@@ -19,13 +19,18 @@ exports.buscarProdutosShopee = async (filtros) => {
       'X-RapidAPI-Host': 'shopee-api3.p.rapidapi.com'
     }
   };
-  const { data } = await axios.request(options);
-  return data.items?.map(item => ({
-    id: item.itemid,
-    nome: item.name,
-    preco: item.price / 100000,
-    imagem: item.image,
-    url: `https://shopee.com.br/product/${item.shopid}/${item.itemid}`,
-    marketplace: 'Shopee'
-  })) || [];
+  try {
+    const { data } = await axios.request(options);
+    return data.items?.map(item => ({
+      id: item.itemid,
+      nome: item.name,
+      preco: item.price / 100000,
+      imagem: item.image,
+      url: `https://shopee.com.br/product/${item.shopid}/${item.itemid}`,
+      marketplace: 'Shopee'
+    })) || [];
+  } catch (err) {
+    console.error('Erro Shopee:', err.response?.data || err.message);
+    return [];
+  }
 };

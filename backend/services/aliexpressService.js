@@ -18,13 +18,18 @@ exports.buscarProdutosAliExpress = async (filtros) => {
       'X-RapidAPI-Host': 'aliexpress-datahub.p.rapidapi.com'
     }
   };
-  const { data } = await axios.request(options);
-  return data.result?.resultList?.map(item => ({
-    id: item.productId,
-    nome: item.productTitle,
-    preco: item.salePrice,
-    imagem: item.imageUrl,
-    url: item.productDetailUrl,
-    marketplace: 'AliExpress'
-  })) || [];
+  try {
+    const { data } = await axios.request(options);
+    return data.result?.resultList?.map(item => ({
+      id: item.productId,
+      nome: item.productTitle,
+      preco: item.salePrice,
+      imagem: item.imageUrl,
+      url: item.productDetailUrl,
+      marketplace: 'AliExpress'
+    })) || [];
+  } catch (err) {
+    console.error('Erro AliExpress:', err.response?.data || err.message);
+    return [];
+  }
 };
