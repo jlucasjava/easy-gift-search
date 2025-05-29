@@ -20,6 +20,7 @@ exports.searchProducts = async (req, res) => {
     // Paginação simples (mock, pois Mercado Livre já limita a 9)
     res.json({ produtos, pagina: Number(page), totalPaginas: 5 });
   } catch (err) {
+    console.error('Erro ao buscar produtos:', err);
     res.status(500).json({ erro: 'Erro ao buscar produtos.' });
   }
 };
