@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Easy Gift Search</title>
+  <meta name="description" content="Easy Gift Search - Busque e encontre presentes perfeitos com inteligência artificial e integração com marketplaces. Compare preços e descubra sugestões personalizadas!">
+  <meta name="keywords" content="presentes, recomendação, marketplace, AI, inteligência artificial, busca, produtos, comprar, sugestões, fácil, gift, search">
+  <meta name="author" content="Easy Gift Search">
+  <!-- Open Graph / Facebook -->
+  <meta property="og:title" content="Easy Gift Search">
+  <meta property="og:description" content="Busque e encontre presentes perfeitos com inteligência artificial e integração com marketplaces." />
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://easy-gift-search.vercel.app/">
+  <meta property="og:image" content="/assets/og-image.png">
+  <!-- Twitter -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Easy Gift Search">
+  <meta name="twitter:description" content="Busque e encontre presentes perfeitos com inteligência artificial e integração com marketplaces." />
+  <meta name="twitter:image" content="/assets/og-image.png">
+  <link rel="stylesheet" href="css/style.min.css">
+  <!-- Fallback para desenvolvimento -->
+  <link rel="stylesheet" href="css/style.css" media="print" onload="this.media='all'" aria-label="CSS não minificado para fallback em desenvolvimento">
+</head>
+<body>
+  <header>
+    <h1 id="mainTitle" tabindex="0">Easy Gift Search</h1>
+    <button id="toggleDark" aria-label="Alternar modo escuro" style="position:absolute;top:1.2rem;right:1.2rem;z-index:10;min-width:40px;min-height:40px;font-size:1.3rem;">🌙</button>
+    <form id="searchForm" aria-label="Formulário de busca de presentes" role="search">
+      <label for="precoMin" class="sr-only">Preço mínimo</label>
+      <input type="number" id="precoMin" placeholder="Preço mínimo" aria-label="Preço mínimo" />
+      <label for="idadeInput" class="sr-only">Idade</label>
+      <input type="number" id="idadeInput" placeholder="Idade" aria-label="Idade" />
+      <label for="generoSelect" class="sr-only">Gênero</label>
+      <select id="generoSelect" aria-label="Gênero">
+        <option value="">Gênero</option>
+        <option value="Masculino">Masculino</option>
+        <option value="Feminino">Feminino</option>
+        <option value="Unissex">Unissex</option>
+      </select>
+      <button type="submit" aria-label="Buscar">Buscar</button>
+    </form>
+  </header>
+  <main>
+    <div id="loader" style="display:none; text-align:center; margin:2rem 0;">
+      <div class="spinner" role="status" aria-label="Carregando"></div>
+      <span style="color:#4e54c8; font-size:1.1rem;" role="status">Carregando...</span>
+    </div>
+    <div id="mensagem" style="display:none; text-align:center; margin:1.5rem 0; color:#4e54c8; font-size:1.1rem;" role="alert"></div>
+    <nav style="text-align:center; margin-bottom:1.5rem;" aria-label="Navegação principal">
+      <button id="btnVerResultados" class="tab-btn" aria-label="Ver resultados" tabindex="0">Resultados</button>
+      <button id="btnVerFavoritos" class="tab-btn" aria-label="Ver favoritos" tabindex="0">Favoritos</button>
+    </nav>
+    <section id="recomendacao" aria-labelledby="recomendacaoTitle">
+      <h3 id="recomendacaoTitle" tabindex="0">Recomendação Inteligente</h3>
+      <div id="sugestao"></div>
+      <div id="sugestaoProdutos" class="grid"></div>
+    </section>
+    <section id="produtos" aria-labelledby="resultadosTitle">
+      <h3 id="resultadosTitle" tabindex="0">Resultados</h3>
+      <div id="grid" class="grid" tabindex="0" aria-label="Lista de produtos"></div>
+      <div id="paginacao" aria-label="Paginação dos resultados"></div>
+    </section>
+    <section id="favoritos" style="display:none;" aria-labelledby="favoritosTitle">
+      <h3 id="favoritosTitle" tabindex="0">Meus Favoritos</h3>
+      <div id="gridFavoritos" class="grid" tabindex="0" aria-label="Lista de favoritos"></div>
+    </section>
+  </main>
+  <script src="js/app.min.js"></script>
+  <!-- Fallback para desenvolvimento -->
+  <script src="js/app.js" nomodule></script>
+  <script src="js/i18n.js"></script>
+</body>
+</html>

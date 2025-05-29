@@ -1,0 +1,67 @@
+openapi: 3.0.0
+info:
+  title: Easy Gift Search API
+  version: 1.0.0
+  description: API para busca e recomendação inteligente de presentes. Não há persistência local ou banco de dados; feedback é apenas mock.
+servers:
+  - url: http://localhost:3000/api
+paths:
+  /products:
+    get:
+      summary: Buscar produtos em marketplaces
+      parameters:
+        - in: query
+          name: precoMin
+          schema:
+            type: number
+        - in: query
+          name: idade
+          schema:
+            type: string
+        - in: query
+          name: genero
+          schema:
+            type: string
+        - in: query
+          name: page
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Lista de produtos
+  /recommend:
+    post:
+      summary: Obter recomendação inteligente de presente
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                idade:
+                  type: string
+                genero:
+                  type: string
+      responses:
+        '200':
+          description: Sugestão de presente
+  /feedback:
+    post:
+      summary: Mock de feedback do usuário (não persiste)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                sugestaoId:
+                  type: integer
+                util:
+                  type: boolean
+                comentario:
+                  type: string
+      responses:
+        '200':
+          description: Feedback recebido (mock, sem persistência)

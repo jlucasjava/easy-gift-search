@@ -1,0 +1,6 @@
+{
+  "name": "easy-gift-search-frontend",
+  "version": "1.0.0",
+  "description": "Frontend para Easy Gift Search - busca e recomendação inteligente de presentes.",
+  "main": "index.html"
+}

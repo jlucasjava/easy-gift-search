@@ -1,0 +1,31 @@
+version: '3.8'
+services:
+  backend:
+    build: ./backend
+    container_name: easy-gift-backend
+    ports:
+      - "3000:3000"
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - RAPIDAPI_KEY=${RAPIDAPI_KEY}
+      - ELASTIC_URL=${ELASTIC_URL}
+    env_file:
+      - ./backend/.env
+    restart: always
+    networks:
+      - easygift
+  frontend:
+    image: nginx:alpine
+    container_name: easy-gift-frontend
+    volumes:
+      - ./frontend:/usr/share/nginx/html:ro
+      - ./frontend/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    ports:
+      - "8080:80"
+    depends_on:
+      - backend
+    networks:
+      - easygift
+networks:
+  easygift:
+    driver: bridge

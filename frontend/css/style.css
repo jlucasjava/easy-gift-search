@@ -1,0 +1,312 @@
+body {
+  font-family: 'Segoe UI', Arial, sans-serif;
+  margin: 0;
+  background: linear-gradient(135deg, #f7f7f7 60%, #e0e7ff 100%);
+}
+header {
+  background: #4e54c8;
+  color: #fff;
+  padding: 2rem 1rem 1.5rem 1rem;
+  text-align: center;
+  box-shadow: 0 2px 8px rgba(78,84,200,0.08);
+}
+header h1 {
+  margin: 0 0 1rem 0;
+  font-size: 2.2rem;
+  letter-spacing: 1px;
+}
+form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.7rem;
+  justify-content: center;
+  margin-top: 1rem;
+}
+input, select, button {
+  padding: 0.7rem;
+  border-radius: 6px;
+  border: 1px solid #bfc4d6;
+  font-size: 1rem;
+  outline: none;
+}
+input:focus, select:focus {
+  border-color: #4e54c8;
+}
+button[type="submit"] {
+  background: #4e54c8;
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+button[type="submit"]:hover {
+  background: #3136a8;
+}
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
+  margin: 2rem auto;
+  max-width: 1000px;
+}
+.card {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(78,84,200,0.10);
+  padding: 1.2rem 1rem 1.5rem 1rem;
+  text-align: center;
+  transition: transform 0.15s, box-shadow 0.15s;
+  position: relative;
+}
+.card:hover {
+  transform: translateY(-4px) scale(1.03);
+  box-shadow: 0 6px 24px rgba(78,84,200,0.18);
+}
+.card img {
+  width: 110px;
+  height: 110px;
+  object-fit: contain;
+  margin-bottom: 0.7rem;
+}
+.card h3 {
+  margin: 0.5rem 0 0.3rem 0;
+  font-size: 1.1rem;
+  color: #4e54c8;
+}
+.card p {
+  margin: 0.2rem 0 0.7rem 0;
+  color: #222;
+  font-weight: bold;
+}
+.card a {
+  display: inline-block;
+  margin-bottom: 0.5rem;
+  color: #4e54c8;
+  text-decoration: none;
+  font-size: 0.98rem;
+  transition: color 0.2s;
+}
+.card a:hover {
+  color: #3136a8;
+  text-decoration: underline;
+}
+.card button {
+  background: #f7f7f7;
+  color: #4e54c8;
+  border: 1px solid #bfc4d6;
+  border-radius: 6px;
+  padding: 0.4rem 1.1rem;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+.card button:hover {
+  background: #e0e7ff;
+  color: #3136a8;
+}
+#paginacao {
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-bottom: 2rem;
+}
+#paginacao button {
+  background: #fff;
+  border: 1px solid #bfc4d6;
+  color: #4e54c8;
+  border-radius: 6px;
+  padding: 0.5rem 1rem;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+#paginacao button:disabled {
+  background: #4e54c8;
+  color: #fff;
+  border: none;
+}
+#recomendacao {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(78,84,200,0.10);
+  max-width: 600px;
+  margin: 2rem auto 1.5rem auto;
+  padding: 1.5rem 1.2rem 1.2rem 1.2rem;
+  text-align: center;
+}
+#recomendacao h2 {
+  margin-top: 0;
+  color: #4e54c8;
+}
+#sugestao {
+  margin: 1rem 0 1.2rem 0;
+  font-size: 1.1rem;
+  color: #222;
+}
+#avaliarBoa, #avaliarRuim {
+  background: #f7f7f7;
+  color: #4e54c8;
+  border: 1px solid #bfc4d6;
+  border-radius: 6px;
+  padding: 0.4rem 1.1rem;
+  font-size: 1.2rem;
+  margin: 0 0.3rem;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+#avaliarBoa:hover, #avaliarRuim:hover {
+  background: #e0e7ff;
+  color: #3136a8;
+}
+.spinner {
+  border: 5px solid #e0e7ff;
+  border-top: 5px solid #4e54c8;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 0.7rem auto;
+}
+.tab-btn {
+  background: #fff;
+  color: #4e54c8;
+  border: 1px solid #bfc4d6;
+  border-radius: 6px 6px 0 0;
+  padding: 0.6rem 1.5rem;
+  font-size: 1rem;
+  margin: 0 0.2rem;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+.tab-btn.active, .tab-btn:disabled {
+  background: #4e54c8;
+  color: #fff;
+  border-bottom: 2px solid #fff;
+}
+#favoritos {
+  margin-bottom: 2rem;
+}
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+@media (max-width: 900px) {
+  .grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+  }
+  .card {
+    padding: 1rem 0.5rem 1.2rem 0.5rem;
+  }
+}
+@media (max-width: 600px) {
+  .grid {
+    grid-template-columns: 1fr;
+    gap: 0.7rem;
+  }
+  .card {
+    padding: 0.7rem 0.3rem 1rem 0.3rem;
+  }
+  header {
+    padding: 1rem 0.2rem 0.7rem 0.2rem;
+  }
+  form {
+    gap: 0.4rem;
+  }
+  input, select, button, .tab-btn {
+    font-size: 1.1rem;
+    padding: 1rem 0.7rem;
+    min-width: 90px;
+  }
+  .tab-btn {
+    padding: 1rem 1.2rem;
+  }
+  #recomendacao {
+    margin: 0.7rem 0.2rem;
+    padding: 0.7rem 0.2rem;
+  }
+}
+button, .tab-btn, #avaliarBoa, #avaliarRuim {
+  min-width: 110px;
+  min-height: 48px;
+  font-size: 1.1rem;
+}
+.card button, .card a {
+  width: 100%;
+  box-sizing: border-box;
+  margin-bottom: 0.3rem;
+}
+body.dark {
+  background: linear-gradient(135deg, #23243a 60%, #181a2a 100%);
+  color: #e0e7ff;
+}
+body.dark header {
+  background: #23243a;
+  color: #e0e7ff;
+  box-shadow: 0 2px 8px rgba(24,26,42,0.18);
+}
+body.dark .card {
+  background: #23243a;
+  color: #e0e7ff;
+  box-shadow: 0 2px 12px rgba(24,26,42,0.18);
+}
+body.dark .card h3 {
+  color: #aab4ff;
+}
+body.dark .card a {
+  color: #aab4ff;
+}
+body.dark .card a:hover {
+  color: #fff;
+}
+body.dark .card button, body.dark #avaliarBoa, body.dark #avaliarRuim, body.dark .tab-btn, body.dark button[type="submit"] {
+  background: #181a2a;
+  color: #aab4ff;
+  border: 1px solid #31336a;
+}
+body.dark .card button:hover, body.dark #avaliarBoa:hover, body.dark #avaliarRuim:hover, body.dark .tab-btn:hover, body.dark button[type="submit"]:hover {
+  background: #23243a;
+  color: #fff;
+}
+body.dark #recomendacao {
+  background: #23243a;
+  color: #e0e7ff;
+  box-shadow: 0 2px 12px rgba(24,26,42,0.18);
+}
+body.dark #mensagem {
+  color: #aab4ff !important;
+}
+body.dark .spinner {
+  border: 5px solid #31336a;
+  border-top: 5px solid #aab4ff;
+}
+body.dark input, body.dark select {
+  background: #181a2a;
+  color: #e0e7ff;
+  border: 1px solid #31336a;
+}
+body.dark input:focus, body.dark select:focus {
+  border-color: #aab4ff;
+}
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0,0,0,0);
+  border: 0;
+}
+:focus {
+  outline: 2px solid #4e54c8;
+  outline-offset: 2px;
+}
+button:focus, a:focus, input:focus, select:focus {
+  outline: 2px solid #4e54c8;
+  outline-offset: 2px;
+  box-shadow: 0 0 0 2px #e0e7ff;
+}
+body.dark :focus {
+  outline: 2px solid #aab4ff;
+}
