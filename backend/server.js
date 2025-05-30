@@ -48,11 +48,15 @@ const productRoutes = require('./routes/products');
 const recommendRoutes = require('./routes/recommend');
 const feedbackRoutes = require('./routes/feedback');
 const mercadoLivreAuthRoutes = require('./routes/mercadoLivreAuth');
+const testRoutes = require('./routes/test');
+const newApisRoutes = require('./routes/newApis');
 
 app.use('/api/products', productRoutes);
 app.use('/api/recommend', recommendRoutes);
 app.use('/api/feedback', feedbackRoutes);
 app.use('/api/mercadolivre/auth', mercadoLivreAuthRoutes);
+app.use('/api/test', testRoutes);
+app.use('/api/new-apis', newApisRoutes);
 
 app.get('/', (req, res) => {
   res.send('Easy Gift Search API rodando!');

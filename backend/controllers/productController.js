@@ -12,12 +12,11 @@ exports.searchProducts = async (req, res) => {
     
     // Novo: accessToken pode vir do header ("x-ml-access-token")
     const accessToken = req.headers['x-ml-access-token'] || null;
-    
-    // Busca em todos os marketplaces em paralelo
+      // Busca em todos os marketplaces em paralelo
     const [ml, shopee, amazon, ali] = await Promise.all([
       mercadoLivreService.buscarProdutos({ precoMin, precoMax, idade, genero }, accessToken),
       shopeeService.buscarProdutosShopee({ precoMin, precoMax, idade, genero }),
-      amazonService.buscarProdutosAmazon({ precoMin, precoMax, idade, genero }),
+      amazonService.buscarProdutos({ precoMin, precoMax, idade, genero }), // Usando nova função principal
       aliexpressService.buscarProdutosAliExpress({ precoMin, precoMax, idade, genero })
     ]);
     
