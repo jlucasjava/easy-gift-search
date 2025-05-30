@@ -90,13 +90,12 @@ exports.buscarProdutosAmazon = async (filtros) => {
   // MODO DEMO: retorna produtos mock com links reais para demonstração
   console.log('🔧 MODO DEMO: Retornando produtos mock da Amazon');
   console.log('Filtros recebidos:', filtros);
-  
-  const produtosMock = [
+    const produtosMock = [
     {
       id: 'B08N5WRWNW',
       nome: 'Echo Dot (4ª Geração) - Smart Speaker com Alexa',
       preco: 249.90,
-      imagem: 'https://m.media-amazon.com/images/I/714Rq4k05UL._AC_SL1000_.jpg',
+      imagem: 'https://via.placeholder.com/300x300/ff6b35/ffffff?text=Echo+Dot',
       url: 'https://www.amazon.com.br/dp/B08N5WRWNW',
       marketplace: 'Amazon'
     },
@@ -104,7 +103,7 @@ exports.buscarProdutosAmazon = async (filtros) => {
       id: 'B08C1W5N87',
       nome: 'Fire TV Stick | Streaming em Full HD com Alexa',
       preco: 199.90,
-      imagem: 'https://m.media-amazon.com/images/I/51TjJOTfslL._AC_SL1000_.jpg',
+      imagem: 'https://via.placeholder.com/300x300/ff6b35/ffffff?text=Fire+TV+Stick',
       url: 'https://www.amazon.com.br/dp/B08C1W5N87',
       marketplace: 'Amazon'
     },
@@ -112,7 +111,7 @@ exports.buscarProdutosAmazon = async (filtros) => {
       id: 'B09BFG5ZQW',
       nome: 'Kindle (11ª geração) - O eReader mais vendido do mundo',
       preco: 349.90,
-      imagem: 'https://m.media-amazon.com/images/I/71rRnLfCHJL._AC_SL1000_.jpg',
+      imagem: 'https://via.placeholder.com/300x300/ff6b35/ffffff?text=Kindle',
       url: 'https://www.amazon.com.br/dp/B09BFG5ZQW',
       marketplace: 'Amazon'
     },
@@ -120,7 +119,7 @@ exports.buscarProdutosAmazon = async (filtros) => {
       id: 'B08F5M1W6Q',
       nome: 'Bose QuietComfort 35 II - Fone Bluetooth',
       preco: 899.90,
-      imagem: 'https://m.media-amazon.com/images/I/81+jNVOUsJL._AC_SL1500_.jpg',
+      imagem: 'https://via.placeholder.com/300x300/ff6b35/ffffff?text=Bose+Headphones',
       url: 'https://www.amazon.com.br/dp/B08F5M1W6Q',
       marketplace: 'Amazon'
     },
@@ -128,7 +127,7 @@ exports.buscarProdutosAmazon = async (filtros) => {
       id: 'B07Y8J1W3K',
       nome: 'Caderno Inteligente Grande 80 Folhas',
       preco: 59.90,
-      imagem: 'https://m.media-amazon.com/images/I/81234567890._AC_SL1000_.jpg',
+      imagem: 'https://via.placeholder.com/300x300/ff6b35/ffffff?text=Caderno+Inteligente',
       url: 'https://www.amazon.com.br/dp/B07Y8J1W3K',
       marketplace: 'Amazon'
     }

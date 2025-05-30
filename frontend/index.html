@@ -68,20 +68,23 @@
       <div class="spinner" role="status" aria-label="Carregando"></div>
       <span style="color:#4e54c8; font-size:1.1rem;" role="status">Carregando...</span>
     </div>
-    <div id="mensagem" style="display:none; text-align:center; margin:1.5rem 0; color:#4e54c8; font-size:1.1rem;" role="alert"></div>
-    <nav style="text-align:center; margin-bottom:1.5rem;" aria-label="Navegação principal">
+    <div id="mensagem" style="display:none; text-align:center; margin:1.5rem 0; color:#4e54c8; font-size:1.1rem;" role="alert"></div>    <nav style="text-align:center; margin-bottom:1.5rem;" aria-label="Navegação principal">
       <button id="btnVerResultados" class="tab-btn" aria-label="Ver resultados" tabindex="0">Resultados</button>
       <button id="btnVerFavoritos" class="tab-btn" aria-label="Ver favoritos" tabindex="0">Favoritos</button>
     </nav>
-    <section id="recomendacao" aria-labelledby="recomendacaoTitle">
-      <h3 id="recomendacaoTitle" tabindex="0">Recomendação Inteligente</h3>
-      <div id="sugestao"></div>
-      <div id="sugestaoProdutos" class="grid"></div>
-    </section>
     <section id="produtos" aria-labelledby="resultadosTitle">
       <h3 id="resultadosTitle" tabindex="0">Resultados</h3>
       <div id="grid" class="grid" tabindex="0" aria-label="Lista de produtos"></div>
       <div id="paginacao" aria-label="Paginação dos resultados"></div>
+    </section>
+    <section id="recomendacao" style="display:none;" aria-labelledby="recomendacaoTitle">
+      <h3 id="recomendacaoTitle" tabindex="0">🎯 Recomendação Inteligente</h3>
+      <div id="sugestao" style="margin-bottom: 1rem; padding: 1rem; background: var(--card-bg); border-radius: 8px; border-left: 4px solid var(--primary-color);"></div>
+      <div id="sugestaoProdutos" class="grid"></div>
+      <div style="text-align: center; margin-top: 1rem;">        <button id="btnMaisRecomendacoes" class="control-btn" aria-label="Ver mais recomendações" style="background: var(--primary-color); color: white; padding: 0.5rem 1rem; border-radius: 6px;">
+          🔄 Ver Mais Recomendações
+        </button>
+      </div>
     </section>
     <section id="favoritos" style="display:none;" aria-labelledby="favoritosTitle">
       <h3 id="favoritosTitle" tabindex="0">Meus Favoritos</h3>

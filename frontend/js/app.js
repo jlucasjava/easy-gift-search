@@ -74,7 +74,9 @@ function renderSugestao(sugestao, produtosRelacionados = [], start = 0, limit = 
   const grid = document.getElementById('sugestaoProdutos');
   grid.innerHTML = '';
   if (produtosRelacionados && produtosRelacionados.length) {
-    produtosRelacionados.slice(start, start + limit).forEach(prod => {
+    // Randomizar os produtos antes de exibir
+    const produtosRandomizados = [...produtosRelacionados].sort(() => Math.random() - 0.5);
+    produtosRandomizados.slice(start, start + limit).forEach(prod => {
       const card = document.createElement('div');
       card.className = 'card';
       card.innerHTML = `
@@ -164,12 +166,8 @@ function mostrarMensagemInicial() {
       <p style="font-size:14px;opacity:0.8;">${t('benvindo_instrucoes')}</p>
     </div>
   `;
-  // Limpar a seção de recomendação também
-  document.getElementById('sugestao').innerHTML = `
-    <div style="text-align:center;font-style:italic;opacity:0.8;">
-      ${t('recomendacao_inicial')}
-    </div>
-  `;
+  // Esconder a seção de recomendação inicialmente
+  document.getElementById('recomendacao').style.display = 'none';
 }
 
 // Renderiza grid de produtos
@@ -289,6 +287,13 @@ async function carregarProdutos(params = {}) {
     const { produtos, pagina, totalPaginas } = await buscarProdutos(params);
     renderGrid(produtos);
     renderPaginacao(pagina, totalPaginas, params);
+    
+    // Mostrar seção de recomendação após carregar produtos
+    if (produtos && produtos.length > 0) {
+      document.getElementById('recomendacao').style.display = 'block';
+      // Carregar recomendação automaticamente
+      carregarRecomendacao();
+    }
   } finally {
     showLoader(false);
   }
@@ -314,9 +319,10 @@ document.getElementById('searchForm').onsubmit = async (e) => {
     precoMax: document.getElementById('precoMax').value,
     idade: document.getElementById('idadeInput').value,
     genero: document.getElementById('generoSelect').value,
-    page: 1  };
+    page: 1
+  };
   carregarProdutos(params);
-  carregarRecomendacao();
+  // A recomendação será carregada automaticamente em carregarProdutos()
 };
 
 // Alterna abas
@@ -385,7 +391,7 @@ if (!localStorage.getItem('lang')) {
 }
 
 // Botões de controle do header
-const btnLang = document.getElementById('btnLang');
+// const btnLang já foi declarado anteriormente
 
 // Inicializar texto do botão de idioma
 btnLang.textContent = localStorage.getItem('lang') === 'en' ? '🇧🇷' : '🇺🇸';
@@ -418,8 +424,7 @@ function atualizarIdioma(lang) {
   if (historicoBuscas && historicoBuscas.querySelector('h3')) {
     historicoBuscas.querySelector('h3').textContent = t('historico');
   }
-  
-  renderFavoritos();
+    renderFavoritos();
   // Não carrega produtos automaticamente - apenas atualiza a mensagem inicial
   mostrarMensagemInicial();
   btnLang.textContent = lang === 'en' ? '🇧🇷' : '🇺🇸';
@@ -457,5 +462,19 @@ document.addEventListener('DOMContentLoaded', () => {
       const loadTime = performance.timing.loadEventEnd - performance.timing.navigationStart;
       window.analyticsService.trackPerformance('page_load_time', loadTime, 'ms');
     });
+  }
+  
+  // Botão para ver mais recomendações
+  const btnMaisRecomendacoes = document.getElementById('btnMaisRecomendacoes');
+  if (btnMaisRecomendacoes) {
+    btnMaisRecomendacoes.onclick = () => {
+      // Recarregar recomendação com novos produtos randomizados
+      carregarRecomendacao(true);
+      
+      // Analytics: Track recommendation refresh
+      if (window.analyticsService) {
+        window.analyticsService.trackEvent('recommendation_refresh', 'user_action', 'clicked_more_recommendations');
+      }
+    };
   }
 });
