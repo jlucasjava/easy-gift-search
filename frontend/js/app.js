@@ -24,12 +24,44 @@ function clearMensagem() {
 async function buscarProdutos(params = {}) {
   showLoader(true);
   clearMensagem();
+  
+  // Analytics: Track search with filters
+  if (window.analyticsService) {
+    const query = params.query || 'busca_geral';
+    const filters = {
+      min_price: params.precoMin || null,
+      max_price: params.precoMax || null,
+      age: params.idade || null,
+      gender: params.genero || null,
+      page: params.page || 1
+    };
+    window.analyticsService.trackSearch(query, filters);
+    
+    // Track filter usage if any filters are applied
+    if (params.precoMin) {
+      window.analyticsService.trackFilterUsage('price_min', params.precoMin);
+    }
+    if (params.precoMax) {
+      window.analyticsService.trackFilterUsage('price_max', params.precoMax);
+    }
+    if (params.idade) {
+      window.analyticsService.trackFilterUsage('age', params.idade);
+    }
+    if (params.genero) {
+      window.analyticsService.trackFilterUsage('gender', params.genero);
+    }
+  }
+  
   try {
     const query = new URLSearchParams(params).toString();
     const res = await fetch(`${API_URL}/products?${query}`);
     if (!res.ok) throw new Error('Erro ao buscar produtos.');
     return await res.json();
   } catch (e) {
+    // Analytics: Track error
+    if (window.analyticsService) {
+      window.analyticsService.trackError('API_Error', e.message, 'buscarProdutos');
+    }
     showMensagem('Erro ao buscar produtos. Tente novamente.', true);
     return { produtos: [], pagina: 1, totalPaginas: 1 };
   } finally {
@@ -68,6 +100,15 @@ const SUGESTAO_LIMIT = 3;
 async function recomendarPresente(perfil) {
   showLoader(true);
   clearMensagem();
+  
+  const startTime = Date.now();
+  
+  // Analytics: Track recommendation request
+  if (window.analyticsService) {
+    const query = `idade:${perfil.idade || 'não_informado'} genero:${perfil.genero || 'não_informado'}`;
+    window.analyticsService.trackRecommendationRequest(query, null);
+  }
+  
   try {
     const res = await fetch(`${API_URL}/recommend`, {
       method: 'POST',
@@ -75,8 +116,23 @@ async function recomendarPresente(perfil) {
       body: JSON.stringify(perfil)
     });
     if (!res.ok) throw new Error('Erro ao buscar sugestão.');
-    return await res.json();
+    
+    const result = await res.json();
+    const responseTime = Date.now() - startTime;
+    
+    // Analytics: Track recommendation response
+    if (window.analyticsService) {
+      const query = `idade:${perfil.idade || 'não_informado'} genero:${perfil.genero || 'não_informado'}`;
+      const productsCount = result.produtosRelacionados ? result.produtosRelacionados.length : 0;
+      window.analyticsService.trackRecommendationResponse(query, productsCount, responseTime);
+    }
+    
+    return result;
   } catch (e) {
+    // Analytics: Track error
+    if (window.analyticsService) {
+      window.analyticsService.trackError('Recommendation_Error', e.message, 'recomendarPresente');
+    }
     showMensagem('Erro ao buscar sugestão. Tente novamente.', true);
     return { sugestao: '', produtosRelacionados: [] };
   } finally {
@@ -125,19 +181,33 @@ function renderGrid(produtos) {
     return;
   }
   clearMensagem();
-  produtos.forEach(prod => {
+  produtos.forEach((prod, index) => {
     const card = document.createElement('div');
     card.className = 'card';
     card.innerHTML = `
       <img src="${prod.imagem}" alt="${prod.nome}" loading="lazy">
       <h3>${prod.nome}</h3>
       <p>R$ ${prod.preco}</p>
-      <a href="${prod.url}" target="_blank">${t('ver_marketplace')}</a>
+      <a href="${prod.url}" target="_blank" onclick="trackProductClick('${prod.id}', '${prod.nome.replace(/'/g, '')}', ${prod.preco}, '${prod.marketplace}', ${index}, '${prod.url}')">${t('ver_marketplace')}</a>
       <button onclick="favoritarProduto('${prod.id}', '${prod.nome.replace(/'/g, '')}')">${t('favoritar')}</button>
     `;
+    
+    // Analytics: Track product view
+    if (window.analyticsService) {
+      window.analyticsService.trackProductView(prod.id, prod.nome, prod.preco, prod.marketplace);
+    }
+    
     grid.appendChild(card);
   });
 }
+
+// Global function for tracking product clicks
+window.trackProductClick = function(productId, productName, price, marketplace, position, url) {
+  if (window.analyticsService) {
+    window.analyticsService.trackProductClick(productId, productName, price, marketplace, position);
+    window.analyticsService.trackConversion(productId, productName, price, marketplace, url);
+  }
+};
 
 // Favoritos persistentes no localStorage
 function getFavoritos() {
@@ -287,6 +357,11 @@ btnToggleDark.onclick = () => {
   const isDark = document.body.classList.toggle('dark');
   btnToggleDark.textContent = isDark ? '☀️' : '🌙';
   localStorage.setItem('darkMode', isDark);
+  
+  // Analytics: Track dark mode toggle
+  if (window.analyticsService) {
+    window.analyticsService.trackDarkModeToggle(isDark);
+  }
 };
 
 // Função utilitária para obter string traduzida
@@ -319,7 +394,14 @@ btnLang.textContent = localStorage.getItem('lang') === 'en' ? '🇧🇷' : '🇺
 document.body.appendChild(btnLang);
 
 function atualizarIdioma(lang) {
+  const previousLang = localStorage.getItem('lang');
   localStorage.setItem('lang', lang);
+  
+  // Analytics: Track language change
+  if (window.analyticsService && previousLang !== lang) {
+    window.analyticsService.trackLanguageChange(lang, previousLang);
+  }
+  
   btnVerResultados.textContent = t('resultados');
   btnVerFavoritos.textContent = t('favoritos');
   document.getElementById('resultadosTitle').textContent = t('resultados');
@@ -343,3 +425,33 @@ btnLang.onclick = () => {
   const lang = localStorage.getItem('lang') === 'en' ? 'pt' : 'en';
   atualizarIdioma(lang);
 };
+
+// Analytics: Initialize user properties
+document.addEventListener('DOMContentLoaded', () => {
+  if (window.analyticsService) {
+    // Set user properties for analytics
+    const userProperties = {
+      language: localStorage.getItem('lang') || 'pt',
+      dark_mode_preference: localStorage.getItem('darkMode') === 'true',
+      device_type: /Mobi|Android/i.test(navigator.userAgent) ? 'mobile' : 'desktop',
+      browser: navigator.userAgent.includes('Chrome') ? 'Chrome' : 
+               navigator.userAgent.includes('Firefox') ? 'Firefox' : 
+               navigator.userAgent.includes('Safari') ? 'Safari' : 'Other',
+      first_visit: !localStorage.getItem('analytics_visited'),
+      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
+    };
+    
+    window.analyticsService.setUserProperties(userProperties);
+    
+    // Mark as visited
+    if (!localStorage.getItem('analytics_visited')) {
+      localStorage.setItem('analytics_visited', 'true');
+    }
+    
+    // Track page load performance
+    window.addEventListener('load', () => {
+      const loadTime = performance.timing.loadEventEnd - performance.timing.navigationStart;
+      window.analyticsService.trackPerformance('page_load_time', loadTime, 'ms');
+    });
+  }
+});

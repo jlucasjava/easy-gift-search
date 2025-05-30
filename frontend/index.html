@@ -17,10 +17,26 @@
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="Easy Gift Search">
   <meta name="twitter:description" content="Busque e encontre presentes perfeitos com inteligência artificial e integração com marketplaces." />
-  <meta name="twitter:image" content="/assets/og-image.png">
-  <link rel="stylesheet" href="css/style.min.css">
+  <meta name="twitter:image" content="/assets/og-image.png">  <link rel="stylesheet" href="css/style.min.css">
   <!-- Fallback para desenvolvimento -->
   <link rel="stylesheet" href="css/style.css" media="print" onload="this.media='all'" aria-label="CSS não minificado para fallback em desenvolvimento">
+  
+  <!-- Google Analytics 4 (GA4) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=GA_MEASUREMENT_ID"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    
+    // Configuração do GA4 com parâmetros personalizados
+    gtag('config', 'GA_MEASUREMENT_ID', {
+      page_title: 'Easy Gift Search',
+      page_location: window.location.href,
+      send_page_view: true,
+      allow_enhanced_conversions: true,
+      cookie_flags: 'SameSite=None;Secure'
+    });
+  </script>
 </head>
 <body>
   <header>
@@ -66,10 +82,11 @@
       <h3 id="favoritosTitle" tabindex="0">Meus Favoritos</h3>
       <div id="gridFavoritos" class="grid" tabindex="0" aria-label="Lista de favoritos"></div>
     </section>
-  </main>
-  <script src="js/app.min.js"></script>
+  </main>  <script src="js/app.min.js"></script>
   <!-- Fallback para desenvolvimento -->
   <script src="js/app.js" nomodule></script>
   <script src="js/i18n.js"></script>
+  <script src="js/analytics-config.js"></script>
+  <script src="js/analytics.js"></script>
 </body>
 </html>
