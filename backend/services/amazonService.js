@@ -2,7 +2,28 @@
 const axios = require('axios');
 
 exports.buscarProdutosAmazon = async (filtros) => {
-  // Exemplo usando RapidAPI (Amazon Product API)
+  // MODO DEMO: retorna produtos mock com links reais para demonstração
+  console.log('🔧 MODO DEMO: Retornando produtos mock da Amazon');
+  return [
+    {
+      id: 'B08N5WRWNW',
+      nome: 'Echo Dot (4ª Geração) - Smart Speaker com Alexa',
+      preco: 249.90,
+      imagem: 'https://m.media-amazon.com/images/I/714Rq4k05UL._AC_SL1000_.jpg',
+      url: 'https://www.amazon.com.br/dp/B08N5WRWNW',
+      marketplace: 'Amazon'
+    },
+    {
+      id: 'B08C1W5N87',
+      nome: 'Fire TV Stick | Streaming em Full HD com Alexa',
+      preco: 199.90,
+      imagem: 'https://m.media-amazon.com/images/I/51TjJOTfslL._AC_SL1000_.jpg',
+      url: 'https://www.amazon.com.br/dp/B08C1W5N87',
+      marketplace: 'Amazon'
+    }
+  ];
+  
+  /* CÓDIGO ORIGINAL (desabilitado para demo):
   const options = {
     method: 'GET',
     url: 'https://amazon24.p.rapidapi.com/api/product',
@@ -11,7 +32,6 @@ exports.buscarProdutosAmazon = async (filtros) => {
       country: 'BR',
       categoryID: '',
       minPrice: filtros.precoMin || 0,
-      // Amazon não tem filtro direto de idade, pode ser usado no keyword
       page: '1'
     },
     headers: {
@@ -33,4 +53,5 @@ exports.buscarProdutosAmazon = async (filtros) => {
     console.error('Erro Amazon:', err.response?.data || err.message);
     return [];
   }
+  */
 };

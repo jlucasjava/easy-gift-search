@@ -8,9 +8,11 @@ exports.searchProducts = async (req, res) => {
   try {
     // Filtros recebidos via query string
     const { precoMin, idade, genero, page = 1 } = req.query;
+    // Novo: accessToken pode vir do header ("x-ml-access-token")
+    const accessToken = req.headers['x-ml-access-token'] || null;
     // Busca em todos os marketplaces em paralelo
     const [ml, shopee, amazon, ali] = await Promise.all([
-      mercadoLivreService.buscarProdutos({ precoMin, idade, genero }),
+      mercadoLivreService.buscarProdutos({ precoMin, idade, genero }, accessToken),
       shopeeService.buscarProdutosShopee({ precoMin, idade, genero }),
       amazonService.buscarProdutosAmazon({ precoMin, idade, genero }),
       aliexpressService.buscarProdutosAliExpress({ precoMin, idade, genero })
@@ -24,3 +26,4 @@ exports.searchProducts = async (req, res) => {
     res.status(500).json({ erro: 'Erro ao buscar produtos.' });
   }
 };
+// Para reverter, basta remover o uso do accessToken e voltar ao serviço original.
