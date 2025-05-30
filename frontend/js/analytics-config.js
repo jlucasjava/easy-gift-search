@@ -8,9 +8,8 @@ const ANALYTICS_CONFIG = {
     debugMode: true,
     enableConsoleLogs: true
   },
-  
-  production: {
-    measurementId: 'G-XXXXXXXXXX', // Substitua pelo seu ID real do GA4
+    production: {
+    measurementId: 'G-0M6ZBDXDXJ', // ID real do GA4 - Easy Gift Search
     debugMode: false,
     enableConsoleLogs: false
   },
