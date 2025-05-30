@@ -7,22 +7,48 @@ const aliexpressService = require('../services/aliexpressService');
 exports.searchProducts = async (req, res) => {
   try {
     // Filtros recebidos via query string
-    const { precoMin, idade, genero, page = 1 } = req.query;
+    const { precoMin, precoMax, idade, genero, page = 1 } = req.query;
+    console.log('🔍 Filtros recebidos:', { precoMin, precoMax, idade, genero, page });
+    
     // Novo: accessToken pode vir do header ("x-ml-access-token")
     const accessToken = req.headers['x-ml-access-token'] || null;
+    
     // Busca em todos os marketplaces em paralelo
     const [ml, shopee, amazon, ali] = await Promise.all([
-      mercadoLivreService.buscarProdutos({ precoMin, idade, genero }, accessToken),
-      shopeeService.buscarProdutosShopee({ precoMin, idade, genero }),
-      amazonService.buscarProdutosAmazon({ precoMin, idade, genero }),
-      aliexpressService.buscarProdutosAliExpress({ precoMin, idade, genero })
+      mercadoLivreService.buscarProdutos({ precoMin, precoMax, idade, genero }, accessToken),
+      shopeeService.buscarProdutosShopee({ precoMin, precoMax, idade, genero }),
+      amazonService.buscarProdutosAmazon({ precoMin, precoMax, idade, genero }),
+      aliexpressService.buscarProdutosAliExpress({ precoMin, precoMax, idade, genero })
     ]);
-    // Junta e limita a 9 resultados
-    const produtos = [...ml, ...shopee, ...amazon, ...ali].slice(0, 9);
+    
+    // Junta todos os produtos
+    const todosProdutos = [...ml, ...shopee, ...amazon, ...ali];
+    console.log(`📦 Total de produtos encontrados: ${todosProdutos.length}`);
+    
+    // Aplicar filtros globais se necessário (backup caso algum serviço não tenha aplicado)
+    let produtosFiltrados = todosProdutos;
+    if (precoMin || precoMax) {
+      const min = precoMin ? parseFloat(precoMin) : 0;
+      const max = precoMax ? parseFloat(precoMax) : Infinity;
+      
+      produtosFiltrados = todosProdutos.filter(produto => {
+        return produto.preco >= min && produto.preco <= max;
+      });
+      
+      console.log(`💰 Filtro de preço R$ ${min} - R$ ${max === Infinity ? '∞' : max}: ${produtosFiltrados.length} produtos`);
+    }
+    
+    // Limita a 9 resultados e ordena por relevância/preço
+    const produtos = produtosFiltrados
+      .sort((a, b) => a.preco - b.preco) // Ordena por preço crescente
+      .slice(0, 9);
+    
+    console.log(`✅ Retornando ${produtos.length} produtos para o frontend`);
+    
     // Paginação simples (mock, pois Mercado Livre já limita a 9)
     res.json({ produtos, pagina: Number(page), totalPaginas: 5 });
   } catch (err) {
-    console.error('Erro ao buscar produtos:', err);
+    console.error('❌ Erro ao buscar produtos:', err);
     res.status(500).json({ erro: 'Erro ao buscar produtos.' });
   }
 };

@@ -223,6 +223,7 @@ document.getElementById('searchForm').onsubmit = async (e) => {
   e.preventDefault();
   const params = {
     precoMin: document.getElementById('precoMin').value,
+    precoMax: document.getElementById('precoMax').value,
     idade: document.getElementById('idadeInput').value,
     genero: document.getElementById('generoSelect').value,
     page: 1
@@ -309,6 +310,7 @@ function atualizarIdioma(lang) {
   document.getElementById('favoritosTitle').textContent = t('favoritos');
   document.getElementById('recomendacaoTitle').textContent = t('recomendacao');
   document.getElementById('precoMin').placeholder = t('preco_min');
+  document.getElementById('precoMax').placeholder = t('preco_max');
   document.getElementById('idadeInput').placeholder = t('idade');
   document.getElementById('generoSelect').options[0].text = t('genero');
   document.getElementById('generoSelect').options[1].text = t('masculino');

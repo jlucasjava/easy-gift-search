@@ -25,10 +25,11 @@
 <body>
   <header>
     <h1 id="mainTitle" tabindex="0">Easy Gift Search</h1>
-    <button id="toggleDark" aria-label="Alternar modo escuro" style="position:absolute;top:1.2rem;right:1.2rem;z-index:10;min-width:40px;min-height:40px;font-size:1.3rem;">🌙</button>
-    <form id="searchForm" aria-label="Formulário de busca de presentes" role="search">
+    <button id="toggleDark" aria-label="Alternar modo escuro" style="position:absolute;top:1.2rem;right:1.2rem;z-index:10;min-width:40px;min-height:40px;font-size:1.3rem;">🌙</button>    <form id="searchForm" aria-label="Formulário de busca de presentes" role="search">
       <label for="precoMin" class="sr-only">Preço mínimo</label>
       <input type="number" id="precoMin" placeholder="Preço mínimo" aria-label="Preço mínimo" />
+      <label for="precoMax" class="sr-only">Preço máximo</label>
+      <input type="number" id="precoMax" placeholder="Preço máximo" aria-label="Preço máximo" />
       <label for="idadeInput" class="sr-only">Idade</label>
       <input type="number" id="idadeInput" placeholder="Idade" aria-label="Idade" />
       <label for="generoSelect" class="sr-only">Gênero</label>

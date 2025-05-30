@@ -4,7 +4,9 @@ const axios = require('axios');
 exports.buscarProdutosShopee = async (filtros) => {
   // MODO DEMO: retorna produtos mock com links reais para demonstração
   console.log('🔧 MODO DEMO: Retornando produtos mock da Shopee');
-  return [
+  console.log('Filtros recebidos:', filtros);
+  
+  const produtosMock = [
     {
       id: 'shopee123456',
       nome: 'Kit Maquiagem Completo Ruby Rose',
@@ -20,8 +22,47 @@ exports.buscarProdutosShopee = async (filtros) => {
       imagem: 'https://cf.shopee.com.br/file/654321987_tn',
       url: 'https://shopee.com.br/Tenis-Esportivo-Nike-Air-Max-i.654321.987654321',
       marketplace: 'Shopee'
+    },
+    {
+      id: 'shopee777888',
+      nome: 'Perfume Importado Feminino 100ml',
+      preco: 159.90,
+      imagem: 'https://cf.shopee.com.br/file/777888999_tn',
+      url: 'https://shopee.com.br/Perfume-Importado-Feminino-i.777888.123456789',
+      marketplace: 'Shopee'
+    },
+    {
+      id: 'shopee999000',
+      nome: 'Conjunto de Panelas Antiaderente',
+      preco: 199.90,
+      imagem: 'https://cf.shopee.com.br/file/999000111_tn',
+      url: 'https://shopee.com.br/Conjunto-Panelas-Antiaderente-i.999000.987654321',
+      marketplace: 'Shopee'
+    },
+    {
+      id: 'shopee111333',
+      nome: 'Caneca Térmica Personalizada',
+      preco: 39.90,
+      imagem: 'https://cf.shopee.com.br/file/111333555_tn',
+      url: 'https://shopee.com.br/Caneca-Termica-Personalizada-i.111333.456789012',
+      marketplace: 'Shopee'
     }
   ];
+  // Aplicar filtro de preço mínimo se fornecido
+  let produtosFiltrados = produtosMock;
+  if (filtros.precoMin || filtros.precoMax) {
+    const precoMinimo = filtros.precoMin ? parseFloat(filtros.precoMin) : 0;
+    const precoMaximo = filtros.precoMax ? parseFloat(filtros.precoMax) : Infinity;
+    
+    if (!isNaN(precoMinimo) || !isNaN(precoMaximo)) {
+      produtosFiltrados = produtosMock.filter(produto => {
+        return produto.preco >= precoMinimo && produto.preco <= precoMaximo;
+      });
+      console.log(`Filtro preço R$ ${precoMinimo} - R$ ${precoMaximo === Infinity ? '∞' : precoMaximo}: ${produtosFiltrados.length} produtos encontrados`);
+    }
+  }
+
+  return produtosFiltrados;
   
   /* CÓDIGO ORIGINAL (desabilitado para demo):
   const options = {
