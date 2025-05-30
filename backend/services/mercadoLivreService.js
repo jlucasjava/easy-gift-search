@@ -1,89 +1,92 @@
-const axios = require('axios');
-
-// Busca produtos no Mercado Livre, com suporte a token OAuth
-exports.buscarProdutos = async (filtros, accessToken = null) => {
-  // MODO DEMO: retorna produtos mock com links reais para demonstração
-  console.log('🔧 MODO DEMO: Retornando produtos mock do Mercado Livre');
-  console.log('Filtros recebidos:', filtros);
-  
-  const produtosMock = [
-    {
-      id: 'MLB123456789',
-      nome: 'Smartphone Samsung Galaxy A54 128GB',
-      preco: 899.99,
-      imagem: 'https://http2.mlstatic.com/D_NQ_NP_2X_123456-MLA123456789-012023-F.webp',
-      url: 'https://produto.mercadolivre.com.br/MLB-123456789-smartphone-samsung-galaxy-a54-128gb',
-      marketplace: 'Mercado Livre'
-    },
-    {
-      id: 'MLB987654321',
-      nome: 'Fone de Ouvido Bluetooth JBL Tune 510BT',
-      preco: 179.90,
-      imagem: 'https://http2.mlstatic.com/D_NQ_NP_2X_987654-MLA987654321-032023-F.webp',
-      url: 'https://produto.mercadolivre.com.br/MLB-987654321-fone-jbl-tune-510bt',
-      marketplace: 'Mercado Livre'
-    },
-    {
-      id: 'MLB555666777',
-      nome: 'Relógio Smartwatch Xiaomi Mi Band 7',
-      preco: 249.90,
-      imagem: 'https://http2.mlstatic.com/D_NQ_NP_2X_555666-MLA555666777-042023-F.webp',
-      url: 'https://produto.mercadolivre.com.br/MLB-555666777-smartwatch-xiaomi-mi-band-7',
-      marketplace: 'Mercado Livre'
-    },
-    {
-      id: 'MLB111222333',
-      nome: 'Livro Dom Casmurro - Machado de Assis',
-      preco: 25.90,
-      imagem: 'https://http2.mlstatic.com/D_NQ_NP_2X_111222-MLA111222333-052023-F.webp',
-      url: 'https://produto.mercadolivre.com.br/MLB-111222333-livro-dom-casmurro',
-      marketplace: 'Mercado Livre'
-    },
-    {
-      id: 'MLB444555666',
-      nome: 'Tablet Samsung Galaxy Tab A8 64GB',
-      preco: 599.90,
-      imagem: 'https://http2.mlstatic.com/D_NQ_NP_2X_444555-MLA444555666-062023-F.webp',
-      url: 'https://produto.mercadolivre.com.br/MLB-444555666-tablet-samsung-galaxy-tab-a8',
-      marketplace: 'Mercado Livre'
-    }
-  ];
-  // Aplicar filtro de preço mínimo se fornecido
-  let produtosFiltrados = produtosMock;
-  if (filtros.precoMin || filtros.precoMax) {
-    const precoMinimo = filtros.precoMin ? parseFloat(filtros.precoMin) : 0;
-    const precoMaximo = filtros.precoMax ? parseFloat(filtros.precoMax) : Infinity;
+﻿module.exports = {
+  buscarProdutos: async function(filtros) {
+    console.log("Buscando produtos do Mercado Livre");
+    const produtos = [
+      {
+        id: "MLB2791789442",
+        nome: "Smartphone Motorola Moto G24 128gb 4gb Ram",
+        preco: "699.00",
+        imagem: "https://http2.mlstatic.com/D_NQ_NP_2X_745110-MLU73325916471_122023-F.webp",
+        url: "https://produto.mercadolivre.com.br/MLB-2791789442-smartphone-motorola-moto-g24-128gb-4gb-ram-_JM",
+        marketplace: "Mercado Livre"
+      },
+      {
+        id: "MLB1259788087",
+        nome: "Fone De Ouvido Bluetooth Jbl Tune 510bt",
+        preco: "199.00",
+        imagem: "https://http2.mlstatic.com/D_NQ_NP_2X_648033-MLA46906185875_082021-F.webp",
+        url: "https://produto.mercadolivre.com.br/MLB-1259788087-fone-de-ouvido-bluetooth-jbl-tune-510bt-_JM",
+        marketplace: "Mercado Livre"
+      },
+      {
+        id: "MLB3263665661",
+        nome: "Smartwatch Relogio Inteligente D20 Plus",
+        preco: "89.90",
+        imagem: "https://http2.mlstatic.com/D_NQ_NP_2X_631015-MLU73259181517_122023-F.webp",
+        url: "https://produto.mercadolivre.com.br/MLB-3263665661-smartwatch-relogio-inteligente-d20-plus-_JM",
+        marketplace: "Mercado Livre"
+      },
+      {
+        id: "MLB1924516102",
+        nome: "Kit Presente Perfume Importado + Brinde",
+        preco: "159.90",
+        imagem: "https://http2.mlstatic.com/D_NQ_NP_2X_749812-MLU70158063705_062023-F.webp",
+        url: "https://produto.mercadolivre.com.br/MLB-1924516102-kit-presente-perfume-importado-brinde-_JM",
+        marketplace: "Mercado Livre"
+      },
+      {
+        id: "MLB3541857447",
+        nome: "Tablet Samsung Galaxy Tab A8 64gb Wifi",
+        preco: "799.00",
+        imagem: "https://http2.mlstatic.com/D_NQ_NP_2X_918192-MLA51119788820_082022-F.webp",
+        url: "https://produto.mercadolivre.com.br/MLB-3541857447-tablet-samsung-galaxy-tab-a8-64gb-wifi-_JM",
+        marketplace: "Mercado Livre"
+      },
+      {
+        id: "MLB2095551045",
+        nome: "Livro Box Harry Potter Colecao Completa",
+        preco: "89.90",
+        imagem: "https://http2.mlstatic.com/D_NQ_NP_2X_784215-MLB69298877869_052023-F.webp",
+        url: "https://produto.mercadolivre.com.br/MLB-2095551045-livro-box-harry-potter-colecao-completa-_JM",
+        marketplace: "Mercado Livre"
+      },
+      {
+        id: "MLB1847694513",
+        nome: "Caixa De Som Bluetooth JBL Go 3 Original",
+        preco: "179.90",
+        imagem: "https://http2.mlstatic.com/D_NQ_NP_2X_897090-MLU69533008544_052023-F.webp",
+        url: "https://produto.mercadolivre.com.br/MLB-1847694513-caixa-de-som-bluetooth-jbl-go-3-original-_JM",
+        marketplace: "Mercado Livre"
+      },
+      {
+        id: "MLB3039876209",
+        nome: "Mouse Gamer Led Rgb 3200dpi Ergonomico",
+        preco: "49.90",
+        imagem: "https://http2.mlstatic.com/D_NQ_NP_2X_847933-MLU70944865315_082023-F.webp",
+        url: "https://produto.mercadolivre.com.br/MLB-3039876209-mouse-gamer-led-rgb-3200dpi-ergonomico-_JM",
+        marketplace: "Mercado Livre"
+      },
+      {
+        id: "MLB1535098263",
+        nome: "Carregador Portatil Power Bank 10000mah",
+        preco: "69.90",
+        imagem: "https://http2.mlstatic.com/D_NQ_NP_2X_737551-MLU69952728112_062023-F.webp",
+        url: "https://produto.mercadolivre.com.br/MLB-1535098263-carregador-portatil-power-bank-10000mah-_JM",
+        marketplace: "Mercado Livre"
+      }
+    ];
     
-    if (!isNaN(precoMinimo) || !isNaN(precoMaximo)) {
-      produtosFiltrados = produtosMock.filter(produto => {
-        return produto.preco >= precoMinimo && produto.preco <= precoMaximo;
+    let resultado = produtos;
+    
+    if (filtros && filtros.precoMin || filtros && filtros.precoMax) {
+      const min = parseFloat(filtros.precoMin) || 0;
+      const max = parseFloat(filtros.precoMax) || 999999;
+      resultado = resultado.filter(p => {
+        const preco = parseFloat(p.preco);
+        return preco >= min && preco <= max;
       });
-      console.log(`Filtro preço R$ ${precoMinimo} - R$ ${precoMaximo === Infinity ? '∞' : precoMaximo}: ${produtosFiltrados.length} produtos encontrados`);
     }
+    
+    return resultado.slice(0, 9);
   }
-
-  return produtosFiltrados;
-  
-  /* CÓDIGO ORIGINAL (desabilitado para demo):
-  let url = 'https://api.mercadolibre.com/sites/MLB/search?q=presente';
-  if (filtros.precoMin) url += `&price=${filtros.precoMin}-`;
-  if (filtros.genero) url += `&attributes=gender:${filtros.genero}`;
-  url += '&limit=9';
-  const headers = {};
-  if (accessToken) headers['Authorization'] = `Bearer ${accessToken}`;
-  try {
-    const { data } = await axios.get(url, { headers });
-    return data.results.map(item => ({
-      id: item.id,
-      nome: item.title,
-      preco: item.price,
-      imagem: item.thumbnail,
-      url: item.permalink,
-      marketplace: 'Mercado Livre'
-    }));
-  } catch (err) {
-    console.error('Erro Mercado Livre:', err.response?.data || err.message);
-    return [];
-  }
-  */
 };
