@@ -346,17 +346,23 @@ renderFavoritos();
 // Exibe mensagem inicial convidativa ao invés de carregar produtos automaticamente
 mostrarMensagemInicial();
 
-// Dark mode toggle
+// Dark mode toggle melhorado
 const btnToggleDark = document.getElementById('toggleDark');
+const btnLang = document.getElementById('btnLang');
 const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+// Inicializar modo dark
 if (localStorage.getItem('darkMode') === 'true' || (!localStorage.getItem('darkMode') && prefersDark)) {
   document.body.classList.add('dark');
-  btnToggleDark.textContent = '☀️';
 }
+
+// Toggle do modo dark com animação suave
 btnToggleDark.onclick = () => {
   const isDark = document.body.classList.toggle('dark');
-  btnToggleDark.textContent = isDark ? '☀️' : '🌙';
   localStorage.setItem('darkMode', isDark);
+  
+  // Animação suave
+  document.body.style.transition = 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)';
   
   // Analytics: Track dark mode toggle
   if (window.analyticsService) {
@@ -378,20 +384,11 @@ if (!localStorage.getItem('lang')) {
   localStorage.setItem('lang', navLang);
 }
 
-// Botão de troca de idioma
-const btnLang = document.createElement('button');
-btnLang.id = 'btnLang';
-btnLang.type = 'button';
-btnLang.style.position = 'absolute';
-btnLang.style.top = '1.2rem';
-btnLang.style.right = '3.8rem';
-btnLang.style.zIndex = '10';
-btnLang.style.minWidth = '40px';
-btnLang.style.minHeight = '40px';
-btnLang.style.fontSize = '1.3rem';
-btnLang.setAttribute('aria-label', 'Trocar idioma / Switch language');
+// Botões de controle do header
+const btnLang = document.getElementById('btnLang');
+
+// Inicializar texto do botão de idioma
 btnLang.textContent = localStorage.getItem('lang') === 'en' ? '🇧🇷' : '🇺🇸';
-document.body.appendChild(btnLang);
 
 function atualizarIdioma(lang) {
   const previousLang = localStorage.getItem('lang');
@@ -413,8 +410,15 @@ function atualizarIdioma(lang) {
   document.getElementById('generoSelect').options[0].text = t('genero');
   document.getElementById('generoSelect').options[1].text = t('masculino');
   document.getElementById('generoSelect').options[2].text = t('feminino');
-  document.getElementById('generoSelect').options[3].text = t('unissex');  document.getElementById('searchForm').querySelector('button[type="submit"]').textContent = t('buscar');
-  document.getElementById('historicoBuscas').querySelector('h3').textContent = t('historico');
+  document.getElementById('generoSelect').options[3].text = t('unissex');
+  document.getElementById('searchForm').querySelector('button[type="submit"]').textContent = t('buscar');
+  
+  // Verificar se o elemento historicoBuscas existe antes de tentar acessá-lo
+  const historicoBuscas = document.getElementById('historicoBuscas');
+  if (historicoBuscas && historicoBuscas.querySelector('h3')) {
+    historicoBuscas.querySelector('h3').textContent = t('historico');
+  }
+  
   renderFavoritos();
   // Não carrega produtos automaticamente - apenas atualiza a mensagem inicial
   mostrarMensagemInicial();

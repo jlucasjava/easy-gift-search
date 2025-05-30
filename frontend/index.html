@@ -37,10 +37,16 @@
     });
   </script>
 </head>
-<body>
-  <header>
+<body>  <header>
+    <div class="header-controls">
+      <button id="toggleDark" class="control-btn" aria-label="Alternar modo escuro" title="Alternar modo escuro">
+        <span class="dark-icon">🌙</span>
+        <span class="light-icon">☀️</span>
+      </button>
+      <button id="btnLang" class="control-btn" aria-label="Trocar idioma / Switch language" title="Trocar idioma">🇺🇸</button>
+    </div>
     <h1 id="mainTitle" tabindex="0">Easy Gift Search</h1>
-    <button id="toggleDark" aria-label="Alternar modo escuro" style="position:absolute;top:1.2rem;right:1.2rem;z-index:10;min-width:40px;min-height:40px;font-size:1.3rem;">🌙</button>    <form id="searchForm" aria-label="Formulário de busca de presentes" role="search">
+    <form id="searchForm" aria-label="Formulário de busca de presentes" role="search">
       <label for="precoMin" class="sr-only">Preço mínimo</label>
       <input type="number" id="precoMin" placeholder="Preço mínimo" aria-label="Preço mínimo" />
       <label for="precoMax" class="sr-only">Preço máximo</label>
