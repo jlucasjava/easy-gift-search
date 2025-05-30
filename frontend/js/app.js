@@ -98,6 +98,24 @@ async function carregarRecomendacao(refazer = false) {
   });
 }
 
+// Exibe mensagem inicial convidativa
+function mostrarMensagemInicial() {
+  const grid = document.getElementById('grid');
+  grid.innerHTML = `
+    <div class="mensagem-inicial" style="grid-column:1/-1;text-align:center;padding:40px 20px;">
+      <h3 style="margin-bottom:20px;">🎁 ${t('benvindo_titulo')}</h3>
+      <p style="margin-bottom:15px;font-size:16px;">${t('benvindo_descricao')}</p>
+      <p style="font-size:14px;opacity:0.8;">${t('benvindo_instrucoes')}</p>
+    </div>
+  `;
+  // Limpar a seção de recomendação também
+  document.getElementById('sugestao').innerHTML = `
+    <div style="text-align:center;font-style:italic;opacity:0.8;">
+      ${t('recomendacao_inicial')}
+    </div>
+  `;
+}
+
 // Renderiza grid de produtos
 function renderGrid(produtos) {
   const grid = document.getElementById('grid');
@@ -226,10 +244,9 @@ document.getElementById('searchForm').onsubmit = async (e) => {
     precoMax: document.getElementById('precoMax').value,
     idade: document.getElementById('idadeInput').value,
     genero: document.getElementById('generoSelect').value,
-    page: 1
-  };
+    page: 1  };
   carregarProdutos(params);
-  carregarRecomendacao(true);
+  carregarRecomendacao();
 };
 
 // Alterna abas
@@ -256,9 +273,8 @@ btnVerResultados.classList.add('active');
 secFavoritos.style.display = 'none';
 renderFavoritos();
 
-// Inicialização
-carregarProdutos();
-carregarRecomendacao(true);
+// Exibe mensagem inicial convidativa ao invés de carregar produtos automaticamente
+mostrarMensagemInicial();
 
 // Dark mode toggle
 const btnToggleDark = document.getElementById('toggleDark');
@@ -315,12 +331,11 @@ function atualizarIdioma(lang) {
   document.getElementById('generoSelect').options[0].text = t('genero');
   document.getElementById('generoSelect').options[1].text = t('masculino');
   document.getElementById('generoSelect').options[2].text = t('feminino');
-  document.getElementById('generoSelect').options[3].text = t('unissex');
-  document.getElementById('searchForm').querySelector('button[type="submit"]').textContent = t('buscar');
+  document.getElementById('generoSelect').options[3].text = t('unissex');  document.getElementById('searchForm').querySelector('button[type="submit"]').textContent = t('buscar');
   document.getElementById('historicoBuscas').querySelector('h3').textContent = t('historico');
   renderFavoritos();
-  carregarProdutos();
-  carregarRecomendacao(true);
+  // Não carrega produtos automaticamente - apenas atualiza a mensagem inicial
+  mostrarMensagemInicial();
   btnLang.textContent = lang === 'en' ? '🇧🇷' : '🇺🇸';
 }
 

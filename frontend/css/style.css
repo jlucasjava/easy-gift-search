@@ -884,3 +884,69 @@ button:focus, a:focus, input:focus, select:focus {
 body.dark :focus {
   outline: 2px solid #aab4ff;
 }
+
+/* Mensagem inicial de boas-vindas */
+.mensagem-inicial {
+  color: #64748b !important;
+  background: rgba(248, 250, 252, 0.8);
+  border-radius: 20px;
+  border: 2px dashed #cbd5e1;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+}
+
+.mensagem-inicial h3 {
+  color: #334155 !important;
+  font-weight: 700;
+  margin-bottom: 20px;
+  font-size: clamp(1.25rem, 2.5vw, 1.75rem);
+}
+
+.mensagem-inicial p {
+  color: #64748b !important;
+  line-height: 1.6;
+  margin-bottom: 15px;
+}
+
+.mensagem-inicial p:last-child {
+  margin-bottom: 0;
+}
+
+/* Dark mode para mensagem inicial */
+body.dark .mensagem-inicial {
+  color: #cbd5e1 !important;
+  background: rgba(30, 27, 75, 0.6);
+  border-color: rgba(139, 92, 246, 0.3);
+}
+
+body.dark .mensagem-inicial h3 {
+  color: #f1f5f9 !important;
+  background: linear-gradient(135deg, #f8fafc 0%, #a78bfa 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+body.dark .mensagem-inicial p {
+  color: #cbd5e1 !important;
+}
+
+/* Animação sutil para mensagem inicial */
+.mensagem-inicial {
+  animation: fadeInUp 0.8s ease-out;
+}
+
+@keyframes fadeInScale {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.mensagem-inicial {
+  animation: fadeInScale 0.6s ease-out;
+}

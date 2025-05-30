@@ -15,10 +15,13 @@ window.I18N_STRINGS = {
     preco_max: 'Preço máximo',
     idade: 'Idade',
     genero: 'Gênero',
-    masculino: 'Masculino',
-    feminino: 'Feminino',
+    masculino: 'Masculino',    feminino: 'Feminino',
     unissex: 'Unissex',
-    carregando: 'Carregando...'
+    carregando: 'Carregando...',
+    benvindo_titulo: 'Bem-vindo ao Easy Gift Search!',
+    benvindo_descricao: 'Encontre o presente perfeito usando nossa busca inteligente.',
+    benvindo_instrucoes: 'Preencha os filtros acima e clique em "Buscar" para começar.',
+    recomendacao_inicial: 'Faça uma busca para receber recomendações personalizadas! 🤖'
   },
   en: {
     buscar: 'Search',
@@ -34,9 +37,12 @@ window.I18N_STRINGS = {
     preco_max: 'Max price',
     idade: 'Age',
     genero: 'Gender',
-    masculino: 'Male',
-    feminino: 'Female',
+    masculino: 'Male',    feminino: 'Female',
     unissex: 'Unisex',
-    carregando: 'Loading...'
+    carregando: 'Loading...',
+    benvindo_titulo: 'Welcome to Easy Gift Search!',
+    benvindo_descricao: 'Find the perfect gift using our intelligent search.',
+    benvindo_instrucoes: 'Fill in the filters above and click "Search" to get started.',
+    recomendacao_inicial: 'Make a search to receive personalized recommendations! 🤖'
   }
 };
