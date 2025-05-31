@@ -329,9 +329,21 @@ document.getElementById('searchForm').onsubmit = async (e) => {
     genero: document.getElementById('generoSelect').value,
     page: 1
   };
+  document.getElementById('produtos').style.display = '';
   carregarProdutos(params);
   // A recomendação será carregada automaticamente em carregarProdutos()
 };
+
+// Esconde resultados na inicialização
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('produtos').style.display = 'none';
+  // Também esconde recomendação e limpa grid ao abrir a página
+  document.getElementById('recomendacao').style.display = 'none';
+  const grid = document.getElementById('grid');
+  if (grid) grid.innerHTML = '';
+  // Esconde mensagem de erro ou info
+  clearMensagem();
+});
 
 // Alterna abas
 const btnVerResultados = document.getElementById('btnVerResultados');

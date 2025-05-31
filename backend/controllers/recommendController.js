@@ -1,4 +1,4 @@
-﻿const axios = require('axios');
+const axios = require('axios');
 
 // Integração real com OpenAI para recomendação inteligente
 exports.getRecommendation = async (req, res) => {
