@@ -81,7 +81,11 @@
       <h3 id="recomendacaoTitle" tabindex="0">🎯 Recomendação Inteligente</h3>
       <div id="sugestao" style="margin-bottom: 1rem; padding: 1rem; background: var(--card-bg); border-radius: 8px; border-left: 4px solid var(--primary-color);"></div>
       <div id="sugestaoProdutos" class="grid"></div>
-      <div style="text-align: center; margin-top: 1rem;">        <button id="btnMaisRecomendacoes" class="control-btn" aria-label="Ver mais recomendações" style="background: var(--primary-color); color: white; padding: 0.5rem 1rem; border-radius: 6px;">
+      <div id="swipeHint" role="status" style="display:none; text-align:center; color:#64748b; font-size:0.98rem; margin-top:0.5rem;">
+        <span>Deslize para o lado para ver mais recomendações ➡️</span>
+      </div>
+      <div style="text-align: center; margin-top: 1rem;">
+        <button id="btnMaisRecomendacoes" class="control-btn" aria-label="Ver mais recomendações" style="background: var(--primary-color); color: white; padding: 0.5rem 1rem; border-radius: 6px;">
           🔄 Ver Mais Recomendações
         </button>
       </div>
@@ -90,7 +94,11 @@
       <h3 id="favoritosTitle" tabindex="0">Meus Favoritos</h3>
       <div id="gridFavoritos" class="grid" tabindex="0" aria-label="Lista de favoritos"></div>
     </section>
-  </main>  <script src="js/app.min.js"></script>
+  </main>
+  <footer role="contentinfo">
+    <span>© 2025 Easy Gift Search &mdash; Toque nos cards para ver detalhes. Navegue pelas abas abaixo.</span>
+  </footer>
+  <script src="js/app.min.js"></script>
   <!-- Fallback para desenvolvimento -->
   <script src="js/app.js" nomodule></script>
   <script src="js/i18n.js"></script>

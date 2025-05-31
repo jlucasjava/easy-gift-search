@@ -88,6 +88,14 @@ function renderSugestao(sugestao, produtosRelacionados = [], start = 0, limit = 
       `;
       grid.appendChild(card);
     });
+    // Exibir dica de swipe no mobile
+    const swipeHint = document.getElementById('swipeHint');
+    if (window.innerWidth <= 600) {
+      swipeHint.style.display = 'block';
+      setTimeout(() => { swipeHint.style.display = 'none'; }, 3500);
+    } else {
+      swipeHint.style.display = 'none';
+    }
   } else {
     grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;color:#888;">${t('nenhum_produto')}</div>`;
   }
