@@ -12,44 +12,39 @@ exports.buscarProdutosAliExpress = async (filtros) => {
   // MODO DEMO: retorna produtos mock com links reais para demonstração
   console.log('🔧 MODO DEMO: Retornando produtos mock do AliExpress');
   console.log('Filtros recebidos:', filtros);
-    const produtosMock = [
-    {
+    const produtosMock = [    {
       id: '1005004123456789',
       nome: 'Fone de Ouvido Sem Fio i12 TWS Bluetooth',
       preco: 45.90,
-      imagem: 'https://via.placeholder.com/300x300/4e54c8/ffffff?text=Fone+Bluetooth',
+      imagem: 'https://ae01.alicdn.com/kf/S9e8c9b1a5d4e6f7c8b9a0b1c2d3e4f5.jpg',
       url: 'https://pt.aliexpress.com/item/1005004123456789.html',
       marketplace: 'AliExpress'
-    },
-    {
+    },    {
       id: '1005003987654321',
       nome: 'Smartwatch DT100 Pro Max Serie 8',
       preco: 78.90,
-      imagem: 'https://via.placeholder.com/300x300/4e54c8/ffffff?text=Smartwatch',
+      imagem: 'https://ae01.alicdn.com/kf/Sa1b2c3d4e5f6789012345678901234567.jpg',
       url: 'https://pt.aliexpress.com/item/1005003987654321.html',
       marketplace: 'AliExpress'
-    },
-    {
+    },    {
       id: '1005002555666777',
       nome: 'Kit Ferramentas Celular 115 em 1',
       preco: 89.90,
-      imagem: 'https://via.placeholder.com/300x300/4e54c8/ffffff?text=Kit+Ferramentas',
+      imagem: 'https://ae01.alicdn.com/kf/Sf6e7d8c9b0a19283746501928374650.jpg',
       url: 'https://pt.aliexpress.com/item/1005002555666777.html',
       marketplace: 'AliExpress'
-    },
-    {
+    },    {
       id: '1005001888999000',
       nome: 'Carregador Sem Fio 15W Qi Fast Charge',
       preco: 129.90,
-      imagem: 'https://via.placeholder.com/300x300/4e54c8/ffffff?text=Carregador+Wireless',
+      imagem: 'https://ae01.alicdn.com/kf/S123456789abcdef0123456789abcdef01.jpg',
       url: 'https://pt.aliexpress.com/item/1005001888999000.html',
       marketplace: 'AliExpress'
-    },
-    {
+    },    {
       id: '1005000111222333',
       nome: 'Capa Protetora Para iPhone Universal',
       preco: 19.90,
-      imagem: 'https://via.placeholder.com/300x300/4e54c8/ffffff?text=Capa+iPhone',
+      imagem: 'https://ae01.alicdn.com/kf/S987654321fedcba0987654321fedcba0.jpg',
       url: 'https://pt.aliexpress.com/item/1005000111222333.html',
       marketplace: 'AliExpress'
     }

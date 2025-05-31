@@ -319,182 +319,757 @@ async function carregarRecomendacao() {
   `;
 }
 
-// Inicialização
-document.getElementById('searchForm').onsubmit = async (e) => {
-  e.preventDefault();
-  const params = {
-    precoMin: document.getElementById('precoMin').value,
-    precoMax: document.getElementById('precoMax').value,
-    idade: document.getElementById('idadeInput').value,
-    genero: document.getElementById('generoSelect').value,
-    page: 1
-  };
-  document.getElementById('produtos').style.display = '';
-  carregarProdutos(params);
-  // A recomendação será carregada automaticamente em carregarProdutos()
-};
+// =============================================================================
+// NEW API INTEGRATIONS - ENHANCED FUNCTIONALITY
+// =============================================================================
 
-// Esconde resultados na inicialização
-document.addEventListener('DOMContentLoaded', () => {
-  document.getElementById('produtos').style.display = 'none';
-  // Também esconde recomendação e limpa grid ao abrir a página
-  document.getElementById('recomendacao').style.display = 'none';
-  const grid = document.getElementById('grid');
-  if (grid) grid.innerHTML = '';
-  // Esconde mensagem de erro ou info
+// Current active locations and data
+let currentLocais = [];
+let currentMapaInfo = null;
+
+// ===== AI-POWERED SEARCH FUNCTIONALITY =====
+
+/**
+ * Executa busca integrada usando múltiplas APIs (IA, Maps, Bing, etc.)
+ */
+async function executarBuscaIA() {
+  showLoader(true);
   clearMensagem();
-});
-
-// Alterna abas
-const btnVerResultados = document.getElementById('btnVerResultados');
-const btnVerFavoritos = document.getElementById('btnVerFavoritos');
-const secResultados = document.getElementById('produtos');
-const secFavoritos = document.getElementById('favoritos');
-
-btnVerResultados.onclick = () => {
-  secResultados.style.display = '';
-  secFavoritos.style.display = 'none';
-  btnVerResultados.classList.add('active');
-  btnVerFavoritos.classList.remove('active');
-};
-btnVerFavoritos.onclick = () => {
-  secResultados.style.display = 'none';
-  secFavoritos.style.display = '';
-  btnVerResultados.classList.remove('active');
-  btnVerFavoritos.classList.add('active');
-  renderFavoritos();
-};
-// Inicialização: sempre mostra resultados primeiro
-btnVerResultados.classList.add('active');
-secFavoritos.style.display = 'none';
-renderFavoritos();
-
-// Exibe mensagem inicial convidativa ao invés de carregar produtos automaticamente
-mostrarMensagemInicial();
-
-// Dark mode toggle melhorado
-const btnToggleDark = document.getElementById('toggleDark');
-const btnLang = document.getElementById('btnLang');
-const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-
-// Inicializar modo dark
-if (localStorage.getItem('darkMode') === 'true' || (!localStorage.getItem('darkMode') && prefersDark)) {
-  document.body.classList.add('dark');
-}
-
-// Toggle do modo dark com animação suave
-btnToggleDark.onclick = () => {
-  const isDark = document.body.classList.toggle('dark');
-  localStorage.setItem('darkMode', isDark);
   
-  // Animação suave
-  document.body.style.transition = 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)';
-  
-  // Analytics: Track dark mode toggle
-  if (window.analyticsService) {
-    window.analyticsService.trackDarkModeToggle(isDark);
-  }
-};
-
-// Função utilitária para obter string traduzida
-function t(key) {
-  const lang = localStorage.getItem('lang') || 'pt';
-  return (window.I18N_STRINGS?.[lang]?.[key]) || key;
-}
-
-// Exemplo de uso: document.getElementById('btnVerFavoritos').textContent = t('favoritos');
-
-// Ao inicializar, pode-se definir idioma pelo navegador:
-if (!localStorage.getItem('lang')) {
-  const navLang = navigator.language.startsWith('en') ? 'en' : 'pt';
-  localStorage.setItem('lang', navLang);
-}
-
-// Botões de controle do header
-// const btnLang já foi declarado anteriormente
-
-// Inicializar texto do botão de idioma
-btnLang.textContent = localStorage.getItem('lang') === 'en' ? '🇧🇷' : '🇺🇸';
-
-function atualizarIdioma(lang) {
-  const previousLang = localStorage.getItem('lang');
-  localStorage.setItem('lang', lang);
-  
-  // Analytics: Track language change
-  if (window.analyticsService && previousLang !== lang) {
-    window.analyticsService.trackLanguageChange(lang, previousLang);
-  }
-  
-  btnVerResultados.textContent = t('resultados');
-  btnVerFavoritos.textContent = t('favoritos');
-  document.getElementById('resultadosTitle').textContent = t('resultados');
-  document.getElementById('favoritosTitle').textContent = t('favoritos');
-  document.getElementById('recomendacaoTitle').textContent = t('recomendacao');
-  document.getElementById('precoMin').placeholder = t('preco_min');
-  document.getElementById('precoMax').placeholder = t('preco_max');
-  document.getElementById('idadeInput').placeholder = t('idade');
-  document.getElementById('generoSelect').options[0].text = t('genero');
-  document.getElementById('generoSelect').options[1].text = t('masculino');
-  document.getElementById('generoSelect').options[2].text = t('feminino');
-  document.getElementById('generoSelect').options[3].text = t('unissex');
-  document.getElementById('searchForm').querySelector('button[type="submit"]').textContent = t('buscar');
-  
-  // Verificar se o elemento historicoBuscas existe antes de tentar acessá-lo
-  const historicoBuscas = document.getElementById('historicoBuscas');
-  if (historicoBuscas && historicoBuscas.querySelector('h3')) {
-    historicoBuscas.querySelector('h3').textContent = t('historico');
-  }
-    renderFavoritos();
-  // Não carrega produtos automaticamente - apenas atualiza a mensagem inicial
-  mostrarMensagemInicial();
-  btnLang.textContent = lang === 'en' ? '🇧🇷' : '🇺🇸';
-}
-
-btnLang.onclick = () => {
-  const lang = localStorage.getItem('lang') === 'en' ? 'pt' : 'en';
-  atualizarIdioma(lang);
-};
-
-// Analytics: Initialize user properties
-document.addEventListener('DOMContentLoaded', () => {
-  if (window.analyticsService) {
-    // Set user properties for analytics
-    const userProperties = {
-      language: localStorage.getItem('lang') || 'pt',
-      dark_mode_preference: localStorage.getItem('darkMode') === 'true',
-      device_type: /Mobi|Android/i.test(navigator.userAgent) ? 'mobile' : 'desktop',
-      browser: navigator.userAgent.includes('Chrome') ? 'Chrome' : 
-               navigator.userAgent.includes('Firefox') ? 'Firefox' : 
-               navigator.userAgent.includes('Safari') ? 'Safari' : 'Other',
-      first_visit: !localStorage.getItem('analytics_visited'),
-      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
-    };
+  try {
+    // Obter dados do formulário
+    const query = document.getElementById('query')?.value || 'presentes';
+    const idade = document.getElementById('idadeInput').value;
+    const genero = document.getElementById('generoSelect').value;
+    const cidade = document.getElementById('cidadeInput').value;
+    const precoMin = document.getElementById('precoMin').value;
+    const precoMax = document.getElementById('precoMax').value;
     
-    window.analyticsService.setUserProperties(userProperties);
+    // Determinar categoria baseada nos filtros
+    let categoria = 'presentes';
+    if (idade && parseInt(idade) < 12) categoria = 'presentes infantis';
+    else if (idade && parseInt(idade) > 60) categoria = 'presentes idosos';
     
-    // Mark as visited
-    if (!localStorage.getItem('analytics_visited')) {
-      localStorage.setItem('analytics_visited', 'true');
+    // Construir query params
+    const params = new URLSearchParams({
+      query,
+      ...(categoria && { categoria }),
+      ...(idade && { idade }),
+      ...(genero && { genero }),
+      ...(cidade && { cidade })
+    });
+    
+    // Analytics: Track AI search
+    if (window.analyticsService) {
+      window.analyticsService.trackEvent('ai_search', 'user_action', query, {
+        idade, genero, cidade, categoria
+      });
     }
     
-    // Track page load performance
-    window.addEventListener('load', () => {
-      const loadTime = performance.timing.loadEventEnd - performance.timing.navigationStart;
-      window.analyticsService.trackPerformance('page_load_time', loadTime, 'ms');
+    // Chamar API de busca integrada
+    const response = await fetch(`${API_URL}/new-apis/busca-integrada?${params}`);
+    if (!response.ok) throw new Error('Erro na busca integrada');
+    
+    const resultado = await response.json();
+    
+    // Processar e exibir resultados
+    await processarResultadosIA(resultado);
+    
+    // Se tem cidade, buscar também lojas próximas
+    if (cidade) {
+      await buscarLojasProximas(cidade);
+    }
+    
+    showMensagem(`✨ Busca IA concluída! Encontrados múltiplos resultados integrados.`);
+    
+  } catch (error) {
+    console.error('Erro na busca IA:', error);
+    showMensagem('Erro na busca inteligente. Tente novamente.', true);
+    
+    // Analytics: Track error
+    if (window.analyticsService) {
+      window.analyticsService.trackError('AI_Search_Error', error.message, 'executarBuscaIA');
+    }
+  } finally {
+    showLoader(false);
+  }
+}
+
+/**
+ * Processa e exibe os resultados da busca IA
+ */
+async function processarResultadosIA(resultado) {
+  // Mostrar seção de produtos se temos resultados
+  if (resultado.produtos && resultado.produtos.length > 0) {
+    document.getElementById('produtos').style.display = '';
+    renderGrid(resultado.produtos);
+    
+    // Atualizar paginação se disponível
+    if (resultado.paginacao) {
+      renderPaginacao(resultado.paginacao.atual, resultado.paginacao.total, {});
+    }
+  }
+  
+  // Mostrar recomendação IA se disponível
+  if (resultado.recomendacao) {
+    document.getElementById('recomendacao').style.display = '';
+    document.getElementById('sugestao').innerHTML = `
+      <strong>🤖 Recomendação IA:</strong><br>
+      ${resultado.recomendacao.texto || resultado.recomendacao}
+    `;
+    
+    // Se tem produtos recomendados, mostrá-los
+    if (resultado.recomendacao.produtos) {
+      renderSugestao(resultado.recomendacao.texto, resultado.recomendacao.produtos);
+    }
+  }
+  
+  // Se tem resultados web do Bing, mostrar informação adicional
+  if (resultado.webSearch && resultado.webSearch.length > 0) {
+    const infoExtra = document.createElement('div');
+    infoExtra.style.cssText = 'margin: 1rem 0; padding: 1rem; background: var(--card-bg); border-radius: 8px; border-left: 4px solid #10b981;';
+    infoExtra.innerHTML = `
+      <strong>🌐 Informações Adicionais da Web:</strong><br>
+      <small>Encontrados ${resultado.webSearch.length} resultados relevantes online</small>
+    `;
+    
+    const grid = document.getElementById('grid');
+    if (grid) {
+      grid.insertBefore(infoExtra, grid.firstChild);
+    }
+  }
+}
+
+// ===== LOCATION-BASED SERVICES =====
+
+/**
+ * Busca lojas próximas usando Google Maps API
+ */
+async function buscarLojasProximas(cidade, categoria = 'loja de presentes') {
+  try {
+    const params = new URLSearchParams({
+      cidade,
+      categoria,
+      radius: '10000' // 10km de raio
+    });
+    
+    const response = await fetch(`${API_URL}/new-apis/maps/lojas?${params}`);
+    if (!response.ok) throw new Error('Erro ao buscar lojas');
+    
+    const resultado = await response.json();
+    
+    if (resultado.sucesso && resultado.dados) {
+      currentLocais = resultado.dados.lojas || [];
+      currentMapaInfo = resultado.dados.info;
+      
+      renderLocais();
+      
+      // Analytics: Track location search
+      if (window.analyticsService) {
+        window.analyticsService.trackEvent('location_search', 'api_call', cidade, {
+          categoria,
+          resultados: currentLocais.length
+        });
+      }
+    }
+    
+  } catch (error) {
+    console.error('Erro ao buscar lojas próximas:', error);
+    showMensagem('Erro ao buscar lojas próximas.', true);
+  }
+}
+
+/**
+ * Busca shopping centers próximos
+ */
+async function buscarShoppings(cidade, estado) {
+  try {
+    const params = new URLSearchParams({
+      cidade,
+      ...(estado && { estado })
+    });
+    
+    const response = await fetch(`${API_URL}/new-apis/maps/shoppings?${params}`);
+    if (!response.ok) throw new Error('Erro ao buscar shoppings');
+    
+    const resultado = await response.json();
+    
+    if (resultado.sucesso && resultado.dados) {
+      currentLocais = resultado.dados.shoppings || [];
+      currentMapaInfo = resultado.dados.info;
+      
+      renderLocais();
+      
+      // Analytics: Track shopping search
+      if (window.analyticsService) {
+        window.analyticsService.trackEvent('shopping_search', 'api_call', cidade, {
+          estado,
+          resultados: currentLocais.length
+        });
+      }
+    }
+    
+  } catch (error) {
+    console.error('Erro ao buscar shoppings:', error);
+    showMensagem('Erro ao buscar shopping centers.', true);
+  }
+}
+
+/**
+ * Renderiza a lista de locais (lojas/shoppings)
+ */
+function renderLocais() {
+  const gridLocais = document.getElementById('gridLocais');
+  const mapaInfo = document.getElementById('mapaInfo');
+  
+  // Mostrar informações do mapa/busca
+  if (currentMapaInfo) {
+    mapaInfo.innerHTML = `
+      <strong>📍 ${currentMapaInfo.cidade || 'Localização'}</strong><br>
+      <small>Encontrados ${currentLocais.length} estabelecimentos próximos</small>
+      ${currentMapaInfo.coordenadas ? `<br><small>📊 Área de busca: ${currentMapaInfo.coordenadas}</small>` : ''}
+    `;
+  }
+  
+  // Limpar grid
+  gridLocais.innerHTML = '';
+  
+  if (!currentLocais.length) {
+    gridLocais.innerHTML = `
+      <div style="grid-column:1/-1;text-align:center;color:#888;padding:2rem;">
+        <p>🏪 Nenhuma loja encontrada na região</p>
+        <small>Tente uma cidade diferente ou verifique a conectividade</small>
+      </div>
+    `;
+    return;
+  }
+  
+  // Renderizar cada local
+  currentLocais.forEach((local, index) => {
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.style.position = 'relative';
+    
+    // Determinar tipo de estabelecimento
+    const tipoIcon = local.tipo === 'shopping' ? '🏬' : '🏪';
+    const rating = local.rating ? `⭐ ${local.rating}` : '';
+    const endereco = local.endereco || local.address || 'Endereço não disponível';
+    
+    card.innerHTML = `
+      <div style="padding: 1rem;">
+        <h3 style="margin: 0 0 0.5rem 0; display: flex; align-items: center; gap: 0.5rem;">
+          ${tipoIcon} ${local.nome || local.name || 'Estabelecimento'}
+        </h3>
+        <p style="margin: 0.25rem 0; color: #666; font-size: 0.9rem;">
+          📍 ${endereco}
+        </p>
+        ${rating ? `<p style="margin: 0.25rem 0; color: #f59e0b; font-size: 0.9rem;">${rating}</p>` : ''}
+        ${local.telefone ? `<p style="margin: 0.25rem 0; color: #666; font-size: 0.9rem;">📞 ${local.telefone}</p>` : ''}
+        ${local.horarios ? `<p style="margin: 0.25rem 0; color: #666; font-size: 0.85rem;">🕒 ${local.horarios}</p>` : ''}
+        <div style="margin-top: 1rem; display: flex; gap: 0.5rem; flex-wrap: wrap;">
+          ${local.website ? `<a href="${local.website}" target="_blank" rel="noopener noreferrer" style="flex: 1; min-width: 100px; text-align: center; padding: 0.5rem; background: var(--primary-color); color: white; text-decoration: none; border-radius: 4px; font-size: 0.9rem;">🌐 Site</a>` : ''}
+          ${local.maps_url ? `<a href="${local.maps_url}" target="_blank" rel="noopener noreferrer" style="flex: 1; min-width: 100px; text-align: center; padding: 0.5rem; background: #10b981; color: white; text-decoration: none; border-radius: 4px; font-size: 0.9rem;">🗺️ Mapa</a>` : ''}
+        </div>
+      </div>
+    `;
+    
+    // Analytics: Track location view
+    card.addEventListener('click', () => {
+      if (window.analyticsService) {
+        window.analyticsService.trackEvent('location_view', 'user_interaction', local.nome || local.name, {
+          tipo: local.tipo,
+          rating: local.rating,
+          position: index
+        });
+      }
+    });
+    
+    gridLocais.appendChild(card);
+  });
+}
+
+// ===== ENHANCED AI RECOMMENDATIONS =====
+
+/**
+ * Gera recomendações usando Llama AI
+ */
+async function gerarRecomendacaoIA(perfil) {
+  try {
+    const { idade, genero, interesses, orcamento } = perfil;
+    
+    // Construir mensagem contextual para o Llama
+    let message = `Preciso de sugestões de presentes`;
+    if (idade) message += ` para uma pessoa de ${idade} anos`;
+    if (genero && genero !== '') message += ` do gênero ${genero}`;
+    if (interesses) message += ` que gosta de ${interesses}`;
+    if (orcamento) message += ` com orçamento de até R$ ${orcamento}`;
+    
+    const response = await fetch(`${API_URL}/new-apis/llama/recomendacao`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        message,
+        webAccess: false
+      })
+    });
+    
+    if (!response.ok) throw new Error('Erro na recomendação IA');
+    
+    const resultado = await response.json();
+    
+    // Analytics: Track AI recommendation
+    if (window.analyticsService) {
+      window.analyticsService.trackEvent('ai_recommendation', 'llama_api', message, {
+        idade, genero, orcamento
+      });
+    }
+    
+    return resultado;
+    
+  } catch (error) {
+    console.error('Erro na recomendação IA:', error);
+    return { erro: 'Erro ao gerar recomendação IA', detalhes: error.message };
+  }
+}
+
+/**
+ * Busca produtos usando APIs aprimoradas (Bing + Google)
+ */
+async function buscarProdutosAprimorados(query, filtros = {}) {
+  try {
+    const params = new URLSearchParams({
+      query,
+      ...filtros
+    });
+    
+    // Tentar primeiro com Google Search
+    let response = await fetch(`${API_URL}/new-apis/google/buscar?${params}&api=both`);
+    let resultadoGoogle = null;
+    
+    if (response.ok) {
+      resultadoGoogle = await response.json();
+    }
+    
+    // Tentar também com Bing para produtos específicos
+    response = await fetch(`${API_URL}/new-apis/bing/produtos?produto=${encodeURIComponent(query)}`);
+    let resultadoBing = null;
+    
+    if (response.ok) {
+      resultadoBing = await response.json();
+    }
+    
+    // Combinar resultados
+    const produtosCombinados = [];
+    
+    if (resultadoGoogle?.sucesso && resultadoGoogle.dados) {
+      // Processar resultados do Google
+      const googleResults = resultadoGoogle.dados.api1?.items || resultadoGoogle.dados.api2?.items || [];
+      googleResults.forEach(item => {
+        produtosCombinados.push({
+          id: `google_${item.title?.hashCode() || Math.random()}`,
+          nome: item.title || item.displayLink,
+          url: item.link,
+          imagem: item.pagemap?.cse_image?.[0]?.src || '/images/placeholder.jpg',
+          preco: 'Ver no site',
+          marketplace: item.displayLink,
+          fonte: 'Google'
+        });
+      });
+    }
+    
+    if (resultadoBing?.sucesso && resultadoBing.dados) {
+      // Processar resultados do Bing
+      const bingResults = resultadoBing.dados.webPages?.value || [];
+      bingResults.forEach(item => {
+        produtosCombinados.push({
+          id: `bing_${item.name?.hashCode() || Math.random()}`,
+          nome: item.name,
+          url: item.url,
+          imagem: '/images/placeholder.jpg',
+          preco: 'Ver no site',
+          marketplace: new URL(item.url).hostname,
+          fonte: 'Bing'
+        });
+      });
+    }
+    
+    return {
+      produtos: produtosCombinados,
+      total: produtosCombinados.length,
+      fontes: {
+        google: resultadoGoogle?.sucesso || false,
+        bing: resultadoBing?.sucesso || false
+      }
+    };
+    
+  } catch (error) {
+    console.error('Erro na busca aprimorada:', error);
+    return { produtos: [], total: 0, erro: error.message };
+  }
+}
+
+// ===== TAB SWITCHING WITH NEW LOCATIONS TAB =====
+
+/**
+ * Configurar navegação entre abas incluindo nova aba de locais
+ */
+function configurarNavegacaoAbas() {
+  const btnVerResultados = document.getElementById('btnVerResultados');
+  const btnVerFavoritos = document.getElementById('btnVerFavoritos');
+  const btnVerLocais = document.getElementById('btnVerLocais');
+  
+  const secResultados = document.getElementById('produtos');
+  const secFavoritos = document.getElementById('favoritos');
+  const secLocais = document.getElementById('locais');
+  const secRecomendacao = document.getElementById('recomendacao');
+  
+  // Função auxiliar para esconder todas as seções
+  function esconderTodasSecoes() {
+    secResultados.style.display = 'none';
+    secFavoritos.style.display = 'none';
+    secLocais.style.display = 'none';
+  }
+  
+  // Função auxiliar para remover classe active de todos os botões
+  function removerActiveButtons() {
+    [btnVerResultados, btnVerFavoritos, btnVerLocais].forEach(btn => {
+      btn.classList.remove('active');
     });
   }
   
-  // Botão para ver mais recomendações
-  const btnMaisRecomendacoes = document.getElementById('btnMaisRecomendacoes');
-  if (btnMaisRecomendacoes) {
-    btnMaisRecomendacoes.onclick = () => {
-      // Recarregar recomendação com novos produtos randomizados
-      carregarRecomendacao(true);
-      
-      // Analytics: Track recommendation refresh
-      if (window.analyticsService) {
-        window.analyticsService.trackEvent('recommendation_refresh', 'user_action', 'clicked_more_recommendations');
+  // Event listeners para cada aba
+  btnVerResultados.onclick = () => {
+    esconderTodasSecoes();
+    removerActiveButtons();
+    
+    secResultados.style.display = '';
+    secRecomendacao.style.display = secRecomendacao.innerHTML ? '' : 'none';
+    btnVerResultados.classList.add('active');
+    
+    // Analytics: Track tab switch
+    if (window.analyticsService) {
+      window.analyticsService.trackEvent('tab_switch', 'navigation', 'resultados');
+    }
+  };
+  
+  btnVerFavoritos.onclick = () => {
+    esconderTodasSecoes();
+    removerActiveButtons();
+    
+    secFavoritos.style.display = '';
+    btnVerFavoritos.classList.add('active');
+    renderFavoritos();
+    
+    // Analytics: Track tab switch
+    if (window.analyticsService) {
+      window.analyticsService.trackEvent('tab_switch', 'navigation', 'favoritos');
+    }
+  };
+  
+  btnVerLocais.onclick = () => {
+    esconderTodasSecoes();
+    removerActiveButtons();
+    
+    secLocais.style.display = '';
+    btnVerLocais.classList.add('active');
+    
+    // Se não tem locais carregados, tentar buscar baseado na cidade
+    if (!currentLocais.length) {
+      const cidade = document.getElementById('cidadeInput').value;
+      if (cidade) {
+        buscarLojasProximas(cidade);
+      } else {
+        // Mostrar mensagem pedindo para informar cidade
+        document.getElementById('mapaInfo').innerHTML = `
+          <strong>📍 Busca de Lojas Próximas</strong><br>
+          <small>Digite uma cidade no campo de busca e clique em "🤖 IA" para encontrar lojas próximas</small>
+        `;
       }
-    };
+    }
+    
+    // Analytics: Track tab switch
+    if (window.analyticsService) {
+      window.analyticsService.trackEvent('tab_switch', 'navigation', 'locais');
+    }
+  };
+}
+
+// ===== UTILITY FUNCTIONS =====
+
+/**
+ * Função auxiliar para gerar hash simples de string
+ */
+String.prototype.hashCode = function() {
+  let hash = 0;
+  if (this.length == 0) return hash;
+  for (let i = 0; i < this.length; i++) {
+    const char = this.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash;
   }
+  return Math.abs(hash);
+};
+
+/**
+ * Detectar localização do usuário (opcional)
+ */
+async function detectarLocalizacao() {
+  if ("geolocation" in navigator) {
+    try {
+      const position = await new Promise((resolve, reject) => {
+        navigator.geolocation.getCurrentPosition(resolve, reject, {
+          timeout: 10000,
+          enableHighAccuracy: false
+        });
+      });
+      
+      const { latitude, longitude } = position.coords;
+      
+      // Buscar informações da localização atual
+      const response = await fetch(`${API_URL}/new-apis/maps/localizacao?latitude=${latitude}&longitude=${longitude}`);
+      if (response.ok) {
+        const resultado = await response.json();
+        if (resultado.sucesso && resultado.dados.cidade) {
+          document.getElementById('cidadeInput').value = resultado.dados.cidade;
+          showMensagem(`📍 Localização detectada: ${resultado.dados.cidade}`);
+          setTimeout(clearMensagem, 3000);
+        }
+      }
+      
+    } catch (error) {
+      console.log('Geolocalização não disponível ou negada pelo usuário');
+    }
+  }
+}
+
+// =============================================================================
+// EVENT LISTENERS E INICIALIZAÇÃO
+// =============================================================================
+
+// Configurar eventos quando a página carregar
+document.addEventListener('DOMContentLoaded', () => {
+  // Configurar botão de busca IA
+  const btnAIPowered = document.getElementById('btnAIPowered');
+  if (btnAIPowered) {
+    btnAIPowered.onclick = executarBuscaIA;
+  }
+  
+  // Configurar navegação entre abas
+  configurarNavegacaoAbas();
+  
+  // Detectar localização automaticamente (opcional)
+  // detectarLocalizacao(); // Descomentari se quiser detecção automática
+  
+  // Melhorar busca tradicional para usar APIs aprimoradas
+  const searchForm = document.getElementById('searchForm');
+  const originalSubmit = searchForm.onsubmit;
+  
+  searchForm.onsubmit = async (e) => {
+    e.preventDefault();
+    
+    // Obter parâmetros do formulário
+    const params = {
+      precoMin: document.getElementById('precoMin').value,
+      precoMax: document.getElementById('precoMax').value,
+      idade: document.getElementById('idadeInput').value,
+      genero: document.getElementById('generoSelect').value,
+      cidade: document.getElementById('cidadeInput').value,
+      page: 1
+    };
+    
+    // Mostrar seção de produtos
+    document.getElementById('produtos').style.display = '';
+    
+    // Executar busca tradicional primeiro
+    await carregarProdutos(params);
+    
+    // Se tem parâmetros de IA, tentar também recomendação IA
+    if (params.idade || params.genero) {
+      try {
+        const recomendacaoIA = await gerarRecomendacaoIA({
+          idade: params.idade,
+          genero: params.genero,
+          orcamento: params.precoMax
+        });
+        
+        if (recomendacaoIA.sucesso && recomendacaoIA.dados) {
+          document.getElementById('recomendacao').style.display = '';
+          document.getElementById('sugestao').innerHTML = `
+            <strong>🤖 Recomendação IA:</strong><br>
+            ${recomendacaoIA.dados.resposta || recomendacaoIA.dados}
+          `;
+        }
+      } catch (error) {
+        console.log('Recomendação IA opcional falhou:', error);
+      }
+    }
+  };
 });
+
+// Expor funções globalmente para uso em outros contextos
+window.executarBuscaIA = executarBuscaIA;
+window.buscarLojasProximas = buscarLojasProximas;
+window.buscarShoppings = buscarShoppings;
+window.gerarRecomendacaoIA = gerarRecomendacaoIA;
+
+// Funções para footer - Política de Privacidade e Termos de Uso
+window.mostrarPoliticaPrivacidade = function() {
+  const modal = document.createElement('div');
+  modal.style.cssText = `
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 10000;
+    padding: 1rem;
+  `;
+  
+  const content = document.createElement('div');
+  content.style.cssText = `
+    background: white;
+    border-radius: 16px;
+    padding: 2rem;
+    max-width: 600px;
+    max-height: 80vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+    position: relative;
+  `;
+  
+  content.innerHTML = `
+    <button onclick="this.closest('.modal').remove()" style="
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      background: #f1f5f9;
+      border: none;
+      border-radius: 50%;
+      width: 32px;
+      height: 32px;
+      cursor: pointer;
+      font-size: 18px;
+    ">×</button>
+    <h2 style="color: #4e54c8; margin-bottom: 1.5rem;">Política de Privacidade</h2>
+    <div style="color: #475569; line-height: 1.6;">
+      <h3>1. Coleta de Informações</h3>
+      <p>O Easy Gift Search coleta apenas informações necessárias para melhorar sua experiência de busca de presentes.</p>
+      
+      <h3>2. Uso das Informações</h3>
+      <p>Utilizamos suas informações para personalizar recomendações e melhorar nossos serviços.</p>
+      
+      <h3>3. Compartilhamento</h3>
+      <p>Não compartilhamos suas informações pessoais com terceiros sem seu consentimento.</p>
+      
+      <h3>4. Cookies</h3>
+      <p>Utilizamos cookies para melhorar a funcionalidade do site e personalizar sua experiência.</p>
+      
+      <h3>5. Segurança</h3>
+      <p>Implementamos medidas de segurança para proteger suas informações.</p>
+      
+      <h3>6. Contato</h3>
+      <p>Para dúvidas sobre privacidade, entre em contato: <strong>contato@easygift.com</strong></p>
+      
+      <p style="margin-top: 1.5rem; font-size: 0.9rem; color: #64748b;">
+        <strong>Última atualização:</strong> Janeiro 2025
+      </p>
+    </div>
+  `;
+  
+  modal.className = 'modal';
+  modal.appendChild(content);
+  document.body.appendChild(modal);
+  
+  // Fechar ao clicar fora do modal
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) {
+      modal.remove();
+    }
+  });
+};
+
+window.mostrarTermosUso = function() {
+  const modal = document.createElement('div');
+  modal.style.cssText = `
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 10000;
+    padding: 1rem;
+  `;
+  
+  const content = document.createElement('div');
+  content.style.cssText = `
+    background: white;
+    border-radius: 16px;
+    padding: 2rem;
+    max-width: 600px;
+    max-height: 80vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+    position: relative;
+  `;
+  
+  content.innerHTML = `
+    <button onclick="this.closest('.modal').remove()" style="
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      background: #f1f5f9;
+      border: none;
+      border-radius: 50%;
+      width: 32px;
+      height: 32px;
+      cursor: pointer;
+      font-size: 18px;
+    ">×</button>
+    <h2 style="color: #4e54c8; margin-bottom: 1.5rem;">Termos de Uso</h2>
+    <div style="color: #475569; line-height: 1.6;">
+      <h3>1. Aceitação dos Termos</h3>
+      <p>Ao usar o Easy Gift Search, você concorda com estes termos de uso.</p>
+      
+      <h3>2. Serviços Oferecidos</h3>
+      <p>Oferecemos um serviço de busca e recomendação de presentes usando inteligência artificial.</p>
+      
+      <h3>3. Uso Responsável</h3>
+      <p>Você concorda em usar o serviço de forma legal e responsável.</p>
+      
+      <h3>4. Limitação de Responsabilidade</h3>
+      <p>O Easy Gift Search não se responsabiliza por transações realizadas em sites externos.</p>
+      
+      <h3>5. Propriedade Intelectual</h3>
+      <p>Todo o conteúdo do site é protegido por direitos autorais.</p>
+      
+      <h3>6. Modificações</h3>
+      <p>Reservamos o direito de modificar estes termos a qualquer momento.</p>
+      
+      <h3>7. Contato</h3>
+      <p>Para questões legais, entre em contato: <strong>contato@easygift.com</strong></p>
+      
+      <p style="margin-top: 1.5rem; font-size: 0.9rem; color: #64748b;">
+        <strong>Última atualização:</strong> Janeiro 2025
+      </p>
+    </div>
+  `;
+  
+  modal.className = 'modal';
+  modal.appendChild(content);
+  document.body.appendChild(modal);
+  
+  // Fechar ao clicar fora do modal
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) {
+      modal.remove();
+    }
+  });
+};

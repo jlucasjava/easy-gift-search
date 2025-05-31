@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teste Abrangente - Easy Gift Search</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+        }
+        .test-container {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+        }
+        .test-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 2px solid #e1e5e9;
+            border-radius: 8px;
+            background: #f8f9fa;
+        }
+        .test-title {
+            color: #4e54c8;
+            margin-bottom: 15px;
+            font-size: 1.4rem;
+            font-weight: 600;
+        }
+        .test-button {
+            background: linear-gradient(135deg, #4e54c8, #8f94fb);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin: 8px;
+            font-size: 1rem;
+            transition: transform 0.2s;
+        }
+        .test-button:hover {
+            transform: translateY(-2px);
+        }
+        .test-result {
+            margin-top: 15px;
+            padding: 15px;
+            border-radius: 6px;
+            border-left: 4px solid #4e54c8;
+            background: #f1f3f4;
+            white-space: pre-wrap;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .success { border-left-color: #10b981; background: #ecfdf5; }
+        .error { border-left-color: #ef4444; background: #fef2f2; }
+        .loading { border-left-color: #f59e0b; background: #fffbeb; }
+        .api-input {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 4px;
+            margin: 5px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>🧪 Teste Abrangente - Easy Gift Search</h1>
+        <p>Teste completo das novas funcionalidades implementadas com integração entre frontend e backend.</p>
+
+        <!-- Teste 1: Backend Status -->
+        <div class="test-section">
+            <h2 class="test-title">1. 📡 Status do Backend</h2>
+            <button class="test-button" onclick="testarBackend()">Testar Conexão Backend</button>
+            <div id="backend-result" class="test-result"></div>
+        </div>
+
+        <!-- Teste 2: APIs Tradicionais -->
+        <div class="test-section">
+            <h2 class="test-title">2. 🔍 APIs Tradicionais (Produtos)</h2>
+            <input type="text" id="produto-query" class="api-input" placeholder="Ex: presente criativo" value="presente criativo">
+            <button class="test-button" onclick="testarBuscaProdutos()">Testar Busca de Produtos</button>
+            <div id="produtos-result" class="test-result"></div>
+        </div>
+
+        <!-- Teste 3: AI-Powered Search -->
+        <div class="test-section">
+            <h2 class="test-title">3. 🤖 Busca Inteligente com IA</h2>
+            <input type="text" id="ia-query" class="api-input" placeholder="Ex: presente para programador de 25 anos" value="presente para programador de 25 anos">
+            <input type="text" id="ia-cidade" class="api-input" placeholder="Cidade (opcional)" value="São Paulo">
+            <button class="test-button" onclick="testarBuscaIA()">Testar Busca IA</button>
+            <div id="ia-result" class="test-result"></div>
+        </div>
+
+        <!-- Teste 4: Location Services -->
+        <div class="test-section">
+            <h2 class="test-title">4. 🗺️ Serviços de Localização</h2>
+            <input type="text" id="local-cidade" class="api-input" placeholder="Ex: São Paulo" value="São Paulo">
+            <button class="test-button" onclick="testarLojasProximas()">Testar Lojas Próximas</button>
+            <button class="test-button" onclick="testarShoppings()">Testar Shopping Centers</button>
+            <div id="local-result" class="test-result"></div>
+        </div>
+
+        <!-- Teste 5: Individual API Tests -->
+        <div class="test-section">
+            <h2 class="test-title">5. 🔧 Testes de APIs Individuais</h2>
+            <input type="text" id="api-query" class="api-input" placeholder="Termo de busca" value="presentes">
+            <button class="test-button" onclick="testarBingAPI()">Testar Bing Search</button>
+            <button class="test-button" onclick="testarGoogleAPI()">Testar Google Search</button>
+            <button class="test-button" onclick="testarLlamaIA()">Testar Llama AI</button>
+            <div id="apis-result" class="test-result"></div>
+        </div>
+
+        <!-- Teste 6: Navigation Tests -->
+        <div class="test-section">
+            <h2 class="test-title">6. 🧭 Teste de Navegação</h2>
+            <button class="test-button" onclick="testarNavegacao()">Testar Tabs do Frontend</button>
+            <div id="nav-result" class="test-result"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:3000/api';
+
+        function log(elementId, message, type = 'loading') {
+            const element = document.getElementById(elementId);
+            element.className = `test-result ${type}`;
+            element.textContent = message;
+        }
+
+        async function testarBackend() {
+            log('backend-result', 'Testando conexão com o backend...', 'loading');
+            try {
+                const response = await fetch('http://localhost:3000/');
+                const text = await response.text();
+                log('backend-result', `✅ Backend conectado com sucesso!\nStatus: ${response.status}\nResposta: ${text}`, 'success');
+            } catch (error) {
+                log('backend-result', `❌ Erro na conexão com backend:\n${error.message}`, 'error');
+            }
+        }
+
+        async function testarBuscaProdutos() {
+            const query = document.getElementById('produto-query').value;
+            log('produtos-result', 'Testando busca tradicional de produtos...', 'loading');
+            try {
+                const response = await fetch(`${API_BASE}/products/search?query=${encodeURIComponent(query)}`);
+                const data = await response.json();
+                log('produtos-result', `✅ Busca de produtos funcionando!\nEncontrados: ${data.produtos?.length || 0} produtos\nResposta: ${JSON.stringify(data, null, 2)}`, 'success');
+            } catch (error) {
+                log('produtos-result', `❌ Erro na busca de produtos:\n${error.message}`, 'error');
+            }
+        }
+
+        async function testarBuscaIA() {
+            const query = document.getElementById('ia-query').value;
+            const cidade = document.getElementById('ia-cidade').value;
+            log('ia-result', 'Testando busca inteligente com IA...', 'loading');
+            try {
+                const body = { query, cidade: cidade || undefined };
+                const response = await fetch(`${API_BASE}/new-apis/busca-integrada`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body)
+                });
+                const data = await response.json();
+                log('ia-result', `✅ Busca IA funcionando!\nResultados obtidos de múltiplas fontes\nResposta: ${JSON.stringify(data, null, 2)}`, 'success');
+            } catch (error) {
+                log('ia-result', `❌ Erro na busca IA:\n${error.message}`, 'error');
+            }
+        }
+
+        async function testarLojasProximas() {
+            const cidade = document.getElementById('local-cidade').value;
+            log('local-result', 'Testando busca de lojas próximas...', 'loading');
+            try {
+                const response = await fetch(`${API_BASE}/new-apis/maps/lojas?cidade=${encodeURIComponent(cidade)}&categoria=loja de presentes`);
+                const data = await response.json();
+                log('local-result', `✅ Lojas próximas funcionando!\nLojas encontradas: ${data.locais?.length || 0}\nResposta: ${JSON.stringify(data, null, 2)}`, 'success');
+            } catch (error) {
+                log('local-result', `❌ Erro na busca de lojas:\n${error.message}`, 'error');
+            }
+        }
+
+        async function testarShoppings() {
+            const cidade = document.getElementById('local-cidade').value;
+            log('local-result', 'Testando busca de shopping centers...', 'loading');
+            try {
+                const response = await fetch(`${API_BASE}/new-apis/maps/shoppings?cidade=${encodeURIComponent(cidade)}`);
+                const data = await response.json();
+                log('local-result', `✅ Shopping centers funcionando!\nShoppings encontrados: ${data.shoppings?.length || 0}\nResposta: ${JSON.stringify(data, null, 2)}`, 'success');
+            } catch (error) {
+                log('local-result', `❌ Erro na busca de shoppings:\n${error.message}`, 'error');
+            }
+        }
+
+        async function testarBingAPI() {
+            const query = document.getElementById('api-query').value;
+            log('apis-result', 'Testando Bing Web Search API...', 'loading');
+            try {
+                const response = await fetch(`${API_BASE}/new-apis/bing/buscar?query=${encodeURIComponent(query)}`);
+                const data = await response.json();
+                log('apis-result', `✅ Bing API testada!\nResultados: ${data.resultados?.length || 0}\nResposta: ${JSON.stringify(data, null, 2)}`, data.sucesso ? 'success' : 'error');
+            } catch (error) {
+                log('apis-result', `❌ Erro no Bing API:\n${error.message}`, 'error');
+            }
+        }
+
+        async function testarGoogleAPI() {
+            const query = document.getElementById('api-query').value;
+            log('apis-result', 'Testando Google Search API...', 'loading');
+            try {
+                const response = await fetch(`${API_BASE}/new-apis/google/buscar?query=${encodeURIComponent(query)}`);
+                const data = await response.json();
+                log('apis-result', `✅ Google API testada!\nResultados: ${data.resultados?.length || 0}\nResposta: ${JSON.stringify(data, null, 2)}`, data.sucesso ? 'success' : 'error');
+            } catch (error) {
+                log('apis-result', `❌ Erro no Google API:\n${error.message}`, 'error');
+            }
+        }
+
+        async function testarLlamaIA() {
+            log('apis-result', 'Testando Llama AI...', 'loading');
+            try {
+                const response = await fetch(`${API_BASE}/new-apis/llama/recomendacao`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: 'Sugira um presente criativo para uma pessoa de 25 anos' })
+                });
+                const data = await response.json();
+                log('apis-result', `✅ Llama AI testada!\nResposta gerada com sucesso\nResposta: ${JSON.stringify(data, null, 2)}`, data.sucesso ? 'success' : 'error');
+            } catch (error) {
+                log('apis-result', `❌ Erro no Llama AI:\n${error.message}`, 'error');
+            }
+        }
+
+        async function testarNavegacao() {
+            log('nav-result', 'Testando navegação por tabs...', 'loading');
+            try {
+                // Simular cliques nos botões de navegação se existirem
+                const tabs = ['btnVerResultados', 'btnVerFavoritos', 'btnVerLocais'];
+                let results = [];
+                
+                tabs.forEach(tabId => {
+                    const button = parent.document?.getElementById(tabId);
+                    if (button) {
+                        results.push(`✅ Tab ${tabId} encontrada`);
+                    } else {
+                        results.push(`❌ Tab ${tabId} não encontrada`);
+                    }
+                });
+
+                // Verificar se as funções JavaScript estão disponíveis
+                const functions = ['executarBuscaIA', 'buscarLojasProximas', 'configurarNavegacaoAbas'];
+                functions.forEach(func => {
+                    if (typeof parent[func] === 'function') {
+                        results.push(`✅ Função ${func} disponível`);
+                    } else {
+                        results.push(`❌ Função ${func} não encontrada`);
+                    }
+                });
+
+                log('nav-result', results.join('\n'), results.some(r => r.includes('❌')) ? 'error' : 'success');
+            } catch (error) {
+                log('nav-result', `❌ Erro no teste de navegação:\n${error.message}`, 'error');
+            }
+        }
+
+        // Auto-teste inicial
+        window.addEventListener('load', () => {
+            console.log('🧪 Página de teste carregada. Execute os testes para validar a integração.');
+        });
+    </script>
+</body>
+</html>

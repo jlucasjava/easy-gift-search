@@ -145,6 +145,44 @@ button[type="submit"]:hover {
 button[type="submit"]:active {
   transform: translateY(0);
 }
+
+/* AI-powered search button */
+.ai-btn {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  font-size: 0.9rem;
+  min-height: 52px;
+  position: relative;
+  overflow: hidden;
+}
+
+.ai-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(16, 185, 129, 0.3);
+}
+
+.ai-btn:active {
+  transform: translateY(0);
+}
+
+.ai-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+  transition: left 0.5s;
+}
+
+.ai-btn:hover::before {
+  left: 100%;
+}
 /* Grid responsivo mobile-first */
 .grid {
   display: grid;
@@ -1036,23 +1074,170 @@ body.dark .mensagem-inicial p {
 
 /* --- MELHORIAS MOBILE E VISUAIS 2025 --- */
 
-/* Sticky footer para mobile */
-@media (max-width: 600px) {
+/* Footer moderno e informativo */
+footer {
+  background: linear-gradient(135deg, #f8fafc 0%, #e0e7ff 100%);
+  border-top: 1px solid rgba(79, 70, 229, 0.1);
+  padding: 2rem 1rem 1rem 1rem;
+  margin-top: 3rem;
+  text-align: center;
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.05);
+}
+
+.footer-content {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.5rem;
+  max-width: 1200px;
+  margin: 0 auto;
+  align-items: center;
+}
+
+.footer-brand h3 {
+  color: #4e54c8;
+  font-size: 1.25rem;
+  margin: 0 0 0.5rem 0;
+  font-weight: 700;
+}
+
+.footer-brand p {
+  color: #64748b;
+  font-size: 0.9rem;
+  margin: 0;
+  font-weight: 500;
+}
+
+.footer-contact p {
+  margin: 0;
+  color: #475569;
+  font-size: 0.95rem;
+}
+
+.footer-contact a {
+  color: #4e54c8;
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.3s ease;
+}
+
+.footer-contact a:hover {
+  color: #3730a3;
+}
+
+.footer-legal p {
+  margin: 0 0 0.5rem 0;
+  color: #64748b;
+  font-size: 0.9rem;
+}
+
+.footer-links {
+  margin-top: 0.5rem;
+}
+
+.footer-link-btn {
+  background: none;
+  border: none;
+  color: #4e54c8;
+  text-decoration: none;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: color 0.3s ease;
+  padding: 0;
+  font-family: inherit;
+}
+
+.footer-link-btn:hover {
+  color: #3730a3;
+  text-decoration: underline;
+}
+
+.footer-separator {
+  color: #64748b;
+  margin: 0 0.5rem;
+}
+
+.footer-hint {
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(79, 70, 229, 0.1);
+  font-size: 0.9rem;
+  color: #64748b;
+  font-style: italic;
+}
+
+/* Dark mode para footer */
+body.dark footer {
+  background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%);
+  border-top-color: rgba(139, 92, 246, 0.2);
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.3);
+}
+
+body.dark .footer-brand h3 {
+  color: #a78bfa;
+}
+
+body.dark .footer-brand p,
+body.dark .footer-legal p,
+body.dark .footer-hint {
+  color: #cbd5e1;
+}
+
+body.dark .footer-contact p {
+  color: #e2e8f0;
+}
+
+body.dark .footer-contact a,
+body.dark .footer-link-btn {
+  color: #a78bfa;
+}
+
+body.dark .footer-contact a:hover,
+body.dark .footer-link-btn:hover {
+  color: #c4b5fd;
+}
+
+/* Footer responsivo para mobile */
+@media (max-width: 768px) {
   footer {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    width: 100vw;
-    background: linear-gradient(90deg, #4e54c8 0%, #ff6b35 100%);
-    color: #fff;
+    padding: 1.5rem 1rem;
+    margin-top: 2rem;
+  }
+  
+  .footer-content {
+    grid-template-columns: 1fr;
+    gap: 1rem;
     text-align: center;
-    padding: 0.7rem 0.5rem 0.9rem 0.5rem;
+  }
+  
+  .footer-brand h3 {
     font-size: 1.1rem;
-    z-index: 1000;
-    box-shadow: 0 -2px 12px rgba(79,70,229,0.08);
-    border-top-left-radius: 18px;
-    border-top-right-radius: 18px;
-    letter-spacing: 0.01em;
+  }
+  
+  .footer-hint {
+    margin-top: 1rem;
+    padding-top: 0.75rem;
+  }
+}
+
+/* Sticky footer para mobile pequeno */
+@media (max-width: 480px) {
+  footer {
+    position: relative;
+    margin-top: 2rem;
+    padding: 1rem 0.5rem;
+  }
+  
+  .footer-content {
+    gap: 0.75rem;
+  }
+  
+  .footer-brand h3 {
+    font-size: 1rem;
+  }
+  
+  .footer-hint {
+    font-size: 0.85rem;
   }
 }
 

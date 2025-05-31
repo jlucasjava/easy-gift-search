@@ -1,4 +1,3 @@
-
 const express = require('express');
 const router = express.Router();
 const newApisController = require('../controllers/newApisController');
@@ -8,6 +7,8 @@ const newApisController = require('../controllers/newApisController');
  * - Llama AI (Open AI 21)
  * - Google Search APIs (2 versões)
  * - AliExpress DataHub API
+ * - Bing Web Search API
+ * - Google Maps API
  */
 
 // ===== ROTAS LLAMA AI =====
@@ -35,6 +36,66 @@ router.post('/llama/sugestoes', newApisController.sugerirPresentes);
  */
 router.get('/google/buscar', newApisController.buscarGoogle);
 
+// ===== ROTAS BING WEB SEARCH =====
+
+/**
+ * GET /api/new-apis/bing/buscar
+ * Busca na web usando Bing Web Search API
+ * Query: ?query=termo&mkt=pt-br&safeSearch=Moderate&freshness=Week&count=10&offset=0
+ */
+router.get('/bing/buscar', newApisController.buscarWeb);
+
+/**
+ * GET /api/new-apis/bing/produtos
+ * Busca produtos específicos usando Bing Web Search
+ * Query: ?produto=nome&categoria=categoria&preco=faixa&marketplace=site
+ */
+router.get('/bing/produtos', newApisController.buscarProdutosWeb);
+
+/**
+ * GET /api/new-apis/bing/recomendacoes
+ * Busca recomendações de presentes usando Bing Web Search
+ * Query: ?idade=25&genero=masculino&interesses=esportes&orcamento=100-500
+ */
+router.get('/bing/recomendacoes', newApisController.buscarRecomendacoesWeb);
+
+/**
+ * GET /api/new-apis/bing/tendencias
+ * Busca tendências atuais de presentes
+ * Query: ?categoria=presentes
+ */
+router.get('/bing/tendencias', newApisController.buscarTendencias);
+
+// ===== ROTAS GOOGLE MAPS =====
+
+/**
+ * GET /api/new-apis/maps/localizacao
+ * Busca informações de localização usando Google Maps API
+ * Query: ?text=local&place=referencia&city=cidade&country=pais&latitude=lat&longitude=lng
+ */
+router.get('/maps/localizacao', newApisController.buscarLocalizacao);
+
+/**
+ * GET /api/new-apis/maps/lojas
+ * Busca lojas próximas usando Google Maps API
+ * Query: ?categoria=tipo&latitude=lat&longitude=lng&radius=metros&cidade=cidade
+ */
+router.get('/maps/lojas', newApisController.buscarLojasProximas);
+
+/**
+ * GET /api/new-apis/maps/shoppings
+ * Busca shopping centers usando Google Maps API
+ * Query: ?cidade=cidade&estado=estado
+ */
+router.get('/maps/shoppings', newApisController.buscarShoppings);
+
+/**
+ * GET /api/new-apis/maps/entrega
+ * Busca informações de entrega usando Google Maps API
+ * Query: ?cep=cep&endereco=endereco&cidade=cidade
+ */
+router.get('/maps/entrega', newApisController.buscarInfoEntrega);
+
 // ===== ROTAS ALIEXPRESS =====
 
 /**
@@ -49,15 +110,9 @@ router.get('/aliexpress/detalhes/:itemId', newApisController.detalheAliExpress);
 /**
  * GET /api/new-apis/busca-integrada
  * Busca combinando múltiplas APIs
- * Query: ?query=termo&categoria=cat&idade=25&genero=m&orcamento=100
+ * Query: ?query=termo&categoria=categoria&idade=idade&genero=genero&cidade=cidade
  */
 router.get('/busca-integrada', newApisController.buscaIntegrada);
-
-/**
- * GET /api/new-apis/teste-todas
- * Testa todas as novas APIs
- */
-router.get('/teste-todas', newApisController.testarTodasApis);
 
 // ===== ROTAS DE DEMONSTRAÇÃO =====
 
@@ -66,12 +121,16 @@ router.get('/teste-todas', newApisController.testarTodasApis);
  * Demonstração da API Llama
  */
 router.get('/demo/llama', async (req, res) => {
-  const resultado = await newApisController.gerarRecomendacao({
-    body: {
-      message: "Preciso de sugestões de presentes para uma pessoa de 30 anos que gosta de tecnologia",
-      webAccess: false
-    }
-  }, { json: (data) => res.json(data) });
+  try {
+    await newApisController.gerarRecomendacao({
+      body: {
+        message: "Preciso de sugestões de presentes para uma pessoa de 30 anos que gosta de tecnologia",
+        webAccess: false
+      }
+    }, res);
+  } catch (error) {
+    res.status(500).json({ erro: error.message });
+  }
 });
 
 /**
@@ -79,9 +138,13 @@ router.get('/demo/llama', async (req, res) => {
  * Demonstração das APIs Google Search
  */
 router.get('/demo/google', async (req, res) => {
-  const resultado = await newApisController.buscarGoogle({
-    query: { query: 'presentes eletrônicos', api: 'both' }
-  }, { json: (data) => res.json(data) });
+  try {
+    await newApisController.buscarGoogle({
+      query: { query: 'presentes eletrônicos', api: 'both' }
+    }, res);
+  } catch (error) {
+    res.status(500).json({ erro: error.message });
+  }
 });
 
 /**
@@ -89,9 +152,54 @@ router.get('/demo/google', async (req, res) => {
  * Demonstração da API AliExpress
  */
 router.get('/demo/aliexpress', async (req, res) => {
-  const resultado = await newApisController.detalheAliExpress({
-    params: { itemId: '1005005244562338' }
-  }, { json: (data) => res.json(data) });
+  try {
+    await newApisController.detalheAliExpress({
+      params: { itemId: '1005005244562338' }
+    }, res);
+  } catch (error) {
+    res.status(500).json({ erro: error.message });
+  }
+});
+
+/**
+ * GET /api/new-apis/demo/bing
+ * Demonstração da API Bing Web Search
+ */
+router.get('/demo/bing', async (req, res) => {
+  try {
+    await newApisController.buscarWeb({
+      query: { query: 'presentes tecnologia 2025', mkt: 'pt-br', count: '5' }
+    }, res);
+  } catch (error) {
+    res.status(500).json({ erro: error.message });
+  }
+/**
+ * GET /api/new-apis/demo/bing
+ * Demonstração da API Bing Web Search
+ */
+router.get('/demo/bing', async (req, res) => {
+  try {
+    await newApisController.buscarWeb({
+      query: { query: 'presentes tecnologia 2025', mkt: 'pt-br', count: '5' }
+    }, res);
+  } catch (error) {
+    res.status(500).json({ erro: error.message });
+  }
+});
+
+/**
+ * GET /api/new-apis/demo/maps
+ * Demonstração da API Google Maps
+ */
+router.get('/demo/maps', async (req, res) => {
+  try {
+    await newApisController.buscarShoppings({
+      query: { cidade: 'São Paulo', estado: 'SP' }
+    }, res);
+  } catch (error) {
+    res.status(500).json({ erro: error.message });
+  }
+});
 });
 
 /**
@@ -100,8 +208,8 @@ router.get('/demo/aliexpress', async (req, res) => {
  */
 router.get('/info', (req, res) => {
   res.json({
-    titulo: "🚀 Easy Gift Search - Novas APIs Integradas",
-    versao: "1.0.0",
+    titulo: "🚀 Easy Gift Search - APIs Integradas Expandidas",
+    versao: "2.0.0",
     apis_disponiveis: {
       llama_ai: {
         nome: "Llama AI (Open AI 21)",
@@ -142,6 +250,37 @@ router.get('/info', (req, res) => {
         rotas: [
           "GET /api/new-apis/aliexpress/detalhes/:itemId"
         ]
+      },
+      bing_web_search: {
+        nome: "Bing Web Search API",
+        endpoint: "https://bing-web-search.p.rapidapi.com/search",
+        funcionalidades: [
+          "Busca na web",
+          "Pesquisa de produtos",
+          "Recomendações de presentes",
+          "Tendências de presentes"
+        ],
+        rotas: [
+          "GET /api/new-apis/bing/buscar",
+          "GET /api/new-apis/bing/produtos",
+          "GET /api/new-apis/bing/recomendacoes",
+          "GET /api/new-apis/bing/tendencias"
+        ]
+      },
+      google_maps: {
+        nome: "Google Maps API",
+        endpoint: "https://google-maps30.p.rapidapi.com/geocode",
+        funcionalidades: [
+          "Busca de localização",
+          "Lojas e shoppings próximos",
+          "Informações de entrega"
+        ],
+        rotas: [
+          "GET /api/new-apis/maps/localizacao",
+          "GET /api/new-apis/maps/lojas",
+          "GET /api/new-apis/maps/shoppings",
+          "GET /api/new-apis/maps/entrega"
+        ]
       }
     },
     rotas_especiais: {
@@ -150,14 +289,18 @@ router.get('/info', (req, res) => {
       demos: [
         "GET /api/new-apis/demo/llama",
         "GET /api/new-apis/demo/google",
-        "GET /api/new-apis/demo/aliexpress"
+        "GET /api/new-apis/demo/aliexpress",
+        "GET /api/new-apis/demo/bing",
+        "GET /api/new-apis/demo/maps"
       ]
     },
     configuracao: {
       chave_api: process.env.RAPIDAPI_KEY_NEW ? "✅ Configurada" : "❌ Não configurada",
       llama_ativo: process.env.USE_LLAMA_API === 'true' ? "✅ Ativo" : "❌ Inativo",
       google_ativo: process.env.USE_GOOGLE_SEARCH_API === 'true' ? "✅ Ativo" : "❌ Inativo",
-      aliexpress_ativo: process.env.USE_ALIEXPRESS_DATAHUB_API === 'true' ? "✅ Ativo" : "❌ Inativo"
+      aliexpress_ativo: process.env.USE_ALIEXPRESS_DATAHUB_API === 'true' ? "✅ Ativo" : "❌ Inativo",
+      bing_ativo: process.env.USE_BING_WEB_SEARCH_API === 'true' ? "✅ Ativo" : "❌ Inativo",
+      maps_ativo: process.env.USE_GOOGLE_MAPS_API === 'true' ? "✅ Ativo" : "❌ Inativo"
     },
     timestamp: new Date().toISOString()
   });

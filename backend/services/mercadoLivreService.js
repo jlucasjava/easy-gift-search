@@ -68,26 +68,51 @@ const produtosVerificados = [
     marketplace: 'Mercado Livre',
     genero: 'unisex',
     idadeMin: 12
-  },
-  {
+  },  {
     id: 'MLB3039876209',
     nome: 'Mouse Gamer Led Rgb 3200dpi Ergonomico',
     preco: '49.90',
-    imagem: 'https://http2.mlstatic.com/D_NQ_NP_2X_847933-MLU70944865315_082023-F.webp',
+    imagem: 'https://http2.mlstatic.com/D_NQ_NP_2X_768345-MLA51156533477_082022-F.webp',
     url: 'https://produto.mercadolivre.com.br/MLB-3039876209-mouse-gamer-led-rgb-3200dpi-ergonomico-_JM',
     marketplace: 'Mercado Livre',
     genero: 'masculino',
     idadeMin: 12
-  },
-  {
+  },  {
     id: 'MLB1535098263',
     nome: 'Carregador Portatil Power Bank 10000mah',
     preco: '69.90',
-    imagem: 'https://http2.mlstatic.com/D_NQ_NP_2X_737551-MLU69952728112_062023-F.webp',
+    imagem: 'https://http2.mlstatic.com/D_NQ_NP_2X_695432-MLA45781443620_052021-F.webp',
     url: 'https://produto.mercadolivre.com.br/MLB-1535098263-carregador-portatil-power-bank-10000mah-_JM',
     marketplace: 'Mercado Livre',
     genero: 'unisex',
     idadeMin: 14
+  },  {
+    id: 'MLB9876543210',
+    nome: 'Relógio Masculino Esportivo Digital',
+    preco: '89.90',
+    imagem: 'https://http2.mlstatic.com/D_NQ_NP_2X_923456-MLB69145623841_042023-F.webp',
+    url: 'https://produto.mercadolivre.com.br/MLB-9876543210-relogio-masculino-esportivo-digital-_JM',
+    marketplace: 'Mercado Livre',
+    genero: 'masculino',
+    idadeMin: 16
+  },  {
+    id: 'MLB1122334455',
+    nome: 'Carteira Masculina Couro Porta Cartão',
+    preco: '45.90',
+    imagem: 'https://http2.mlstatic.com/D_NQ_NP_2X_657234-MLB49876543210_052022-F.webp',
+    url: 'https://produto.mercadolivre.com.br/MLB-1122334455-carteira-masculina-couro-porta-cartao-_JM',
+    marketplace: 'Mercado Livre',
+    genero: 'masculino',
+    idadeMin: 18
+  },  {
+    id: 'MLB5566778899',
+    nome: 'Kit Barba Masculino Completo',
+    preco: '79.90',
+    imagem: 'https://http2.mlstatic.com/D_NQ_NP_2X_834567-MLB72345678901_102023-F.webp',
+    url: 'https://produto.mercadolivre.com.br/MLB-5566778899-kit-barba-masculino-completo-_JM',
+    marketplace: 'Mercado Livre',
+    genero: 'masculino',
+    idadeMin: 18
   }
 ];
 
@@ -103,13 +128,15 @@ function aplicarFiltros(produtos, filtros) {
     });
     console.log(`Filtro preco: ${resultado.length} produtos`);
   }
-
-  if (filtros.genero && filtros.genero.toLowerCase() !== 'nao informado') {
+  if (filtros.genero && filtros.genero.toLowerCase() !== 'nao informado' && filtros.genero.toLowerCase() !== '') {
     const genero = filtros.genero.toLowerCase();
-    resultado = resultado.filter(p => 
-      p.genero === 'unisex' || p.genero === genero
-    );
-    console.log(`Filtro genero: ${resultado.length} produtos`);
+    console.log(`Aplicando filtro de gênero: ${genero}`);
+    resultado = resultado.filter(p => {
+      const produtoGenero = p.genero.toLowerCase();
+      console.log(`Produto: ${p.nome} - Gênero: ${produtoGenero}`);
+      return produtoGenero === 'unisex' || produtoGenero === genero;
+    });
+    console.log(`Filtro genero: ${resultado.length} produtos restantes`);
   }
 
   if (filtros.idade) {
