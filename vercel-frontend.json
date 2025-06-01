@@ -1,8 +1,6 @@
 {
   "version": 2,
-  "public": true,
-  "trailingSlash": false,
-  "cleanUrls": true,
+  "name": "easy-gift-search",
   "builds": [
     {
       "src": "frontend/**",
@@ -14,5 +12,7 @@
       "src": "/(.*)",
       "dest": "/frontend/$1"
     }
-  ]
+  ],
+  "cleanUrls": true,
+  "trailingSlash": false
 }
