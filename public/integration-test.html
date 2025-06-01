@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Integration Test - Easy Gift Search</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .product { border: 1px solid #ddd; margin: 10px; padding: 15px; display: inline-block; width: 300px; }
+        .product img { max-width: 100%; height: auto; }
+        .product h3 { margin: 10px 0; }
+        .product a { display: inline-block; background: #4e54c8; color: white; padding: 8px 16px; text-decoration: none; border-radius: 4px; margin-top: 10px; }
+        .product a:hover { background: #3949ab; }
+        #status { background: #f5f5f5; padding: 10px; margin-bottom: 20px; border-radius: 4px; }
+        .success { color: green; }
+        .error { color: red; }
+    </style>
+</head>
+<body>
+    <h1>Easy Gift Search - Integration Test</h1>
+    
+    <div id="status">
+        <h3>Testing Backend Connection...</h3>
+        <div id="statusContent">Loading...</div>
+    </div>
+
+    <div>
+        <h3>Test Search</h3>
+        <button onclick="testSearch('smartphone')">Test: Smartphone</button>
+        <button onclick="testSearch('fone')">Test: Fone de Ouvido</button>
+        <button onclick="testRecommendation()">Test: Recommendation</button>
+        <button onclick="testFilters()">Test: With Filters</button>
+    </div>
+
+    <div id="results"></div>
+
+    <script>
+        const API_URL = 'http://localhost:3000/api';
+        
+        // Test backend connection
+        async function testConnection() {
+            try {
+                const response = await fetch(`${API_URL}/test`);
+                const data = await response.json();
+                document.getElementById('statusContent').innerHTML = 
+                    `<span class="success">✅ Backend Connected: ${data.status}</span>`;
+            } catch (error) {
+                document.getElementById('statusContent').innerHTML = 
+                    `<span class="error">❌ Backend Connection Failed: ${error.message}</span>`;
+            }
+        }
+
+        async function testSearch(query) {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = '<h3>Loading products...</h3>';
+            
+            try {
+                const response = await fetch(`${API_URL}/products?query=${query}`);
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                
+                const data = await response.json();
+                displayProducts(data.produtos, `Search Results for "${query}"`);
+            } catch (error) {
+                resultsDiv.innerHTML = `<h3 class="error">Error: ${error.message}</h3>`;
+            }
+        }
+
+        async function testRecommendation() {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = '<h3>Loading recommendations...</h3>';
+            
+            try {
+                const response = await fetch(`${API_URL}/recommend`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ idade: 25, genero: 'masculino' })
+                });
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                
+                const data = await response.json();
+                resultsDiv.innerHTML = `<h3>Recommendation: ${data.sugestao}</h3>`;
+                displayProducts(data.produtosRelacionados, 'Recommended Products');
+            } catch (error) {
+                resultsDiv.innerHTML = `<h3 class="error">Error: ${error.message}</h3>`;
+            }
+        }
+
+        async function testFilters() {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = '<h3>Loading filtered results...</h3>';
+            
+            try {
+                const response = await fetch(`${API_URL}/products?precoMin=100&precoMax=1000&genero=masculino`);
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                
+                const data = await response.json();
+                displayProducts(data.produtos, 'Filtered Results (R$100-R$1000, Masculino)');
+            } catch (error) {
+                resultsDiv.innerHTML = `<h3 class="error">Error: ${error.message}</h3>`;
+            }
+        }
+
+        function displayProducts(produtos, title) {
+            const resultsDiv = document.getElementById('results');
+            
+            if (!produtos || produtos.length === 0) {
+                resultsDiv.innerHTML = `<h3>${title}</h3><p>No products found.</p>`;
+                return;
+            }
+
+            let html = `<h3>${title} (${produtos.length} products)</h3>`;
+            
+            produtos.forEach(produto => {
+                html += `
+                    <div class="product">
+                        <img src="${produto.imagem}" alt="${produto.nome}" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgZmlsbD0iI2RkZCIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LXNpemU9IjE4IiBmaWxsPSIjOTk5IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkeT0iLjNlbSI+Tm8gSW1hZ2U8L3RleHQ+PC9zdmc+'">
+                        <h3>${produto.nome}</h3>
+                        <p><strong>R$ ${produto.preco}</strong></p>
+                        <p><small>ID: ${produto.id}</small></p>
+                        <a href="${produto.url}" target="_blank" onclick="console.log('Clicked product:', '${produto.id}', '${produto.nome}')">
+                            Ver no Mercado Livre
+                        </a>
+                    </div>
+                `;
+            });
+            
+            resultsDiv.innerHTML = html;
+        }
+
+        // Test connection on page load
+        testConnection();
+    </script>
+</body>
+</html>

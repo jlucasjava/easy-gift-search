@@ -3,6 +3,7 @@ backend/
 docs/
 *.md
 !frontend/README.md
+!public/README.md
 .git/
 node_modules/
 frontend/package*.json*

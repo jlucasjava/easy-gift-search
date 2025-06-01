@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Easy Gift Search</title>
+  <meta name="description" content="Easy Gift Search - Busque e encontre presentes perfeitos com inteligência artificial e integração com marketplaces. Compare preços e descubra sugestões personalizadas!">
+  <meta name="keywords" content="presentes, recomendação, marketplace, AI, inteligência artificial, busca, produtos, comprar, sugestões, fácil, gift, search">  <meta name="author" content="Easy Gift Search">
+  <meta name="build-timestamp" content="2025-05-31T11:45:00-03:00">
+  <meta name="version" content="2.1.0">
+  <meta name="deploy-id" content="production-branch-2025-05-31">
+  <!-- Open Graph / Facebook -->
+  <meta property="og:title" content="Easy Gift Search">
+  <meta property="og:description" content="Busque e encontre presentes perfeitos com inteligência artificial e integração com marketplaces." />
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://easy-gift-search.vercel.app/">
+  <meta property="og:image" content="/assets/og-image.png">
+  <!-- Twitter -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Easy Gift Search">  <meta name="twitter:description" content="Busque e encontre presentes perfeitos com inteligência artificial e integração com marketplaces." />
+  <meta name="twitter:image" content="/assets/og-image.png">
+  <link rel="stylesheet" href="css/style.min.css" aria-label="Estilos principais minificados">
+  <!-- Fallback para desenvolvimento -->
+  <link rel="stylesheet" href="css/style.css" media="print" onload="this.media='all'" aria-label="CSS não minificado para fallback em desenvolvimento">
+    <!-- Google Analytics 4 (GA4) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-0M6ZBDXDXJ"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    
+    // Configuração do GA4 com parâmetros personalizados
+    gtag('config', 'G-0M6ZBDXDXJ', {
+      page_title: 'Easy Gift Search',
+      page_location: window.location.href,
+      send_page_view: true,
+      allow_enhanced_conversions: true,
+      cookie_flags: 'SameSite=None;Secure'
+    });
+  </script>
+</head>
+<body>  <header>
+    <div class="header-controls">      <button id="toggleDark" class="control-btn" aria-label="Alternar modo escuro" title="Alternar modo escuro">
+        <span class="dark-icon" role="img" aria-label="Lua">🌙</span>
+        <span class="light-icon" role="img" aria-label="Sol">☀️</span>
+      </button>
+      <button id="btnLang" class="control-btn" aria-label="Trocar idioma / Switch language" title="Trocar idioma">🇺🇸</button>
+    </div>
+    <h1 id="mainTitle" tabindex="0">Easy Gift Search</h1>
+    <form id="searchForm" aria-label="Formulário de busca de presentes" role="search">
+      <label for="precoMin" class="sr-only">Preço mínimo</label>
+      <input type="number" id="precoMin" placeholder="Preço mínimo" aria-label="Preço mínimo" />
+      <label for="precoMax" class="sr-only">Preço máximo</label>
+      <input type="number" id="precoMax" placeholder="Preço máximo" aria-label="Preço máximo" />
+      <label for="idadeInput" class="sr-only">Idade</label>
+      <input type="number" id="idadeInput" placeholder="Idade" aria-label="Idade" />      <label for="generoSelect" class="sr-only">Gênero</label>      <select id="generoSelect" aria-label="Gênero">
+        <option value="">Gênero</option>
+        <option value="masculino">Masculino</option>
+        <option value="feminino">Feminino</option>
+        <option value="unisex">Unissex</option>
+      </select>
+      <label for="cidadeInput" class="sr-only">Cidade</label>
+      <input type="text" id="cidadeInput" placeholder="Cidade (opcional)" aria-label="Cidade para busca local" />
+      <button type="submit" aria-label="Buscar">Buscar</button>
+      <button type="button" id="btnAIPowered" class="ai-btn" aria-label="Busca com IA" title="Busca inteligente com múltiplas APIs">🤖 IA</button>
+    </form>
+  </header>
+  <main>
+    <div id="loader" style="display:none; text-align:center; margin:2rem 0;">
+      <div class="spinner" role="status" aria-label="Carregando"></div>
+      <span style="color:#4e54c8; font-size:1.1rem;" role="status">Carregando...</span>
+    </div>
+    <div id="mensagem" style="display:none; text-align:center; margin:1.5rem 0; color:#4e54c8; font-size:1.1rem;" role="alert"></div>    <nav style="text-align:center; margin-bottom:1.5rem;" aria-label="Navegação principal">
+      <button id="btnVerResultados" class="tab-btn" aria-label="Ver resultados" tabindex="0">Resultados</button>
+      <button id="btnVerFavoritos" class="tab-btn" aria-label="Ver favoritos" tabindex="0">Favoritos</button>
+      <button id="btnVerLocais" class="tab-btn" aria-label="Ver lojas próximas" tabindex="0">Lojas Próximas</button>
+    </nav>
+    <section id="produtos" style="display:none;" aria-labelledby="resultadosTitle">
+      <h3 id="resultadosTitle" tabindex="0">Resultados</h3>
+      <div id="grid" class="grid" tabindex="0" aria-label="Lista de produtos"></div>
+      <div id="paginacao" aria-label="Paginação dos resultados"></div>
+    </section>
+    <section id="recomendacao" style="display:none;" aria-labelledby="recomendacaoTitle">
+      <h3 id="recomendacaoTitle" tabindex="0">🎯 Recomendação Inteligente</h3>
+      <div id="sugestao" style="margin-bottom: 1rem; padding: 1rem; background: var(--card-bg); border-radius: 8px; border-left: 4px solid var(--primary-color);"></div>
+      <div id="sugestaoProdutos" class="grid"></div>      <div id="swipeHint" role="status" style="display:none; text-align:center; color:#64748b; font-size:0.98rem; margin-top:0.5rem;">
+        <span role="text">Deslize para o lado para ver mais recomendações ➡️</span>
+      </div>
+      <div style="text-align: center; margin-top: 1rem;">
+        <button id="btnMaisRecomendacoes" class="control-btn" aria-label="Ver mais recomendações" style="background: var(--primary-color); color: white; padding: 0.5rem 1rem; border-radius: 6px;">
+          🔄 Ver Mais Recomendações
+        </button>
+      </div>
+    </section>    <section id="favoritos" style="display:none;" aria-labelledby="favoritosTitle">
+      <h3 id="favoritosTitle" tabindex="0">Meus Favoritos</h3>
+      <div id="gridFavoritos" class="grid" tabindex="0" aria-label="Lista de favoritos"></div>
+    </section>
+    <section id="locais" style="display:none;" aria-labelledby="locaisTitle">
+      <h3 id="locaisTitle" tabindex="0">🗺️ Lojas e Shopping Centers</h3>
+      <div id="mapaInfo" style="margin-bottom: 1rem; padding: 1rem; background: var(--card-bg); border-radius: 8px; border-left: 4px solid var(--primary-color);"></div>
+      <div id="gridLocais" class="grid" tabindex="0" aria-label="Lista de lojas próximas"></div>
+    </section>
+  </main>  <footer role="contentinfo">
+    <div class="footer-content">
+      <div class="footer-brand">
+        <h3>Easy Gift Search</h3>
+        <p>Versão 2.1.0</p>
+      </div>
+      <div class="footer-contact">
+        <p>📧 <a href="mailto:contato@easygift.com">contato@easygift.com</a></p>
+      </div>
+      <div class="footer-legal">
+        <p>© 2025 Easy Gift Search. Todos os direitos reservados.</p>        <div class="footer-links">
+          <button type="button" onclick="mostrarPoliticaPrivacidade()" class="footer-link-btn" aria-label="Visualizar Política de Privacidade">Política de Privacidade</button>
+          <span class="footer-separator" role="separator" aria-hidden="true"> | </span>
+          <button type="button" onclick="mostrarTermosUso()" class="footer-link-btn" aria-label="Visualizar Termos de Uso">Termos de Uso</button>
+        </div>
+      </div>
+    </div>
+    <div class="footer-hint">
+      <span role="text">💡 Toque nos cards para ver detalhes. Navegue pelas abas acima para explorar todas as funcionalidades.</span>
+    </div>
+  </footer>
+  <script src="js/app.min.js"></script>
+  <!-- Fallback para desenvolvimento -->
+  <script src="js/app.js" nomodule></script>
+  <script src="js/i18n.js"></script>
+  <script src="js/analytics-config.js"></script>
+  <script src="js/analytics.js"></script>
+</body>
+</html>

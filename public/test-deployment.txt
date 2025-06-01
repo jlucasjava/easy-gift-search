@@ -1,0 +1,3 @@
+Teste de deployment - 31/05/2025 11:25
+Este arquivo confirma que o deployment está funcionando.
+Footer implementado na versão 2.1.0
