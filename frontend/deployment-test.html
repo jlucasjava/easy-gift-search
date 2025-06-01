@@ -35,19 +35,39 @@
             opacity: 0.8;
             font-size: 14px;
         }
+        .build-info {
+            background: rgba(0,0,0,0.2);
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
     </style>
 </head>
 <body>
     <div class="test-container">
-        <h1>🚀 Teste de Deploy Vercel</h1>
+        <h1>🚀 Teste de Deploy Vercel v2</h1>
         <p class="status success">✅ Deploy funcionando corretamente!</p>
+        
+        <div class="build-info">
+            <h3>🔧 Correções Aplicadas:</h3>
+            <ul style="text-align: left; display: inline-block;">
+                <li>✅ package.json excluído do build via .vercelignore</li>
+                <li>✅ Configuração estática no vercel.json</li>
+                <li>✅ Roteamento corrigido para /frontend/</li>
+                <li>✅ Build process simplificado</li>
+            </ul>
+        </div>
+        
         <p>Se você está vendo esta página, significa que:</p>
         <ul style="text-align: left; display: inline-block;">
-            <li>A configuração do vercel.json foi corrigida</li>
+            <li>O erro "No Output Directory named 'public'" foi resolvido</li>
+            <li>A configuração do vercel.json está funcionando</li>
             <li>O diretório frontend está sendo servido corretamente</li>
             <li>O footer deve estar visível na página principal</li>
         </ul>
-        <p class="timestamp">Timestamp: 2025-06-01 - Commit: 03197c1</p>
+        
+        <p class="timestamp">Timestamp: 2025-06-01 - Commit: 32ce035</p>
+        <p class="timestamp">Build Fix: Static deployment without Node.js build</p>
         <a href="/" style="color: white; text-decoration: underline;">← Voltar para a página principal</a>
     </div>
 </body>
