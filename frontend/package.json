@@ -6,7 +6,8 @@
   "scripts": {
     "build-css": "cleancss -o css/style.min.css css/style.css",
     "watch-css": "cleancss -o css/style.min.css css/style.css --watch",
-    "build": "npm run build-css"
+    "build": "npm run build-css && mkdir -p public && cp -r * public/ && rm -rf public/public public/node_modules",
+    "vercel-build": "npm run build-css"
   },
   "devDependencies": {
     "clean-css-cli": "^5.6.3",
