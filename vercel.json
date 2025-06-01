@@ -1,8 +1,12 @@
 {
   "version": 2,
+  "public": true,
+  "outputDirectory": "public",
+  "buildCommand": null,
+  "installCommand": null,
   "builds": [
     {
-      "src": "public/**",
+      "src": "public/**/*",
       "use": "@vercel/static"
     }
   ],
@@ -10,6 +14,10 @@
     {
       "src": "/(.*)",
       "dest": "/public/$1"
+    },
+    {
+      "src": "/",
+      "dest": "/public/index.html"
     }
   ]
 }
