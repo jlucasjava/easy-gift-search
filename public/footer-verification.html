@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Footer Deployment Verification - Easy Gift Search</title>
+    <link rel="stylesheet" href="css/style.min.css">
+    <style>
+        .verification-container {
+            max-width: 800px;
+            margin: 2rem auto;
+            padding: 2rem;
+            background: var(--card-bg);
+            border-radius: 12px;
+            border: 2px solid var(--primary-color);
+        }
+        .test-results {
+            background: #f8f9fa;
+            padding: 1rem;
+            border-radius: 8px;
+            margin: 1rem 0;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            white-space: pre-line;
+        }
+        .status-badge {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            color: white;
+            font-weight: bold;
+            margin: 0.25rem;
+        }
+        .status-success { background: #28a745; }
+        .status-error { background: #dc3545; }
+        .status-warning { background: #ffc107; color: #000; }
+    </style>
+</head>
+<body>
+    <div class="verification-container">
+        <h1>🧪 Footer Deployment Verification</h1>
+        <p>Esta página verifica se o footer foi implementado corretamente no ambiente de produção.</p>
+        
+        <div id="verificationResults" class="test-results">
+            Executando verificações...
+        </div>
+        
+        <div>
+            <h3>Manual Tests:</h3>
+            <p>1. Scroll down to check if the footer is visible</p>
+            <p>2. Try clicking the "Política de Privacidade" button below</p>
+            <p>3. Try clicking the "Termos de Uso" button below</p>
+            
+            <div style="margin: 1rem 0;">
+                <button onclick="mostrarPoliticaPrivacidade()" class="control-btn">Test Privacy Policy</button>
+                <button onclick="mostrarTermosUso()" class="control-btn">Test Terms of Use</button>
+            </div>
+        </div>
+        
+        <div>
+            <h3>Deployment Info:</h3>
+            <div id="deploymentInfo"></div>
+        </div>
+    </div>
+
+    <!-- Footer should be here -->
+    <footer role="contentinfo">
+        <div class="footer-content">
+            <div class="footer-brand">
+                <h3>Easy Gift Search</h3>
+                <p>Versão 2.1.0</p>
+            </div>
+            <div class="footer-contact">
+                <p>📧 <a href="mailto:contato@easygift.com">contato@easygift.com</a></p>
+            </div>
+            <div class="footer-legal">
+                <p>© 2025 Easy Gift Search. Todos os direitos reservados.</p>
+                <div class="footer-links">
+                    <button type="button" onclick="mostrarPoliticaPrivacidade()" class="footer-link-btn">Política de Privacidade</button>
+                    <span class="footer-separator"> | </span>
+                    <button type="button" onclick="mostrarTermosUso()" class="footer-link-btn">Termos de Uso</button>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="js/app.min.js"></script>
+    <script src="validate-footer-deployment.js"></script>
+    <script>
+        // Run verification on page load
+        window.addEventListener('load', function() {
+            const results = document.getElementById('verificationResults');
+            const deploymentInfo = document.getElementById('deploymentInfo');
+            
+            try {
+                // Execute the validation script
+                console.log('Running footer validation...');
+                
+                // Get validation results
+                const validation = {
+                    footerExists: !!document.querySelector('footer[role="contentinfo"]'),
+                    functionsExist: typeof mostrarPoliticaPrivacidade === 'function' && typeof mostrarTermosUso === 'function',
+                    timestamp: new Date().toISOString(),
+                    buildVersion: document.querySelector('meta[name="version"]')?.content || 'Unknown'
+                };
+                
+                let output = '';
+                output += '🚀 FOOTER DEPLOYMENT VALIDATION\n';
+                output += '================================\n\n';
+                output += validation.footerExists ? '✅ Footer element found\n' : '❌ Footer element NOT found\n';
+                output += validation.functionsExist ? '✅ Footer functions exist\n' : '❌ Footer functions missing\n';
+                output += '\n📊 Technical Details:\n';
+                output += `  - Timestamp: ${validation.timestamp}\n`;
+                output += `  - Build Version: ${validation.buildVersion}\n`;
+                output += `  - User Agent: ${navigator.userAgent.substring(0, 50)}...\n`;
+                output += `  - Viewport: ${window.innerWidth}x${window.innerHeight}\n`;
+                
+                results.textContent = output;
+                
+                // Show deployment info
+                deploymentInfo.innerHTML = `
+                    <div class="status-badge ${validation.footerExists && validation.functionsExist ? 'status-success' : 'status-error'}">
+                        ${validation.footerExists && validation.functionsExist ? 'DEPLOYMENT SUCCESS' : 'DEPLOYMENT ISSUES'}
+                    </div>
+                    <p>Build: ${validation.buildVersion} | Time: ${new Date().toLocaleString()}</p>
+                `;
+                
+            } catch (error) {
+                results.textContent = `❌ Validation Error: ${error.message}`;
+                deploymentInfo.innerHTML = '<div class="status-badge status-error">ERROR</div>';
+            }
+        });
+    </script>
+</body>
+</html>
