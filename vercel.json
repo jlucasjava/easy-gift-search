@@ -1,0 +1,21 @@
+{
+  "version": 2,
+  "public": true,
+  "trailingSlash": false,
+  "cleanUrls": true,
+  "functions": {
+    "backend/server.js": {
+      "runtime": "nodejs18.x"
+    }
+  },
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "/backend/server.js"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/frontend/$1"
+    }
+  ]
+}
