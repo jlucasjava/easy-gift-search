@@ -5,6 +5,6 @@ docs/
 !frontend/README.md
 .git/
 node_modules/
-frontend/package.json
-frontend/package-lock.json
+frontend/package*.json*
 frontend/node_modules/
+*.backup
