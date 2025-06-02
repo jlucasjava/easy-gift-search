@@ -209,6 +209,13 @@
             <div id="llama2Results" class="result"></div>
         </div>
 
+        <!-- Recomendação Inteligente Randomizada -->
+        <div class="test-section">
+            <h3>🎯 Recomendação Inteligente (Randomizada)</h3>
+            <div id="recomendacaoInteligente" class="result" style="min-height: 60px;"></div>
+            <button onclick="carregarRecomendacaoRandom()" aria-label="Nova recomendação">🔄 Nova Recomendação</button>
+        </div>
+
         <!-- Console de Logs -->
         <div class="test-section">
             <h3>📝 Console de Logs</h3>
@@ -509,11 +516,33 @@
             }
         }
 
-        // Inicializar
+        // Recomendação Inteligente Randomizada
+        async function carregarRecomendacaoRandom() {
+            const recomendacaoDiv = document.getElementById('recomendacaoInteligente');
+            recomendacaoDiv.textContent = 'Carregando...';
+            try {
+                const response = await fetch(`${API_URL}/api/recommend/random`);
+                if (response.ok) {
+                    const data = await response.json();
+                    let html = `💡 <b>${data.sugestao}</b><br><ul style='list-style:none;padding:0;'>`;
+                    data.produtosRelacionados.forEach(p => {
+                        html += `<li style='margin:8px 0;'><span style='font-weight:600;'>${p.nome}</span> - <span style='color:#5b8def;'>${p.preco}</span> <a href='${p.url}' target='_blank' style='color:#2d3a4a;text-decoration:underline;'>Ver</a></li>`;
+                    });
+                    html += '</ul>';
+                    recomendacaoDiv.innerHTML = html;
+                } else {
+                    recomendacaoDiv.textContent = 'Erro ao buscar recomendação.';
+                }
+            } catch (e) {
+                recomendacaoDiv.textContent = 'Erro ao buscar recomendação.';
+            }
+        }
+        // Carregar recomendação ao abrir a página
         window.addEventListener('load', () => {
             log('Debug page carregada');
             log(`API URL configurada: ${API_URL}`);
             checkSystemStatus();
+            carregarRecomendacaoRandom();
         });
 
         // Capturar erros não tratados
