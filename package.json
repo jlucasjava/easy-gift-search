@@ -2,11 +2,11 @@
   "name": "easy-gift-search",
   "version": "2.1.0",
   "description": "AI-powered gift finder with marketplace integration",
-  "main": "index.html",
-  "scripts": {
-    "start": "echo 'Static site - no build required'",
-    "build": "echo 'No build step needed for static site'",
+  "main": "index.html",  "scripts": {
+    "start": "npx serve public -s",
+    "build": "echo 'Static site ready in public directory'",
     "dev": "python -m http.server 8000 --directory public",
+    "serve": "npx serve public -s -p $PORT",
     "test": "echo 'No tests specified'"
   },
   "repository": {
@@ -15,8 +15,11 @@
   },
   "keywords": ["gift", "search", "ai", "marketplace", "presents"],
   "author": "Easy Gift Search Team",
-  "license": "MIT",
-  "engines": {
+  "license": "MIT",  "engines": {
     "node": ">=16.0.0"
-  }
+  },
+  "dependencies": {
+    "serve": "^14.2.0"
+  },
+  "devDependencies": {}
 }
