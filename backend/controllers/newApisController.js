@@ -3,6 +3,7 @@ const googleSearchService = require('../services/googleSearchService');
 const aliexpressService = require('../services/aliexpressService');
 const bingSearchService = require('../services/bingSearchService');
 const googleMapsService = require('../services/googleMapsService');
+const gpt35Service = require('../services/gpt35Service');
 
 /**
  * Controller para gerenciar as novas APIs integradas:
@@ -512,6 +513,26 @@ exports.testarTodasApis = async (req, res) => {
       erro: 'Erro interno do servidor',
       detalhes: error.message
     });
+  }
+};
+
+/**
+ * Gera resposta usando GPT-3.5 (Open AI32)
+ */
+exports.gerarRespostaGPT35 = async (req, res) => {
+  try {
+    const { message, webAccess } = req.body;
+    if (!message) {
+      return res.status(400).json({ erro: 'Parâmetro "message" é obrigatório' });
+    }
+    const resultado = await gpt35Service.gerarRespostaGPT35({
+      message,
+      webAccess: webAccess || false
+    });
+    res.json(resultado);
+  } catch (error) {
+    console.error('Erro no controller GPT-3.5:', error);
+    res.status(500).json({ erro: 'Erro interno do servidor', detalhes: error.message });
   }
 };
 

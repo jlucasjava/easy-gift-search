@@ -173,18 +173,6 @@ router.get('/demo/bing', async (req, res) => {
   } catch (error) {
     res.status(500).json({ erro: error.message });
   }
-/**
- * GET /api/new-apis/demo/bing
- * Demonstração da API Bing Web Search
- */
-router.get('/demo/bing', async (req, res) => {
-  try {
-    await newApisController.buscarWeb({
-      query: { query: 'presentes tecnologia 2025', mkt: 'pt-br', count: '5' }
-    }, res);
-  } catch (error) {
-    res.status(500).json({ erro: error.message });
-  }
 });
 
 /**
@@ -199,7 +187,6 @@ router.get('/demo/maps', async (req, res) => {
   } catch (error) {
     res.status(500).json({ erro: error.message });
   }
-});
 });
 
 /**
