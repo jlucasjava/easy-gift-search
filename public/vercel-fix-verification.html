@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🚨 VERCEL DEPLOYMENT FIX VERIFICATION</title>
+    <style>
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 1000px; 
+            margin: 0 auto; 
+            padding: 2rem; 
+            line-height: 1.6;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            min-height: 100vh;
+        }
+        .container {
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            padding: 2rem;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        .status { 
+            padding: 1rem; 
+            border-radius: 8px; 
+            margin: 1rem 0; 
+            font-weight: bold;
+        }
+        .success { background: rgba(34, 197, 94, 0.2); border-left: 4px solid #22c55e; }
+        .error { background: rgba(239, 68, 68, 0.2); border-left: 4px solid #ef4444; }
+        .warning { background: rgba(245, 158, 11, 0.2); border-left: 4px solid #f59e0b; }
+        .info { background: rgba(59, 130, 246, 0.2); border-left: 4px solid #3b82f6; }
+        pre { 
+            background: rgba(0,0,0,0.3); 
+            padding: 1rem; 
+            border-radius: 8px; 
+            overflow-x: auto;
+            font-size: 0.9rem;
+        }
+        .test-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1rem;
+            margin: 2rem 0;
+        }
+        .test-card {
+            background: rgba(255,255,255,0.1);
+            padding: 1.5rem;
+            border-radius: 12px;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        button {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            margin: 0.5rem;
+            transition: transform 0.2s;
+        }
+        button:hover { transform: translateY(-2px); }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚨 VERCEL DEPLOYMENT FIX VERIFICATION</h1>
+        <p><strong>Timestamp:</strong> <span id="timestamp"></span></p>
+        
+        <div class="status info">
+            <strong>🎯 OBJECTIVE:</strong> Verify that Vercel is now deploying from the correct commit (94990a7) instead of the old commit (22d0530)
+        </div>
+
+        <div id="deploymentStatus" class="status warning">
+            <strong>🔄 CHECKING DEPLOYMENT STATUS...</strong>
+        </div>
+
+        <div class="test-grid">
+            <div class="test-card">
+                <h3>🔍 Commit Detection</h3>
+                <div id="commitTest">Testing...</div>
+                <pre id="commitInfo"></pre>
+            </div>
+
+            <div class="test-card">
+                <h3>📁 Directory Structure</h3>
+                <div id="directoryTest">Testing...</div>
+                <pre id="directoryInfo"></pre>
+            </div>
+
+            <div class="test-card">
+                <h3>🦶 Footer Verification</h3>
+                <div id="footerTest">Testing...</div>
+                <pre id="footerInfo"></pre>
+            </div>
+
+            <div class="test-card">
+                <h3>🎨 CSS Loading</h3>
+                <div id="cssTest">Testing...</div>
+                <pre id="cssInfo"></pre>
+            </div>
+        </div>
+
+        <div class="status info">
+            <h3>🧪 Manual Tests:</h3>
+            <button onclick="testFooterModal()">Test Privacy Policy Modal</button>
+            <button onclick="testTermsModal()">Test Terms Modal</button>
+            <button onclick="testResponsive()">Test Responsive Design</button>
+            <button onclick="window.location.href='/'">Go to Main Site</button>
+        </div>
+
+        <div id="manualTestResults"></div>
+
+        <div class="status warning">
+            <h3>⚡ Expected Fix Results:</h3>
+            <ul>
+                <li>✅ Vercel should deploy commit <code>94990a7</code> instead of <code>22d0530</code></li>
+                <li>✅ No more "No Output Directory named 'public' found" error</li>
+                <li>✅ Footer should be visible on main site</li>
+                <li>✅ All CSS and JS files should load correctly</li>
+                <li>✅ Modal functions should work properly</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        // Set timestamp
+        document.getElementById('timestamp').textContent = new Date().toLocaleString();
+
+        // Test functions
+        async function runAllTests() {
+            await testCommit();
+            await testDirectory();
+            await testFooter();
+            await testCSS();
+            updateOverallStatus();
+        }
+
+        async function testCommit() {
+            const commitElement = document.getElementById('commitTest');
+            const infoElement = document.getElementById('commitInfo');
+            
+            try {
+                // Check if we can detect build info
+                const buildTimestamp = document.querySelector('meta[name="build-timestamp"]')?.content;
+                const version = document.querySelector('meta[name="version"]')?.content;
+                const deployId = document.querySelector('meta[name="deploy-id"]')?.content;
+                
+                let info = `Build Timestamp: ${buildTimestamp || 'Not found'}\n`;
+                info += `Version: ${version || 'Not found'}\n`;
+                info += `Deploy ID: ${deployId || 'Not found'}\n`;
+                info += `Current URL: ${window.location.href}\n`;
+                info += `User Agent: ${navigator.userAgent.substring(0, 80)}...`;
+                
+                infoElement.textContent = info;
+                
+                if (buildTimestamp && version) {
+                    commitElement.innerHTML = '<span style="color: #22c55e;">✅ DEPLOYMENT METADATA FOUND</span>';
+                } else {
+                    commitElement.innerHTML = '<span style="color: #f59e0b;">⚠️ Limited metadata detected</span>';
+                }
+            } catch (error) {
+                commitElement.innerHTML = '<span style="color: #ef4444;">❌ ERROR</span>';
+                infoElement.textContent = `Error: ${error.message}`;
+            }
+        }
+
+        async function testDirectory() {
+            const dirElement = document.getElementById('directoryTest');
+            const infoElement = document.getElementById('directoryInfo');
+            
+            try {
+                // Test if key files are accessible
+                const tests = [
+                    { file: '/css/style.min.css', name: 'Minified CSS' },
+                    { file: '/js/app.min.js', name: 'Minified JS' },
+                    { file: '/footer-verification.html', name: 'Footer Verification' },
+                    { file: '/deployment-test.html', name: 'Deployment Test' }
+                ];
+                
+                let results = '';
+                let successCount = 0;
+                
+                for (let test of tests) {
+                    try {
+                        const response = await fetch(test.file, { method: 'HEAD' });
+                        if (response.ok) {
+                            results += `✅ ${test.name}: Available\n`;
+                            successCount++;
+                        } else {
+                            results += `❌ ${test.name}: ${response.status}\n`;
+                        }
+                    } catch (e) {
+                        results += `❌ ${test.name}: Network error\n`;
+                    }
+                }
+                
+                infoElement.textContent = results;
+                
+                if (successCount >= 3) {
+                    dirElement.innerHTML = '<span style="color: #22c55e;">✅ DIRECTORY STRUCTURE OK</span>';
+                } else if (successCount >= 1) {
+                    dirElement.innerHTML = '<span style="color: #f59e0b;">⚠️ Partial success</span>';
+                } else {
+                    dirElement.innerHTML = '<span style="color: #ef4444;">❌ DIRECTORY ISSUES</span>';
+                }
+            } catch (error) {
+                dirElement.innerHTML = '<span style="color: #ef4444;">❌ ERROR</span>';
+                infoElement.textContent = `Error: ${error.message}`;
+            }
+        }
+
+        async function testFooter() {
+            const footerElement = document.getElementById('footerTest');
+            const infoElement = document.getElementById('footerInfo');
+            
+            try {
+                // Check if footer elements exist
+                const footer = document.querySelector('footer[role="contentinfo"]');
+                const brand = document.querySelector('.footer-brand h3');
+                const version = document.querySelector('.footer-brand p');
+                const email = document.querySelector('.footer-contact a[href^="mailto:"]');
+                const copyright = document.querySelector('.footer-legal p');
+                const privacyBtn = document.querySelector('button[onclick*="mostrarPoliticaPrivacidade"]');
+                const termsBtn = document.querySelector('button[onclick*="mostrarTermosUso"]');
+                
+                let info = '';
+                info += `Footer element: ${footer ? 'Found' : 'Missing'}\n`;
+                info += `Brand text: ${brand?.textContent || 'Missing'}\n`;
+                info += `Version: ${version?.textContent || 'Missing'}\n`;
+                info += `Email: ${email?.href || 'Missing'}\n`;
+                info += `Copyright: ${copyright?.textContent.substring(0, 50) || 'Missing'}...\n`;
+                info += `Privacy button: ${privacyBtn ? 'Found' : 'Missing'}\n`;
+                info += `Terms button: ${termsBtn ? 'Found' : 'Missing'}\n`;
+                info += `Functions available: ${typeof mostrarPoliticaPrivacidade === 'function' && typeof mostrarTermosUso === 'function' ? 'Yes' : 'No'}`;
+                
+                infoElement.textContent = info;
+                
+                const elementsFound = [footer, brand, version, email, copyright, privacyBtn, termsBtn].filter(Boolean).length;
+                
+                if (elementsFound >= 6) {
+                    footerElement.innerHTML = '<span style="color: #22c55e;">✅ FOOTER COMPLETE</span>';
+                } else if (elementsFound >= 3) {
+                    footerElement.innerHTML = '<span style="color: #f59e0b;">⚠️ Footer partial</span>';
+                } else {
+                    footerElement.innerHTML = '<span style="color: #ef4444;">❌ FOOTER MISSING</span>';
+                }
+            } catch (error) {
+                footerElement.innerHTML = '<span style="color: #ef4444;">❌ ERROR</span>';
+                infoElement.textContent = `Error: ${error.message}`;
+            }
+        }
+
+        async function testCSS() {
+            const cssElement = document.getElementById('cssTest');
+            const infoElement = document.getElementById('cssInfo');
+            
+            try {
+                // Check if CSS is loading properly
+                const stylesheets = Array.from(document.styleSheets);
+                const computedStyle = getComputedStyle(document.body);
+                
+                let info = '';
+                info += `Stylesheets loaded: ${stylesheets.length}\n`;
+                info += `Body background: ${computedStyle.background.substring(0, 50)}...\n`;
+                info += `Font family: ${computedStyle.fontFamily}\n`;
+                
+                // Test if footer has proper styling
+                const footer = document.querySelector('footer');
+                if (footer) {
+                    const footerStyle = getComputedStyle(footer);
+                    info += `Footer display: ${footerStyle.display}\n`;
+                    info += `Footer background: ${footerStyle.backgroundColor}\n`;
+                }
+                
+                infoElement.textContent = info;
+                
+                if (stylesheets.length > 0 && computedStyle.fontFamily) {
+                    cssElement.innerHTML = '<span style="color: #22c55e;">✅ CSS LOADING OK</span>';
+                } else {
+                    cssElement.innerHTML = '<span style="color: #ef4444;">❌ CSS ISSUES</span>';
+                }
+            } catch (error) {
+                cssElement.innerHTML = '<span style="color: #ef4444;">❌ ERROR</span>';
+                infoElement.textContent = `Error: ${error.message}`;
+            }
+        }
+
+        function updateOverallStatus() {
+            const statusElement = document.getElementById('deploymentStatus');
+            const tests = [
+                document.getElementById('commitTest').textContent.includes('✅'),
+                document.getElementById('directoryTest').textContent.includes('✅'),
+                document.getElementById('footerTest').textContent.includes('✅'),
+                document.getElementById('cssTest').textContent.includes('✅')
+            ];
+            
+            const passedTests = tests.filter(Boolean).length;
+            
+            if (passedTests === 4) {
+                statusElement.className = 'status success';
+                statusElement.innerHTML = '<strong>🎉 DEPLOYMENT FIX SUCCESSFUL! All tests passed.</strong>';
+            } else if (passedTests >= 2) {
+                statusElement.className = 'status warning';
+                statusElement.innerHTML = `<strong>⚠️ PARTIAL SUCCESS: ${passedTests}/4 tests passed</strong>`;
+            } else {
+                statusElement.className = 'status error';
+                statusElement.innerHTML = `<strong>❌ DEPLOYMENT STILL HAS ISSUES: ${passedTests}/4 tests passed</strong>`;
+            }
+        }
+
+        // Manual test functions
+        function testFooterModal() {
+            const results = document.getElementById('manualTestResults');
+            try {
+                if (typeof mostrarPoliticaPrivacidade === 'function') {
+                    mostrarPoliticaPrivacidade();
+                    results.innerHTML = '<div class="status success">✅ Privacy Policy modal function works!</div>';
+                } else {
+                    results.innerHTML = '<div class="status error">❌ Privacy Policy function not found</div>';
+                }
+            } catch (e) {
+                results.innerHTML = `<div class="status error">❌ Error: ${e.message}</div>`;
+            }
+        }
+
+        function testTermsModal() {
+            const results = document.getElementById('manualTestResults');
+            try {
+                if (typeof mostrarTermosUso === 'function') {
+                    mostrarTermosUso();
+                    results.innerHTML = '<div class="status success">✅ Terms of Use modal function works!</div>';
+                } else {
+                    results.innerHTML = '<div class="status error">❌ Terms of Use function not found</div>';
+                }
+            } catch (e) {
+                results.innerHTML = `<div class="status error">❌ Error: ${e.message}</div>`;
+            }
+        }
+
+        function testResponsive() {
+            const results = document.getElementById('manualTestResults');
+            const width = window.innerWidth;
+            let message = `<div class="status info">📱 Current viewport: ${width}px<br>`;
+            
+            if (width < 768) {
+                message += 'Mobile view detected - Check if footer stacks properly</div>';
+            } else if (width < 1024) {
+                message += 'Tablet view detected - Check footer grid layout</div>';
+            } else {
+                message += 'Desktop view detected - Footer should show full layout</div>';
+            }
+            
+            results.innerHTML = message;
+        }
+
+        // Run tests on page load
+        window.addEventListener('load', () => {
+            setTimeout(runAllTests, 1000);
+        });
+    </script>
+</body>
+</html>
