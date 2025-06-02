@@ -1,9 +1,5 @@
-const mercadoLivreService = require('../services/mercadoLivreService');
-const shopeeService = require('../services/shopeeService');
-const amazonService = require('../services/amazonService');
-const aliexpressService = require('../services/aliexpressService');
 
-// Controller de produtos: busca mockada Mercado Livre + Elasticsearch
+// Controller de produtos: API mock simplificada para teste
 exports.searchProducts = async (req, res) => {
   try {
     console.log('🔍 API /products chamada com query:', req.query);
@@ -31,6 +27,15 @@ exports.searchProducts = async (req, res) => {
         imagem: 'https://via.placeholder.com/300x300/28A745/FFFFFF?text=Teste+2',
         marketplace: 'teste',
         url: '#'
+      },
+      {
+        id: '3',
+        titulo: 'Produto Teste 3',
+        preco: 120,
+        descricao: 'Terceiro produto de teste',
+        imagem: 'https://via.placeholder.com/300x300/FFC107/000000?text=Teste+3',
+        marketplace: 'teste',
+        url: '#'
       }
     ];
 
@@ -51,26 +56,3 @@ exports.searchProducts = async (req, res) => {
     });
   }
 };
-      
-      produtosFiltrados = todosProdutos.filter(produto => {
-        return produto.preco >= min && produto.preco <= max;
-      });
-      
-      console.log(`💰 Filtro de preço R$ ${min} - R$ ${max === Infinity ? '∞' : max}: ${produtosFiltrados.length} produtos`);
-    }
-    
-    // Limita a 9 resultados e ordena por relevância/preço
-    const produtos = produtosFiltrados
-      .sort((a, b) => a.preco - b.preco) // Ordena por preço crescente
-      .slice(0, 9);
-    
-    console.log(`✅ Retornando ${produtos.length} produtos para o frontend`);
-    
-    // Paginação simples (mock, pois Mercado Livre já limita a 9)
-    res.json({ produtos, pagina: Number(page), totalPaginas: 5 });
-  } catch (err) {
-    console.error('❌ Erro ao buscar produtos:', err);
-    res.status(500).json({ erro: 'Erro ao buscar produtos.' });
-  }
-};
-// Para reverter, basta remover o uso do accessToken e voltar ao serviço original.
