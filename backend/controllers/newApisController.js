@@ -4,6 +4,7 @@ const aliexpressService = require('../services/aliexpressService');
 const bingSearchService = require('../services/bingSearchService');
 const googleMapsService = require('../services/googleMapsService');
 const gpt35Service = require('../services/gpt35Service');
+const llama2Service = require('../services/llama2Service');
 
 /**
  * Controller para gerenciar as novas APIs integradas:
@@ -532,6 +533,26 @@ exports.gerarRespostaGPT35 = async (req, res) => {
     res.json(resultado);
   } catch (error) {
     console.error('Erro no controller GPT-3.5:', error);
+    res.status(500).json({ erro: 'Erro interno do servidor', detalhes: error.message });
+  }
+};
+
+/**
+ * Gera resposta usando Meta Llama-2 API
+ */
+exports.gerarRespostaLlama2 = async (req, res) => {
+  try {
+    const { model, messages } = req.body;
+    if (!messages || !Array.isArray(messages)) {
+      return res.status(400).json({ erro: 'Parâmetro "messages" (array) é obrigatório' });
+    }
+    const resultado = await llama2Service.gerarRespostaLlama2({
+      model: model || 'meta-llama/Llama-2-70b-chat-hf',
+      messages
+    });
+    res.json(resultado);
+  } catch (error) {
+    console.error('Erro no controller Llama-2:', error);
     res.status(500).json({ erro: 'Erro interno do servidor', detalhes: error.message });
   }
 };

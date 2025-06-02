@@ -27,6 +27,13 @@ router.post('/llama/recomendacao', newApisController.gerarRecomendacao);
  */
 router.post('/llama/sugestoes', newApisController.sugerirPresentes);
 
+/**
+ * POST /api/new-apis/llama2/conversar
+ * Gera resposta usando Meta Llama-2 API
+ * Body: { model?: string, messages: array }
+ */
+router.post('/llama2/conversar', newApisController.gerarRespostaLlama2);
+
 // ===== ROTAS GOOGLE SEARCH =====
 
 /**
