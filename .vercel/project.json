@@ -1,0 +1,11 @@
+{
+  "projectId": "easy-gift-search",
+  "orgId": "team_jlucasjava",
+  "settings": {
+    "buildCommand": null,
+    "outputDirectory": "public",
+    "installCommand": null,
+    "framework": null,
+    "nodeVersion": "18.x"
+  }
+}
