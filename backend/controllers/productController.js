@@ -14,7 +14,7 @@ exports.searchProducts = async (req, res) => {
         titulo: `Presente ${genero || 'unissex'} para ${idade || '25'} anos`,
         preco: precoMin ? parseFloat(precoMin) + 10 : 75,
         descricao: 'Produto de teste mock',
-        imagem: 'https://via.placeholder.com/300x300/007BFF/FFFFFF?text=Produto+Teste',
+        imagem: 'https://placehold.co/300x300/007BFF/FFFFFF?text=Produto+Teste',
         marketplace: 'Mercado Livre',
         url: 'https://produto.mercadolivre.com.br/MLB-123456789-presente-exemplo-1'
       },
@@ -23,7 +23,7 @@ exports.searchProducts = async (req, res) => {
         titulo: 'Produto Teste 2',
         preco: precoMax ? parseFloat(precoMax) - 10 : 90,
         descricao: 'Segundo produto de teste',
-        imagem: 'https://via.placeholder.com/300x300/28A745/FFFFFF?text=Teste+2',
+        imagem: 'https://placehold.co/300x300/28A745/FFFFFF?text=Teste+2',
         marketplace: 'Amazon',
         url: 'https://www.amazon.com.br/dp/B0C1234567'
       },
@@ -32,7 +32,7 @@ exports.searchProducts = async (req, res) => {
         titulo: 'Produto Teste 3',
         preco: 120,
         descricao: 'Terceiro produto de teste',
-        imagem: 'https://via.placeholder.com/300x300/FFC107/000000?text=Teste+3',
+        imagem: 'https://placehold.co/300x300/FFC107/000000?text=Teste+3',
         marketplace: 'Americanas',
         url: 'https://www.americanas.com.br/produto/123456789'
       }
