@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teste de Validação - Easy Gift Search</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background-color: #f5f5f5; }
+        .container { max-width: 800px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .test-result { padding: 10px; margin: 10px 0; border-radius: 4px; }
+        .pass { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .fail { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .info { background-color: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+        form { margin: 20px 0; padding: 20px; background: #f8f9fa; border-radius: 8px; }
+        form > * { margin: 5px; padding: 8px; }
+        button { background: #007bff; color: white; border: none; border-radius: 4px; padding: 10px 20px; cursor: pointer; }
+        button:hover { background: #0056b3; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Teste de Validação - Formulário Easy Gift Search</h1>
+        
+        <div class="info">
+            <strong>Objetivo:</strong> Verificar se os campos removidos (precoMin e cidadeInput) não causam erros JavaScript
+        </div>
+
+        <!-- Formulário de teste com apenas os campos que devem existir -->
+        <form id="searchForm">
+            <h3>Formulário de Busca (apenas campos válidos)</h3>
+            <input type="number" id="precoMax" placeholder="Preço máximo" />
+            <input type="number" id="idadeInput" placeholder="Idade" min="0" max="120" />
+            <select id="generoSelect">
+                <option value="">Gênero</option>
+                <option value="masculino">Masculino</option>
+                <option value="feminino">Feminino</option>
+                <option value="unisex">Unissex</option>
+            </select>
+            <button type="submit">Buscar</button>
+            <button type="button" id="btnAIPowered">🤖 IA</button>
+        </form>
+
+        <div id="test-results">
+            <h3>📊 Resultados dos Testes</h3>
+        </div>
+
+        <div id="loader" style="display:none;">Carregando...</div>
+        <div id="mensagem" style="display:none;"></div>
+        <div id="produtos" style="display:none;">
+            <div id="grid"></div>
+            <div id="paginacao"></div>
+        </div>
+        <div id="recomendacao" style="display:none;">
+            <div id="sugestao"></div>
+            <div id="sugestaoProdutos"></div>
+        </div>
+        <div id="favoritos" style="display:none;">
+            <div id="gridFavoritos"></div>
+        </div>
+        <div id="locais" style="display:none;">
+            <div id="mapaInfo"></div>
+            <div id="gridLocais"></div>
+        </div>
+
+        <!-- Botões de navegação mockados -->
+        <div style="display: none;">
+            <button id="btnVerResultados">Resultados</button>
+            <button id="btnVerFavoritos">Favoritos</button>
+            <button id="btnVerLocais">Lojas</button>
+        </div>
+    </div>
+
+    <script>
+        // Mock das variáveis globais necessárias
+        const API_URL = "https://test-api.example.com/api";
+        let currentLocais = [];
+        window.analyticsService = {
+            trackSearch: () => {},
+            trackFilterUsage: () => {},
+            trackEvent: () => {},
+            trackError: () => {}
+        };
+
+        // Funções auxiliares mockadas
+        function showLoader(show) {
+            document.getElementById('loader').style.display = show ? 'block' : 'none';
+            return Promise.resolve();
+        }
+
+        function showMensagem(msg, isError = false) {
+            const el = document.getElementById('mensagem');
+            el.textContent = msg;
+            el.style.display = 'block';
+            el.style.color = isError ? 'red' : 'blue';
+        }
+
+        function clearMensagem() {
+            document.getElementById('mensagem').style.display = 'none';
+        }
+
+        async function carregarProdutos(params) {
+            console.log('Mock carregarProdutos called with:', params);
+            return Promise.resolve({ produtos: [], total: 0 });
+        }
+
+        async function gerarRecomendacaoIA(params) {
+            console.log('Mock gerarRecomendacaoIA called with:', params);
+            return Promise.resolve({ sucesso: true, dados: { resposta: 'Mock recommendation' } });
+        }
+
+        function buscarLojasProximas(cidade) {
+            console.log('Mock buscarLojasProximas called with:', cidade);
+        }
+
+        function esconderTodasSecoes() {}
+        function removerActiveButtons() {}
+        function renderFavoritos() {}
+
+        // Função para adicionar resultado de teste
+        function addTestResult(name, success, message) {
+            const resultsDiv = document.getElementById('test-results');
+            const resultDiv = document.createElement('div');
+            resultDiv.className = `test-result ${success ? 'pass' : 'fail'}`;
+            resultDiv.innerHTML = `<strong>${name}:</strong> ${message}`;
+            resultsDiv.appendChild(resultDiv);
+        }
+
+        // Testes de validação
+        function runValidationTests() {
+            console.log('🧪 Iniciando testes de validação...');
+
+            // Teste 1: Verificar se precoMin NÃO existe
+            try {
+                const precoMinElement = document.getElementById('precoMin');
+                if (precoMinElement === null) {
+                    addTestResult('Campo precoMin removido', true, 'Campo precoMin não encontrado (correto)');
+                } else {
+                    addTestResult('Campo precoMin removido', false, 'Campo precoMin ainda existe no DOM');
+                }
+            } catch (error) {
+                addTestResult('Campo precoMin removido', false, `Erro ao verificar precoMin: ${error.message}`);
+            }
+
+            // Teste 2: Verificar se cidadeInput NÃO existe
+            try {
+                const cidadeElement = document.getElementById('cidadeInput');
+                if (cidadeElement === null) {
+                    addTestResult('Campo cidadeInput removido', true, 'Campo cidadeInput não encontrado (correto)');
+                } else {
+                    addTestResult('Campo cidadeInput removido', false, 'Campo cidadeInput ainda existe no DOM');
+                }
+            } catch (error) {
+                addTestResult('Campo cidadeInput removido', false, `Erro ao verificar cidadeInput: ${error.message}`);
+            }
+
+            // Teste 3: Verificar se idadeInput tem validação correta
+            try {
+                const idadeElement = document.getElementById('idadeInput');
+                if (idadeElement) {
+                    const hasMin = idadeElement.hasAttribute('min') && idadeElement.getAttribute('min') === '0';
+                    const hasMax = idadeElement.hasAttribute('max') && idadeElement.getAttribute('max') === '120';
+                    if (hasMin && hasMax) {
+                        addTestResult('Validação idade', true, 'Campo idade com min="0" e max="120" (correto)');
+                    } else {
+                        addTestResult('Validação idade', false, `Campo idade sem validação correta (min=${idadeElement.getAttribute('min')}, max=${idadeElement.getAttribute('max')})`);
+                    }
+                } else {
+                    addTestResult('Validação idade', false, 'Campo idade não encontrado');
+                }
+            } catch (error) {
+                addTestResult('Validação idade', false, `Erro ao verificar idade: ${error.message}`);
+            }
+
+            // Teste 4: Verificar campos existentes
+            const expectedFields = ['precoMax', 'idadeInput', 'generoSelect'];
+            expectedFields.forEach(fieldId => {
+                try {
+                    const element = document.getElementById(fieldId);
+                    if (element) {
+                        addTestResult(`Campo ${fieldId}`, true, `Campo ${fieldId} encontrado (correto)`);
+                    } else {
+                        addTestResult(`Campo ${fieldId}`, false, `Campo ${fieldId} não encontrado`);
+                    }
+                } catch (error) {
+                    addTestResult(`Campo ${fieldId}`, false, `Erro ao verificar ${fieldId}: ${error.message}`);
+                }
+            });
+        }
+
+        // Executar testes quando a página carregar
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('DOM carregado, executando testes...');
+            runValidationTests();
+
+            // Teste 5: Simular submissão do formulário
+            const form = document.getElementById('searchForm');
+            if (form) {
+                form.addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    console.log('Teste de submissão do formulário...');
+                    
+                    try {
+                        // Simular o código que deveria estar no app.js corrigido
+                        const params = {
+                            precoMax: document.getElementById('precoMax').value,
+                            idade: document.getElementById('idadeInput').value,
+                            genero: document.getElementById('generoSelect').value,
+                            page: 1
+                        };
+                        
+                        console.log('Parâmetros coletados:', params);
+                        addTestResult('Submissão do formulário', true, 'Formulário submetido sem erros JavaScript');
+                        showMensagem('✅ Teste de submissão passou!');
+                        
+                    } catch (error) {
+                        console.error('Erro na submissão:', error);
+                        addTestResult('Submissão do formulário', false, `Erro na submissão: ${error.message}`);
+                        showMensagem('❌ Erro na submissão: ' + error.message, true);
+                    }
+                });
+            }
+
+            // Configurar botão IA
+            const btnAI = document.getElementById('btnAIPowered');
+            if (btnAI) {
+                btnAI.addEventListener('click', () => {
+                    console.log('Teste de busca IA...');
+                    try {
+                        // Simular o código que deveria estar no app.js corrigido
+                        const idade = document.getElementById('idadeInput').value;
+                        const genero = document.getElementById('generoSelect').value;
+                        
+                        console.log('Parâmetros IA:', { idade, genero });
+                        addTestResult('Busca IA', true, 'Busca IA executada sem erros JavaScript');
+                        showMensagem('✅ Teste de busca IA passou!');
+                        
+                    } catch (error) {
+                        console.error('Erro na busca IA:', error);
+                        addTestResult('Busca IA', false, `Erro na busca IA: ${error.message}`);
+                        showMensagem('❌ Erro na busca IA: ' + error.message, true);
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>

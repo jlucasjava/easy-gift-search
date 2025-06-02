@@ -791,52 +791,145 @@ function configurarNavegacaoAbas() {
   };
 }
 
-// ===== UTILITY FUNCTIONS =====
+// Dark Mode functionality
+function initializeDarkMode() {
+  const toggleBtn = document.getElementById('toggleDark');
+  if (!toggleBtn) return;
 
-/**
- * Função auxiliar para gerar hash simples de string
- */
-String.prototype.hashCode = function() {
-  let hash = 0;
-  if (this.length == 0) return hash;
-  for (let i = 0; i < this.length; i++) {
-    const char = this.charCodeAt(i);
-    hash = ((hash << 5) - hash) + char;
-    hash = hash & hash;
-  }
-  return Math.abs(hash);
-};
+  // Load saved theme
+  const savedTheme = localStorage.getItem('theme') || 'light';
+  document.body.setAttribute('data-theme', savedTheme);
+  updateDarkModeButton(savedTheme);
 
-/**
- * Detectar localização do usuário (opcional)
- */
-async function detectarLocalizacao() {
-  if ("geolocation" in navigator) {
-    try {
-      const position = await new Promise((resolve, reject) => {
-        navigator.geolocation.getCurrentPosition(resolve, reject, {
-          timeout: 10000,
-          enableHighAccuracy: false
-        });
-      });
-      
-      const { latitude, longitude } = position.coords;
-        // Buscar informações da localização atual
-      const response = await fetch(`${API_URL}/new-apis/maps/localizacao?latitude=${latitude}&longitude=${longitude}`);
-      if (response.ok) {
-        const resultado = await response.json();
-        if (resultado.sucesso && resultado.dados.cidade) {
-          // Apenas mostrar mensagem da localização detectada
-          showMensagem(`📍 Localização detectada: ${resultado.dados.cidade}`);
-          setTimeout(clearMensagem, 3000);
-        }
-      }
-      
-    } catch (error) {
-      console.log('Geolocalização não disponível ou negada pelo usuário');
+  toggleBtn.addEventListener('click', () => {
+    const currentTheme = document.body.getAttribute('data-theme');
+    const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+    
+    document.body.setAttribute('data-theme', newTheme);
+    localStorage.setItem('theme', newTheme);
+    updateDarkModeButton(newTheme);
+    
+    // Analytics tracking
+    if (window.analyticsService) {
+      window.analyticsService.trackEvent('UI_Interaction', 'dark_mode_toggle', newTheme);
     }
+  });
+}
+
+function updateDarkModeButton(theme) {
+  const toggleBtn = document.getElementById('toggleDark');
+  if (!toggleBtn) return;
+  
+  const darkIcon = toggleBtn.querySelector('.dark-icon');
+  const lightIcon = toggleBtn.querySelector('.light-icon');
+  
+  if (theme === 'dark') {
+    if (darkIcon) darkIcon.style.display = 'none';
+    if (lightIcon) lightIcon.style.display = 'inline';
+    toggleBtn.setAttribute('aria-label', 'Alternar para modo claro');
+    toggleBtn.setAttribute('title', 'Alternar para modo claro');
+  } else {
+    if (darkIcon) darkIcon.style.display = 'inline';
+    if (lightIcon) lightIcon.style.display = 'none';
+    toggleBtn.setAttribute('aria-label', 'Alternar para modo escuro');
+    toggleBtn.setAttribute('title', 'Alternar para modo escuro');
   }
 }
+
+// Language switcher functionality
+function initializeLanguageSwitcher() {
+  const langBtn = document.getElementById('btnLang');
+  if (!langBtn) return;
+
+  // Load saved language
+  const savedLang = localStorage.getItem('language') || 'pt';
+  updateLanguage(savedLang);
+
+  langBtn.addEventListener('click', () => {
+    const currentLang = localStorage.getItem('language') || 'pt';
+    const newLang = currentLang === 'pt' ? 'en' : 'pt';
+    
+    localStorage.setItem('language', newLang);
+    updateLanguage(newLang);
+    
+    // Analytics tracking
+    if (window.analyticsService) {
+      window.analyticsService.trackEvent('UI_Interaction', 'language_switch', newLang);
+    }
+  });
+}
+
+function updateLanguage(lang) {
+  const langBtn = document.getElementById('btnLang');
+  if (!langBtn) return;
+  
+  if (lang === 'en') {
+    langBtn.textContent = '🇧🇷';
+    langBtn.setAttribute('title', 'Switch to Portuguese');
+    document.documentElement.lang = 'en';
+  } else {
+    langBtn.textContent = '🇺🇸';
+    langBtn.setAttribute('title', 'Switch to English');
+    document.documentElement.lang = 'pt-BR';
+  }
+  
+  // Update interface elements if i18n is available
+  if (typeof updateInterfaceLanguage === 'function') {
+    updateInterfaceLanguage(lang);
+  }
+}
+
+// Enhanced search functionality with validation
+function initializeSearchFunctionality() {
+  const form = document.getElementById('searchForm');
+  if (!form) return;
+
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    
+    // Get form values with null checks
+    const precoMax = document.getElementById('precoMax')?.value || '';
+    const idade = document.getElementById('idadeInput')?.value || '';
+    const genero = document.getElementById('generoSelect')?.value || '';
+    
+    // Validate idade if provided
+    if (idade && (parseInt(idade) < 0 || parseInt(idade) > 120)) {
+      showMensagem('Por favor, insira uma idade entre 0 e 120 anos.', true);
+      return;
+    }
+    
+    // Build search parameters
+    const params = {};
+    if (precoMax) params.precoMax = precoMax;
+    if (idade) params.idade = idade;
+    if (genero) params.genero = genero;
+    
+    // Execute search
+    buscarProdutos(params).then(dados => {
+      if (dados && dados.produtos) {
+        renderGrid(dados.produtos);
+        renderPaginacao(dados.pagina || 1, dados.totalPaginas || 1);
+        mostrarSecao('produtos');
+        
+        if (dados.produtos.length === 0) {
+          showMensagem('Nenhum produto encontrado. Tente ajustar os filtros.');
+        }
+      } else {
+        showMensagem('Erro na busca. Tente novamente.', true);
+      }
+    }).catch(error => {
+      console.error('Erro na busca:', error);
+      showMensagem('Erro na busca. Tente novamente.', true);
+    });
+  });
+}
+
+// Initialize all functionality when DOM is loaded
+document.addEventListener('DOMContentLoaded', () => {
+  initializeDarkMode();
+  initializeLanguageSwitcher();
+  initializeSearchFunctionality();
+});
 
 // =============================================================================
 // EVENT LISTENERS E INICIALIZAÇÃO
