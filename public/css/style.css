@@ -102,12 +102,20 @@ form {
 }
 
 .form-inputs {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  display: flex;
+  flex-direction: row;
   gap: 1.25rem;
-  align-items: end;
+  align-items: flex-end;
+  justify-content: center;
   position: relative;
   animation: fadeInUp 0.6s ease-out;
+}
+
+.form-inputs input,
+.form-inputs select {
+  min-width: 160px;
+  max-width: 220px;
+  flex: 1 1 0;
 }
 
 .form-inputs input:focus::placeholder,

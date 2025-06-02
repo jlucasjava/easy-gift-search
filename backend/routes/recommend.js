@@ -5,4 +5,7 @@ const recommendController = require('../controllers/recommendController');
 
 router.post('/', recommendController.getRecommendation);
 
+// Rota para recomendação randomizada
+router.get('/random', recommendController.getRandomRecommendation);
+
 module.exports = router;

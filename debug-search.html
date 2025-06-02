@@ -5,74 +5,77 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Debug - Easy Gift Search</title>
     <style>
+        /* MELHORIAS VISUAIS E LAYOUT */
         body {
             font-family: Arial, sans-serif;
             padding: 20px;
-            background-color: #f5f5f5;
+            background: #f6f8fc;
         }
         .container {
             max-width: 1200px;
             margin: 0 auto;
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            background: #fff;
+            padding: 24px 24px 16px 24px;
+            border-radius: 16px;
+            box-shadow: 0 4px 24px rgba(80,120,200,0.08);
         }
         .test-section {
-            margin: 20px 0;
-            padding: 15px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
+            margin: 24px 0;
+            padding: 18px 16px;
+            border: 1px solid #e3e8f0;
+            border-radius: 10px;
+            background: #fafdff;
         }
         .test-section h3 {
             margin-top: 0;
-            color: #333;
+            color: #2d3a4a;
         }
         .result {
-            background: #f8f9fa;
-            padding: 10px;
-            margin: 10px 0;
-            border-left: 4px solid #375a8c; /* azul escuro mais suave */
+            background: #f4f8fb;
+            padding: 12px;
+            margin: 12px 0;
+            border-left: 4px solid #5b8def;
             font-family: monospace;
             white-space: pre-wrap;
-            text-align: center; /* centraliza o texto */
-            color: #1a2233; /* texto mais escuro para contraste */
+            text-align: center;
+            color: #2d3a4a;
         }
         .error {
-            background: #f8d7da;
-            border-left-color: #dc3545;
-            color: #721c24;
-            text-align: center;
+            background: #ffeaea;
+            border-left-color: #e74c3c;
+            color: #b71c1c;
         }
         .success {
-            background: #e3f0fa;
-            border-left-color: #375a8c;
-            color: #1a2233;
-            text-align: center;
+            background: #eafaf1;
+            border-left-color: #5b8def;
+            color: #2d3a4a;
         }
         .warning {
-            background: #fff3cd;
+            background: #fffbe6;
             border-left-color: #ffc107;
             color: #856404;
-            text-align: center;
         }
         button {
-            background: #007bff;
-            color: white;
+            background: #5b8def;
+            color: #fff;
             border: none;
-            padding: 10px 20px;
-            border-radius: 4px;
+            padding: 10px 22px;
+            border-radius: 6px;
             cursor: pointer;
             margin: 5px;
+            font-weight: 600;
+            font-size: 1rem;
+            transition: background 0.2s;
         }
         button:hover {
-            background: #0056b3;
+            background: #3a6ed8;
         }
         input, select {
-            padding: 8px;
+            padding: 8px 10px;
             margin: 5px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
+            border: 1px solid #e3e8f0;
+            border-radius: 6px;
+            background: #fafdff;
         }
         .form-group {
             margin: 10px 0;
@@ -81,6 +84,37 @@
             display: inline-block;
             width: 120px;
             font-weight: bold;
+            color: #2d3a4a;
+        }
+        /* Alinhamento dos filtros */
+        .filter-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        .filter-row .form-group {
+            margin: 0;
+        }
+        /* Centralização dos resultados */
+        #productResults, #aiResults, #googleResults, #integratedResults, #llama2Results {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        /* Responsividade */
+        @media (max-width: 700px) {
+            .container {
+                padding: 8px;
+            }
+            .filter-row {
+                flex-direction: column;
+                gap: 8px;
+            }
+            label {
+                width: 100%;
+            }
         }
     </style>
 </head>
@@ -106,24 +140,26 @@
         <!-- Busca de Produtos -->
         <div class="test-section">
             <h3>🛍️ Busca de Produtos</h3>
-            <div class="form-group">
-                <label>Preço Máximo:</label>
-                <input type="number" id="precoMax" value="100" placeholder="100" aria-label="Preço Máximo">
-            </div>
-            <div class="form-group">
-                <label>Categoria:</label>
-                <select id="categoria">
-                    <option value="">Todas</option>
-                    <option value="eletrônicos">Eletrônicos</option>
-                    <option value="casa">Casa</option>
-                    <option value="livros">Livros</option>
-                    <option value="roupas">Roupas</option>
-                    <option value="esportes">Esportes</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label>Busca:</label>
-                <input type="text" id="searchQuery" placeholder="Ex: smartphone" aria-label="Busca de Produto">
+            <div class="filter-row">
+                <div class="form-group">
+                    <label>Preço Máximo:</label>
+                    <input type="number" id="precoMax" value="100" placeholder="100" aria-label="Preço Máximo">
+                </div>
+                <div class="form-group">
+                    <label>Categoria:</label>
+                    <select id="categoria">
+                        <option value="">Todas</option>
+                        <option value="eletrônicos">Eletrônicos</option>
+                        <option value="casa">Casa</option>
+                        <option value="livros">Livros</option>
+                        <option value="roupas">Roupas</option>
+                        <option value="esportes">Esportes</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Busca:</label>
+                    <input type="text" id="searchQuery" placeholder="Ex: smartphone" aria-label="Busca de Produto">
+                </div>
             </div>
             <button onclick="searchProducts()" aria-label="Buscar Produtos">Buscar Produtos</button>
             <div id="productResults" class="result"></div>
