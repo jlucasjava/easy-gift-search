@@ -46,3 +46,32 @@ window.I18N_STRINGS = {
     recomendacao_inicial: 'Make a search to receive personalized recommendations! 🤖'
   }
 };
+
+// Função de tradução
+function getCurrentLanguage() {
+  return localStorage.getItem('language') || 'pt';
+}
+
+function t(key, fallback = null) {
+  const currentLang = getCurrentLanguage();
+  const translations = window.I18N_STRINGS[currentLang] || window.I18N_STRINGS.pt;
+  
+  if (translations && translations[key]) {
+    return translations[key];
+  }
+  
+  // Fallback para português se não encontrar na língua atual
+  if (currentLang !== 'pt' && window.I18N_STRINGS.pt && window.I18N_STRINGS.pt[key]) {
+    return window.I18N_STRINGS.pt[key];
+  }
+  
+  // Se ainda não encontrar, retorna o fallback ou a própria chave
+  return fallback || key;
+}
+
+// Função para alterar idioma
+function setLanguage(lang) {
+  localStorage.setItem('language', lang);
+  // Recarregar a página para aplicar as mudanças
+  location.reload();
+}

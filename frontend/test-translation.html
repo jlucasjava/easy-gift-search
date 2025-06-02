@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test - Translation Function</title>
+</head>
+<body>
+    <h1>Test da Função de Tradução</h1>
+    <div id="test-results"></div>
+
+    <script src="js/i18n.js"></script>
+    <script>
+        // Test the translation function
+        const testResults = document.getElementById('test-results');
+        
+        function runTests() {
+            const tests = [
+                { key: 'buscar', expected: 'Buscar' },
+                { key: 'favoritos', expected: 'Favoritos' },
+                { key: 'ver_marketplace', expected: 'Ver no marketplace' },
+                { key: 'favoritar', expected: 'Favoritar' },
+                { key: 'benvindo_titulo', expected: 'Bem-vindo ao Easy Gift Search!' },
+                { key: 'nonexistent_key', expected: 'nonexistent_key' }
+            ];
+            
+            let results = '<h2>Resultados dos Testes:</h2>';
+            let allPassed = true;
+            
+            tests.forEach((test, index) => {
+                const result = t(test.key);
+                const passed = result === test.expected;
+                allPassed = allPassed && passed;
+                
+                results += `<p>${index + 1}. t('${test.key}') = "${result}" ${passed ? '✅' : '❌'}</p>`;
+            });
+            
+            results += `<h3>Resultado Final: ${allPassed ? '✅ TODOS OS TESTES PASSARAM!' : '❌ ALGUNS TESTES FALHARAM'}</h3>`;
+            testResults.innerHTML = results;
+        }
+        
+        // Run tests when page loads
+        window.addEventListener('load', runTests);
+    </script>
+</body>
+</html>
