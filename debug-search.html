@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug - Easy Gift Search</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .test-section h3 {
+            margin-top: 0;
+            color: #333;
+        }
+        .result {
+            background: #f8f9fa;
+            padding: 10px;
+            margin: 10px 0;
+            border-left: 4px solid #007bff;
+            font-family: monospace;
+            white-space: pre-wrap;
+        }
+        .error {
+            background: #f8d7da;
+            border-left-color: #dc3545;
+            color: #721c24;
+        }
+        .success {
+            background: #d4edda;
+            border-left-color: #28a745;
+            color: #155724;
+        }
+        .warning {
+            background: #fff3cd;
+            border-left-color: #ffc107;
+            color: #856404;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        input, select {
+            padding: 8px;
+            margin: 5px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .form-group {
+            margin: 10px 0;
+        }
+        label {
+            display: inline-block;
+            width: 120px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Debug - Easy Gift Search</h1>
+        <p>Esta página permite testar todas as funcionalidades de busca e conectividade do sistema.</p>
+
+        <!-- Status do Sistema -->
+        <div class="test-section">
+            <h3>📊 Status do Sistema</h3>
+            <button onclick="checkSystemStatus()">Verificar Status</button>
+            <div id="systemStatus" class="result"></div>
+        </div>
+
+        <!-- Teste de Conectividade API -->
+        <div class="test-section">
+            <h3>🔗 Conectividade API</h3>
+            <button onclick="testAPIConnectivity()">Testar Conectividade</button>
+            <div id="apiStatus" class="result"></div>
+        </div>
+
+        <!-- Busca de Produtos -->
+        <div class="test-section">
+            <h3>🛍️ Busca de Produtos</h3>
+            <div class="form-group">
+                <label>Preço Máximo:</label>
+                <input type="number" id="precoMax" value="100" placeholder="100">
+            </div>
+            <div class="form-group">
+                <label>Categoria:</label>
+                <select id="categoria">
+                    <option value="">Todas</option>
+                    <option value="eletrônicos">Eletrônicos</option>
+                    <option value="casa">Casa</option>
+                    <option value="livros">Livros</option>
+                    <option value="roupas">Roupas</option>
+                    <option value="esportes">Esportes</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Busca:</label>
+                <input type="text" id="searchQuery" placeholder="Ex: smartphone">
+            </div>
+            <button onclick="searchProducts()">Buscar Produtos</button>
+            <div id="productResults" class="result"></div>
+        </div>
+
+        <!-- Teste de AI Search -->
+        <div class="test-section">
+            <h3>🤖 Busca com IA</h3>
+            <div class="form-group">
+                <label>Pergunta:</label>
+                <input type="text" id="aiQuery" placeholder="Ex: presente para namorada que gosta de livros" style="width: 300px;">
+            </div>
+            <button onclick="testAISearch()">Buscar com IA</button>
+            <div id="aiResults" class="result"></div>
+        </div>
+
+        <!-- Teste Google Search -->
+        <div class="test-section">
+            <h3>🔍 Google Search</h3>
+            <div class="form-group">
+                <label>Termo:</label>
+                <input type="text" id="googleQuery" placeholder="Ex: melhor presente tecnologia 2024" style="width: 300px;">
+            </div>
+            <button onclick="testGoogleSearch()">Buscar no Google</button>
+            <div id="googleResults" class="result"></div>
+        </div>
+
+        <!-- Simulação de Busca Integrada -->
+        <div class="test-section">
+            <h3>🎯 Busca Integrada (Como no App Principal)</h3>
+            <div class="form-group">
+                <label>Pergunta:</label>
+                <input type="text" id="integratedQuery" placeholder="Ex: presente até R$150 para homem de 30 anos" style="width: 400px;">
+            </div>
+            <button onclick="testIntegratedSearch()">Executar Busca Completa</button>
+            <div id="integratedResults" class="result"></div>
+        </div>
+
+        <!-- Console de Logs -->
+        <div class="test-section">
+            <h3>📝 Console de Logs</h3>
+            <button onclick="clearLogs()">Limpar Logs</button>
+            <div id="consoleLog" class="result" style="max-height: 300px; overflow-y: auto;"></div>
+        </div>
+    </div>
+
+    <script>
+        // Configuração da API
+        const API_URL = window.location.protocol === 'file:' ? 'http://localhost:3000' : '';
+        
+        // Função para logs
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const logDiv = document.getElementById('consoleLog');
+            const logEntry = `[${timestamp}] ${message}\n`;
+            logDiv.textContent += logEntry;
+            logDiv.scrollTop = logDiv.scrollHeight;
+            
+            console.log(`[DEBUG] ${message}`);
+        }
+
+        function clearLogs() {
+            document.getElementById('consoleLog').textContent = '';
+        }
+
+        // Função para exibir resultados
+        function displayResult(elementId, data, isSuccess = true) {
+            const element = document.getElementById(elementId);
+            element.className = `result ${isSuccess ? 'success' : 'error'}`;
+            element.textContent = typeof data === 'string' ? data : JSON.stringify(data, null, 2);
+        }
+
+        // Status do Sistema
+        async function checkSystemStatus() {
+            log('Verificando status do sistema...');
+            const statusElement = document.getElementById('systemStatus');
+            
+            try {
+                const response = await fetch(`${API_URL}/api/test`);
+                if (response.ok) {
+                    const data = await response.json();
+                    displayResult('systemStatus', `✅ Sistema Online\n${JSON.stringify(data, null, 2)}`, true);
+                    log('Sistema funcionando corretamente');
+                } else {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+            } catch (error) {
+                displayResult('systemStatus', `❌ Erro: ${error.message}`, false);
+                log(`Erro no sistema: ${error.message}`, 'error');
+            }
+        }
+
+        // Teste de Conectividade
+        async function testAPIConnectivity() {
+            log('Testando conectividade da API...');
+            const endpoints = [
+                '/api/test',
+                '/api/products',
+                '/api/ai-search',
+                '/api/google-search'
+            ];
+
+            let results = '';
+            for (const endpoint of endpoints) {
+                try {
+                    const response = await fetch(`${API_URL}${endpoint}`);
+                    const status = response.ok ? '✅' : '❌';
+                    results += `${status} ${endpoint} - ${response.status}\n`;
+                    log(`${endpoint}: ${response.status}`);
+                } catch (error) {
+                    results += `❌ ${endpoint} - ERRO: ${error.message}\n`;
+                    log(`${endpoint}: ERRO - ${error.message}`, 'error');
+                }
+            }
+            
+            displayResult('apiStatus', results);
+        }
+
+        // Busca de Produtos
+        async function searchProducts() {
+            log('Iniciando busca de produtos...');
+            const precoMax = document.getElementById('precoMax').value;
+            const categoria = document.getElementById('categoria').value;
+            const query = document.getElementById('searchQuery').value;
+
+            let url = `${API_URL}/api/products?`;
+            if (precoMax) url += `precoMax=${precoMax}&`;
+            if (categoria) url += `categoria=${categoria}&`;
+            if (query) url += `q=${encodeURIComponent(query)}&`;
+
+            try {
+                log(`Fazendo requisição para: ${url}`);
+                const response = await fetch(url);
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    displayResult('productResults', `✅ Encontrados ${data.products?.length || 0} produtos\n${JSON.stringify(data, null, 2)}`, true);
+                    log(`Busca concluída: ${data.products?.length || 0} produtos encontrados`);
+                } else {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+            } catch (error) {
+                displayResult('productResults', `❌ Erro na busca: ${error.message}`, false);
+                log(`Erro na busca de produtos: ${error.message}`, 'error');
+            }
+        }
+
+        // Teste AI Search
+        async function testAISearch() {
+            log('Testando busca com IA...');
+            const query = document.getElementById('aiQuery').value;
+            
+            if (!query.trim()) {
+                displayResult('aiResults', '⚠️ Digite uma pergunta para buscar', false);
+                return;
+            }
+
+            try {
+                log(`Enviando pergunta para IA: ${query}`);
+                const response = await fetch(`${API_URL}/api/ai-search`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ query })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    displayResult('aiResults', `✅ Resposta da IA:\n${JSON.stringify(data, null, 2)}`, true);
+                    log('Busca com IA concluída com sucesso');
+                } else {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+            } catch (error) {
+                displayResult('aiResults', `❌ Erro na busca com IA: ${error.message}`, false);
+                log(`Erro na busca com IA: ${error.message}`, 'error');
+            }
+        }
+
+        // Teste Google Search
+        async function testGoogleSearch() {
+            log('Testando Google Search...');
+            const query = document.getElementById('googleQuery').value;
+            
+            if (!query.trim()) {
+                displayResult('googleResults', '⚠️ Digite um termo para buscar', false);
+                return;
+            }
+
+            try {
+                log(`Buscando no Google: ${query}`);
+                const response = await fetch(`${API_URL}/api/google-search`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ query })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    displayResult('googleResults', `✅ Resultados do Google:\n${JSON.stringify(data, null, 2)}`, true);
+                    log('Google Search concluído com sucesso');
+                } else {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+            } catch (error) {
+                displayResult('googleResults', `❌ Erro no Google Search: ${error.message}`, false);
+                log(`Erro no Google Search: ${error.message}`, 'error');
+            }
+        }
+
+        // Busca Integrada
+        async function testIntegratedSearch() {
+            log('Iniciando busca integrada completa...');
+            const query = document.getElementById('integratedQuery').value;
+            
+            if (!query.trim()) {
+                displayResult('integratedResults', '⚠️ Digite uma pergunta para buscar', false);
+                return;
+            }
+
+            let results = 'BUSCA INTEGRADA - RESULTADOS:\n\n';
+            
+            try {
+                // 1. Busca com IA
+                log('Fase 1: Consultando IA...');
+                results += '🤖 RESPOSTA DA IA:\n';
+                try {
+                    const aiResponse = await fetch(`${API_URL}/api/ai-search`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ query })
+                    });
+                    
+                    if (aiResponse.ok) {
+                        const aiData = await aiResponse.json();
+                        results += JSON.stringify(aiData, null, 2) + '\n\n';
+                    } else {
+                        results += `Erro: HTTP ${aiResponse.status}\n\n`;
+                    }
+                } catch (aiError) {
+                    results += `Erro: ${aiError.message}\n\n`;
+                }
+
+                // 2. Busca no Google
+                log('Fase 2: Buscando no Google...');
+                results += '🔍 RESULTADOS DO GOOGLE:\n';
+                try {
+                    const googleResponse = await fetch(`${API_URL}/api/google-search`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ query })
+                    });
+                    
+                    if (googleResponse.ok) {
+                        const googleData = await googleResponse.json();
+                        results += JSON.stringify(googleData, null, 2) + '\n\n';
+                    } else {
+                        results += `Erro: HTTP ${googleResponse.status}\n\n`;
+                    }
+                } catch (googleError) {
+                    results += `Erro: ${googleError.message}\n\n`;
+                }
+
+                // 3. Busca de produtos locais
+                log('Fase 3: Buscando produtos locais...');
+                results += '🛍️ PRODUTOS LOCAIS:\n';
+                try {
+                    const productsResponse = await fetch(`${API_URL}/api/products?q=${encodeURIComponent(query)}`);
+                    
+                    if (productsResponse.ok) {
+                        const productsData = await productsResponse.json();
+                        results += JSON.stringify(productsData, null, 2) + '\n\n';
+                    } else {
+                        results += `Erro: HTTP ${productsResponse.status}\n\n`;
+                    }
+                } catch (productsError) {
+                    results += `Erro: ${productsError.message}\n\n`;
+                }
+
+                displayResult('integratedResults', results, true);
+                log('Busca integrada concluída');
+                
+            } catch (error) {
+                displayResult('integratedResults', `❌ Erro na busca integrada: ${error.message}`, false);
+                log(`Erro na busca integrada: ${error.message}`, 'error');
+            }
+        }
+
+        // Inicializar
+        window.addEventListener('load', () => {
+            log('Debug page carregada');
+            log(`API URL configurada: ${API_URL}`);
+            checkSystemStatus();
+        });
+
+        // Capturar erros não tratados
+        window.addEventListener('error', (event) => {
+            log(`Erro JavaScript: ${event.error.message}`, 'error');
+        });
+
+        window.addEventListener('unhandledrejection', (event) => {
+            log(`Promise rejeitada: ${event.reason}`, 'error');
+        });
+    </script>
+</body>
+</html>

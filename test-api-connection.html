@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test API Connection - Easy Gift Search</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .success { background-color: #d4edda; border-color: #c3e6cb; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; }
+        .loading { background-color: #fff3cd; border-color: #ffeaa7; }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover { background-color: #0056b3; }
+        pre { background: #f8f9fa; padding: 10px; border-radius: 3px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 Test API Connection - Easy Gift Search</h1>
+        
+        <div class="test-section" id="connection-test">
+            <h3>📡 Backend Connection Test</h3>
+            <button onclick="testConnection()">Test Connection</button>
+            <div id="connection-result"></div>
+        </div>
+
+        <div class="test-section" id="products-test">
+            <h3>🛒 Products API Test</h3>
+            <button onclick="testProducts()">Test Products Search</button>
+            <div id="products-result"></div>
+        </div>
+
+        <div class="test-section" id="recommend-test">
+            <h3>🤖 Recommendation API Test</h3>
+            <button onclick="testRecommendation()">Test AI Recommendation</button>
+            <div id="recommend-result"></div>
+        </div>
+
+        <div class="test-section" id="new-apis-test">
+            <h3>🆕 New APIs Test</h3>
+            <button onclick="testNewAPIs()">Test Enhanced APIs</button>
+            <div id="new-apis-result"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = window.location.hostname === 'localhost' 
+            ? 'http://localhost:3000/api'
+            : 'https://easy-gift-search.onrender.com/api';
+
+        console.log('🔗 Using API URL:', API_URL);
+
+        function setResult(elementId, message, type = 'loading') {
+            const element = document.getElementById(elementId);
+            element.innerHTML = `<div class="${type}">${message}</div>`;
+        }
+
+        async function testConnection() {
+            setResult('connection-result', '⏳ Testing backend connection...', 'loading');
+            
+            try {
+                const response = await fetch(`${API_URL}/test`);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                setResult('connection-result', 
+                    `✅ Connection successful!<br><pre>${JSON.stringify(data, null, 2)}</pre>`, 
+                    'success'
+                );
+            } catch (error) {
+                console.error('Connection test failed:', error);
+                setResult('connection-result', 
+                    `❌ Connection failed: ${error.message}<br>
+                    <strong>Possible issues:</strong><br>
+                    • Backend server not running on port 3000<br>
+                    • CORS configuration issues<br>
+                    • Network connectivity problems`, 
+                    'error'
+                );
+            }
+        }
+
+        async function testProducts() {
+            setResult('products-result', '⏳ Testing products search...', 'loading');
+            
+            try {
+                const response = await fetch(`${API_URL}/products?precoMax=100&genero=unissex`);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                setResult('products-result', 
+                    `✅ Products search working!<br>
+                    Found ${data.produtos?.length || 0} products<br>
+                    <pre>${JSON.stringify(data, null, 2)}</pre>`, 
+                    'success'
+                );
+            } catch (error) {
+                console.error('Products test failed:', error);
+                setResult('products-result', 
+                    `❌ Products search failed: ${error.message}`, 
+                    'error'
+                );
+            }
+        }
+
+        async function testRecommendation() {
+            setResult('recommend-result', '⏳ Testing AI recommendation...', 'loading');
+            
+            try {
+                const response = await fetch(`${API_URL}/recommend`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        idade: 25,
+                        genero: 'feminino',
+                        orcamento: 100
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                setResult('recommend-result', 
+                    `✅ AI Recommendation working!<br>
+                    <pre>${JSON.stringify(data, null, 2)}</pre>`, 
+                    'success'
+                );
+            } catch (error) {
+                console.error('Recommendation test failed:', error);
+                setResult('recommend-result', 
+                    `❌ AI Recommendation failed: ${error.message}`, 
+                    'error'
+                );
+            }
+        }
+
+        async function testNewAPIs() {
+            setResult('new-apis-result', '⏳ Testing enhanced APIs...', 'loading');
+            
+            try {
+                // Test Llama AI
+                const llamaResponse = await fetch(`${API_URL}/new-apis/llama/recomendacao`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        message: 'Preciso de sugestões para presente de aniversário'
+                    })
+                });
+                
+                let results = [];
+                
+                if (llamaResponse.ok) {
+                    const llamaData = await llamaResponse.json();
+                    results.push(`✅ Llama AI: Working (${llamaData.sucesso ? 'Success' : 'Failed'})`);
+                } else {
+                    results.push(`❌ Llama AI: HTTP ${llamaResponse.status}`);
+                }
+
+                // Test Google Search
+                const googleResponse = await fetch(`${API_URL}/new-apis/google/buscar?query=presentes&api=both`);
+                
+                if (googleResponse.ok) {
+                    const googleData = await googleResponse.json();
+                    results.push(`✅ Google Search: Working (${googleData.sucesso ? 'Success' : 'Failed'})`);
+                } else {
+                    results.push(`❌ Google Search: HTTP ${googleResponse.status}`);
+                }
+
+                setResult('new-apis-result', 
+                    `📊 Enhanced APIs Test Results:<br>${results.join('<br>')}`, 
+                    'success'
+                );
+                
+            } catch (error) {
+                console.error('New APIs test failed:', error);
+                setResult('new-apis-result', 
+                    `❌ Enhanced APIs test failed: ${error.message}`, 
+                    'error'
+                );
+            }
+        }
+
+        // Auto-run connection test on page load
+        window.addEventListener('load', () => {
+            console.log('🚀 Auto-testing connection...');
+            testConnection();
+        });
+    </script>
+</body>
+</html>
