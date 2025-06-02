@@ -29,7 +29,6 @@ async function buscarProdutos(params = {}) {
   if (window.analyticsService) {
     const query = params.query || 'busca_geral';
     const filters = {
-      min_price: params.precoMin || null,
       max_price: params.precoMax || null,
       age: params.idade || null,
       gender: params.genero || null,
@@ -38,9 +37,6 @@ async function buscarProdutos(params = {}) {
     window.analyticsService.trackSearch(query, filters);
     
     // Track filter usage if any filters are applied
-    if (params.precoMin) {
-      window.analyticsService.trackFilterUsage('price_min', params.precoMin);
-    }
     if (params.precoMax) {
       window.analyticsService.trackFilterUsage('price_max', params.precoMax);
     }
@@ -341,9 +337,6 @@ async function executarBuscaIA() {
     const query = document.getElementById('query')?.value || 'presentes';
     const idade = document.getElementById('idadeInput').value;
     const genero = document.getElementById('generoSelect').value;
-    const cidade = document.getElementById('cidadeInput').value;
-    const precoMin = document.getElementById('precoMin').value;
-    const precoMax = document.getElementById('precoMax').value;
     
     // Determinar categoria baseada nos filtros
     let categoria = 'presentes';
@@ -355,14 +348,13 @@ async function executarBuscaIA() {
       query,
       ...(categoria && { categoria }),
       ...(idade && { idade }),
-      ...(genero && { genero }),
-      ...(cidade && { cidade })
+      ...(genero && { genero })
     });
     
     // Analytics: Track AI search
     if (window.analyticsService) {
       window.analyticsService.trackEvent('ai_search', 'user_action', query, {
-        idade, genero, cidade, categoria
+        idade, genero, categoria
       });
     }
     
@@ -765,26 +757,20 @@ function configurarNavegacaoAbas() {
       window.analyticsService.trackEvent('tab_switch', 'navigation', 'favoritos');
     }
   };
-  
-  btnVerLocais.onclick = () => {
+    btnVerLocais.onclick = () => {
     esconderTodasSecoes();
     removerActiveButtons();
     
     secLocais.style.display = '';
     btnVerLocais.classList.add('active');
     
-    // Se não tem locais carregados, tentar buscar baseado na cidade
+    // Se não tem locais carregados, mostrar mensagem informativa
     if (!currentLocais.length) {
-      const cidade = document.getElementById('cidadeInput').value;
-      if (cidade) {
-        buscarLojasProximas(cidade);
-      } else {
-        // Mostrar mensagem pedindo para informar cidade
-        document.getElementById('mapaInfo').innerHTML = `
-          <strong>📍 Busca de Lojas Próximas</strong><br>
-          <small>Digite uma cidade no campo de busca e clique em "🤖 IA" para encontrar lojas próximas</small>
-        `;
-      }
+      // Mostrar mensagem pedindo para usar busca IA para encontrar lojas
+      document.getElementById('mapaInfo').innerHTML = `
+        <strong>📍 Busca de Lojas Próximas</strong><br>
+        <small>Use a busca IA (🤖 IA) para encontrar lojas próximas baseado nos seus critérios</small>
+      `;
     }
     
     // Analytics: Track tab switch
@@ -812,6 +798,7 @@ String.prototype.hashCode = function() {
 
 /**
  * Detectar localização do usuário (opcional)
+ * Função mantida para compatibilidade, mas sem campo cidade
  */
 async function detectarLocalizacao() {
   if ("geolocation" in navigator) {
@@ -830,7 +817,7 @@ async function detectarLocalizacao() {
       if (response.ok) {
         const resultado = await response.json();
         if (resultado.sucesso && resultado.dados.cidade) {
-          document.getElementById('cidadeInput').value = resultado.dados.cidade;
+          // Apenas mostrar mensagem da localização detectada
           showMensagem(`📍 Localização detectada: ${resultado.dados.cidade}`);
           setTimeout(clearMensagem, 3000);
         }
@@ -863,17 +850,14 @@ document.addEventListener('DOMContentLoaded', () => {
   // Melhorar busca tradicional para usar APIs aprimoradas
   const searchForm = document.getElementById('searchForm');
   const originalSubmit = searchForm.onsubmit;
-  
-  searchForm.onsubmit = async (e) => {
+    searchForm.onsubmit = async (e) => {
     e.preventDefault();
     
     // Obter parâmetros do formulário
     const params = {
-      precoMin: document.getElementById('precoMin').value,
       precoMax: document.getElementById('precoMax').value,
       idade: document.getElementById('idadeInput').value,
       genero: document.getElementById('generoSelect').value,
-      cidade: document.getElementById('cidadeInput').value,
       page: 1
     };
     

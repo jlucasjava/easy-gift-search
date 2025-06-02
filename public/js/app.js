@@ -29,7 +29,6 @@ async function buscarProdutos(params = {}) {
   if (window.analyticsService) {
     const query = params.query || 'busca_geral';
     const filters = {
-      min_price: params.precoMin || null,
       max_price: params.precoMax || null,
       age: params.idade || null,
       gender: params.genero || null,
@@ -38,9 +37,6 @@ async function buscarProdutos(params = {}) {
     window.analyticsService.trackSearch(query, filters);
     
     // Track filter usage if any filters are applied
-    if (params.precoMin) {
-      window.analyticsService.trackFilterUsage('price_min', params.precoMin);
-    }
     if (params.precoMax) {
       window.analyticsService.trackFilterUsage('price_max', params.precoMax);
     }
@@ -190,12 +186,24 @@ function renderGrid(produtos) {
   produtos.forEach((prod, index) => {
     const card = document.createElement('div');
     card.className = 'card';
+    
+    // Garantir que os valores existem e são válidos
+    const nomeProduto = prod.nome || prod.titulo || 'Produto sem nome';
+    const precoProduto = prod.preco || 'Consulte';
+    const imagemProduto = prod.imagem || '/images/placeholder.jpg';
+    const urlProduto = prod.url || '#';
+    const idProduto = prod.id || Math.random().toString(36).substr(2, 9);
+    const marketplaceProduto = prod.marketplace || 'marketplace';
+    
+    // Escapar aspas simples nos nomes para evitar erros JavaScript
+    const nomeEscapado = nomeProduto.replace(/'/g, '\\\'');
+    
     card.innerHTML = `
-      <img src="${prod.imagem}" alt="${prod.nome}" loading="lazy">
-      <h3>${prod.nome}</h3>
-      <p>R$ ${prod.preco}</p>
-      <a href="${prod.url}" target="_blank" onclick="trackProductClick('${prod.id}', '${prod.nome.replace(/'/g, '')}', ${prod.preco}, '${prod.marketplace}', ${index}, '${prod.url}')">${t('ver_marketplace')}</a>
-      <button onclick="favoritarProduto('${prod.id}', '${prod.nome.replace(/'/g, '')}')">${t('favoritar')}</button>
+      <img src="${imagemProduto}" alt="${nomeProduto}" loading="lazy">
+      <h3>${nomeProduto}</h3>
+      <p>R$ ${precoProduto}</p>
+      <a href="${urlProduto}" target="_blank" onclick="trackProductClick('${idProduto}', '${nomeEscapado}', '${precoProduto}', '${marketplaceProduto}', ${index}, '${urlProduto}')">${t('ver_marketplace')}</a>
+      <button onclick="favoritarProduto('${idProduto}', '${nomeEscapado}')">${t('favoritar')}</button>
     `;
     
     // Analytics: Track product view
@@ -339,11 +347,7 @@ async function executarBuscaIA() {
   try {
     // Obter dados do formulário
     const query = document.getElementById('query')?.value || 'presentes';
-    const idade = document.getElementById('idadeInput').value;
-    const genero = document.getElementById('generoSelect').value;
-    const cidade = document.getElementById('cidadeInput').value;
-    const precoMin = document.getElementById('precoMin').value;
-    const precoMax = document.getElementById('precoMax').value;
+    const idade = document.getElementById('idadeInput').value;    const genero = document.getElementById('generoSelect').value;
     
     // Determinar categoria baseada nos filtros
     let categoria = 'presentes';
@@ -355,14 +359,13 @@ async function executarBuscaIA() {
       query,
       ...(categoria && { categoria }),
       ...(idade && { idade }),
-      ...(genero && { genero }),
-      ...(cidade && { cidade })
+      ...(genero && { genero })
     });
     
     // Analytics: Track AI search
     if (window.analyticsService) {
       window.analyticsService.trackEvent('ai_search', 'user_action', query, {
-        idade, genero, cidade, categoria
+        idade, genero, categoria
       });
     }
     
@@ -772,19 +775,13 @@ function configurarNavegacaoAbas() {
     
     secLocais.style.display = '';
     btnVerLocais.classList.add('active');
-    
-    // Se não tem locais carregados, tentar buscar baseado na cidade
+      // Se não tem locais carregados, mostrar mensagem informativa
     if (!currentLocais.length) {
-      const cidade = document.getElementById('cidadeInput').value;
-      if (cidade) {
-        buscarLojasProximas(cidade);
-      } else {
-        // Mostrar mensagem pedindo para informar cidade
-        document.getElementById('mapaInfo').innerHTML = `
-          <strong>📍 Busca de Lojas Próximas</strong><br>
-          <small>Digite uma cidade no campo de busca e clique em "🤖 IA" para encontrar lojas próximas</small>
-        `;
-      }
+      // Mostrar mensagem pedindo para usar busca IA para encontrar lojas
+      document.getElementById('mapaInfo').innerHTML = `
+        <strong>📍 Busca de Lojas Próximas</strong><br>
+        <small>Use a busca IA (🤖 IA) para encontrar lojas próximas baseado nos seus critérios</small>
+      `;
     }
     
     // Analytics: Track tab switch
@@ -824,13 +821,12 @@ async function detectarLocalizacao() {
       });
       
       const { latitude, longitude } = position.coords;
-      
-      // Buscar informações da localização atual
+        // Buscar informações da localização atual
       const response = await fetch(`${API_URL}/new-apis/maps/localizacao?latitude=${latitude}&longitude=${longitude}`);
       if (response.ok) {
         const resultado = await response.json();
         if (resultado.sucesso && resultado.dados.cidade) {
-          document.getElementById('cidadeInput').value = resultado.dados.cidade;
+          // Apenas mostrar mensagem da localização detectada
           showMensagem(`📍 Localização detectada: ${resultado.dados.cidade}`);
           setTimeout(clearMensagem, 3000);
         }
@@ -866,14 +862,11 @@ document.addEventListener('DOMContentLoaded', () => {
   
   searchForm.onsubmit = async (e) => {
     e.preventDefault();
-    
-    // Obter parâmetros do formulário
+      // Obter parâmetros do formulário
     const params = {
-      precoMin: document.getElementById('precoMin').value,
       precoMax: document.getElementById('precoMax').value,
       idade: document.getElementById('idadeInput').value,
       genero: document.getElementById('generoSelect').value,
-      cidade: document.getElementById('cidadeInput').value,
       page: 1
     };
     
