@@ -3,6 +3,17 @@ const express = require('express');
 const router = express.Router();
 const amazonService = require('../services/amazonService');
 
+// GET /api/test - Endpoint de teste geral
+router.get('/', (req, res) => {
+  res.json({
+    status: 'OK',
+    message: 'Backend Easy Gift Search está funcionando!',
+    timestamp: new Date().toISOString(),
+    api_url: req.get('host'),
+    environment: process.env.NODE_ENV || 'development'
+  });
+});
+
 // GET /api/test/amazon - Testa a integração Amazon
 router.get('/amazon', async (req, res) => {
   try {

@@ -23,9 +23,14 @@ const allowedOrigins = [
 ];
 app.use(cors({
   origin: function (origin, callback) {
-    // Permite requests sem origin (ex: mobile, curl)
+    // Permite requests sem origin (ex: mobile, curl, file://)
     if (!origin) return callback(null, true);
+    
+    // Permite file:// protocol para desenvolvimento local
+    if (origin === 'null') return callback(null, true);
+    
     if (allowedOrigins.indexOf(origin) === -1) {
+      console.log(`⚠️ CORS blocked origin: ${origin}`);
       return callback(new Error('CORS não permitido para esta origem.'), false);
     }
     return callback(null, true);
