@@ -345,9 +345,10 @@ async function executarBuscaIA() {
   clearMensagem();
   
   try {
-    // Obter dados do formulário
-    const query = document.getElementById('query')?.value || 'presentes';
-    const idade = document.getElementById('idadeInput').value;    const genero = document.getElementById('generoSelect').value;
+    // Obter dados do formulário - Note: não temos campo 'query', então usar termo genérico
+    const query = 'presentes inteligentes'; // Termo genérico para busca IA
+    const idade = document.getElementById('idadeInput')?.value;
+    const genero = document.getElementById('generoSelect')?.value;
     
     // Determinar categoria baseada nos filtros
     let categoria = 'presentes';
@@ -374,14 +375,8 @@ async function executarBuscaIA() {
     if (!response.ok) throw new Error('Erro na busca integrada');
     
     const resultado = await response.json();
-    
-    // Processar e exibir resultados
+      // Processar e exibir resultados
     await processarResultadosIA(resultado);
-    
-    // Se tem cidade, buscar também lojas próximas
-    if (cidade) {
-      await buscarLojasProximas(cidade);
-    }
     
     showMensagem(`✨ Busca IA concluída! Encontrados múltiplos resultados integrados.`);
     

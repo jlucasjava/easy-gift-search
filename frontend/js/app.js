@@ -333,10 +333,10 @@ async function executarBuscaIA() {
   clearMensagem();
   
   try {
-    // Obter dados do formulário
-    const query = document.getElementById('query')?.value || 'presentes';
-    const idade = document.getElementById('idadeInput').value;
-    const genero = document.getElementById('generoSelect').value;
+    // Obter dados do formulário - Note: não temos campo 'query', então usar termo genérico
+    const query = 'presentes inteligentes'; // Termo genérico para busca IA
+    const idade = document.getElementById('idadeInput')?.value;
+    const genero = document.getElementById('generoSelect')?.value;
     
     // Determinar categoria baseada nos filtros
     let categoria = 'presentes';
@@ -363,14 +363,8 @@ async function executarBuscaIA() {
     if (!response.ok) throw new Error('Erro na busca integrada');
     
     const resultado = await response.json();
-    
-    // Processar e exibir resultados
+      // Processar e exibir resultados
     await processarResultadosIA(resultado);
-    
-    // Se tem cidade, buscar também lojas próximas
-    if (cidade) {
-      await buscarLojasProximas(cidade);
-    }
     
     showMensagem(`✨ Busca IA concluída! Encontrados múltiplos resultados integrados.`);
     
@@ -780,53 +774,188 @@ function configurarNavegacaoAbas() {
   };
 }
 
-// ===== UTILITY FUNCTIONS =====
+// =============================================================================
+// DARK MODE AND LANGUAGE SWITCHER FUNCTIONALITY
+// =============================================================================
 
 /**
- * Função auxiliar para gerar hash simples de string
+ * Initialize dark mode functionality
  */
-String.prototype.hashCode = function() {
-  let hash = 0;
-  if (this.length == 0) return hash;
-  for (let i = 0; i < this.length; i++) {
-    const char = this.charCodeAt(i);
-    hash = ((hash << 5) - hash) + char;
-    hash = hash & hash;
+function initializeDarkMode() {
+  const toggleDarkBtn = document.getElementById('toggleDark');
+  if (!toggleDarkBtn) return;
+
+  // Check for saved theme preference or default to light mode
+  const savedTheme = localStorage.getItem('theme') || 'light';
+  if (savedTheme === 'dark') {
+    document.body.classList.add('dark');
   }
-  return Math.abs(hash);
-};
+
+  // Toggle dark mode
+  toggleDarkBtn.addEventListener('click', () => {
+    document.body.classList.toggle('dark');
+    const isDark = document.body.classList.contains('dark');
+    localStorage.setItem('theme', isDark ? 'dark' : 'light');
+    
+    // Analytics tracking
+    if (window.analyticsService) {
+      window.analyticsService.trackEvent('ui_interaction', 'theme_toggle', isDark ? 'dark' : 'light');
+    }
+  });
+}
 
 /**
- * Detectar localização do usuário (opcional)
- * Função mantida para compatibilidade, mas sem campo cidade
+ * Initialize language switcher functionality
  */
-async function detectarLocalizacao() {
-  if ("geolocation" in navigator) {
+function initializeLanguageSwitcher() {
+  const langBtn = document.getElementById('btnLang');
+  if (!langBtn) return;
+
+  // Check for saved language preference or default to Portuguese
+  const savedLang = localStorage.getItem('language') || 'pt';
+  updateLanguage(savedLang);
+
+  // Toggle language
+  langBtn.addEventListener('click', () => {
+    const currentLang = localStorage.getItem('language') || 'pt';
+    const newLang = currentLang === 'pt' ? 'en' : 'pt';
+    updateLanguage(newLang);
+    
+    // Analytics tracking
+    if (window.analyticsService) {
+      window.analyticsService.trackEvent('ui_interaction', 'language_switch', newLang);
+    }
+  });
+}
+
+/**
+ * Update interface language
+ */
+function updateLanguage(lang) {
+  localStorage.setItem('language', lang);
+  
+  // Update button text
+  const langBtn = document.getElementById('btnLang');
+  if (langBtn) {
+    langBtn.textContent = lang === 'pt' ? '🇺🇸' : '🇧🇷';
+    langBtn.title = lang === 'pt' ? 'Switch to English' : 'Mudar para Português';
+  }
+
+  // Update page elements if i18n strings are available
+  if (window.I18N_STRINGS && window.I18N_STRINGS[lang]) {
+    const strings = window.I18N_STRINGS[lang];
+    
+    // Update form placeholders and labels
+    const precoMaxInput = document.getElementById('precoMax');
+    if (precoMaxInput) precoMaxInput.placeholder = strings.preco_max || 'Preço máximo';
+    
+    const idadeInput = document.getElementById('idadeInput');
+    if (idadeInput) idadeInput.placeholder = strings.idade || 'Idade';
+    
+    const generoSelect = document.getElementById('generoSelect');
+    if (generoSelect) {
+      const options = generoSelect.querySelectorAll('option');
+      if (options[0]) options[0].textContent = strings.genero || 'Gênero';
+      if (options[1]) options[1].textContent = strings.masculino || 'Masculino';
+      if (options[2]) options[2].textContent = strings.feminino || 'Feminino';
+      if (options[3]) options[3].textContent = strings.unissex || 'Unissex';
+    }
+    
+    // Update button texts
+    const searchBtn = document.querySelector('button[type="submit"]');
+    if (searchBtn) searchBtn.textContent = strings.buscar || 'Buscar';
+    
+    // Update tab buttons
+    const resultadosBtn = document.getElementById('btnVerResultados');
+    if (resultadosBtn) resultadosBtn.textContent = strings.resultados || 'Resultados';
+    
+    const favoritosBtn = document.getElementById('btnVerFavoritos');
+    if (favoritosBtn) favoritosBtn.textContent = strings.favoritos || 'Favoritos';
+    
+    // Update section titles
+    const resultadosTitle = document.getElementById('resultadosTitle');
+    if (resultadosTitle) resultadosTitle.textContent = strings.resultados || 'Resultados';
+    
+    const recomendacaoTitle = document.getElementById('recomendacaoTitle');
+    if (recomendacaoTitle) recomendacaoTitle.textContent = strings.recomendacao || '🎯 Recomendação Inteligente';
+    
+    const favoritosTitle = document.getElementById('favoritosTitle');
+    if (favoritosTitle) favoritosTitle.textContent = strings.favoritos || 'Meus Favoritos';
+  }
+}
+
+/**
+ * Initialize search functionality without errors
+ */
+function initializeSearchFunctionality() {
+  const searchForm = document.getElementById('searchForm');
+  if (!searchForm) return;
+
+  // Enhanced form validation
+  searchForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
     try {
-      const position = await new Promise((resolve, reject) => {
-        navigator.geolocation.getCurrentPosition(resolve, reject, {
-          timeout: 10000,
-          enableHighAccuracy: false
-        });
-      });
+      // Safely get form values
+      const precoMaxElement = document.getElementById('precoMax');
+      const idadeElement = document.getElementById('idadeInput');
+      const generoElement = document.getElementById('generoSelect');
       
-      const { latitude, longitude } = position.coords;
+      const params = {
+        precoMax: precoMaxElement ? precoMaxElement.value : '',
+        idade: idadeElement ? idadeElement.value : '',
+        genero: generoElement ? generoElement.value : '',
+        page: 1
+      };
       
-      // Buscar informações da localização atual
-      const response = await fetch(`${API_URL}/new-apis/maps/localizacao?latitude=${latitude}&longitude=${longitude}`);
-      if (response.ok) {
-        const resultado = await response.json();
-        if (resultado.sucesso && resultado.dados.cidade) {
-          // Apenas mostrar mensagem da localização detectada
-          showMensagem(`📍 Localização detectada: ${resultado.dados.cidade}`);
-          setTimeout(clearMensagem, 3000);
+      // Validate age range
+      if (params.idade && (params.idade < 0 || params.idade > 120)) {
+        showMensagem('Idade deve estar entre 0 e 120 anos', true);
+        return;
+      }
+      
+      console.log('🔍 Searching with params:', params);
+      
+      // Show products section
+      const produtosSection = document.getElementById('produtos');
+      if (produtosSection) {
+        produtosSection.style.display = '';
+      }
+      
+      // Execute search
+      await carregarProdutos(params);
+      
+      // Try AI recommendation if age or gender provided
+      if (params.idade || params.genero) {
+        try {
+          const recomendacaoIA = await gerarRecomendacaoIA({
+            idade: params.idade,
+            genero: params.genero,
+            orcamento: params.precoMax
+          });
+          
+          if (recomendacaoIA && recomendacaoIA.sucesso && recomendacaoIA.dados) {
+            const recomendacaoSection = document.getElementById('recomendacao');
+            const sugestaoDiv = document.getElementById('sugestao');
+            
+            if (recomendacaoSection && sugestaoDiv) {
+              recomendacaoSection.style.display = '';
+              sugestaoDiv.innerHTML = `
+                <strong>🤖 Recomendação IA:</strong><br>
+                ${recomendacaoIA.dados.resposta || recomendacaoIA.dados}
+              `;
+            }
+          }
+        } catch (error) {
+          console.log('Recomendação IA opcional falhou:', error);
         }
       }
       
     } catch (error) {
-      console.log('Geolocalização não disponível ou negada pelo usuário');
+      console.error('Erro na submissão do formulário:', error);
+      showMensagem('Erro ao processar busca. Tente novamente.', true);
     }
-  }
+  });
 }
 
 // =============================================================================
@@ -835,6 +964,15 @@ async function detectarLocalizacao() {
 
 // Configurar eventos quando a página carregar
 document.addEventListener('DOMContentLoaded', () => {
+  console.log('🚀 Initializing Easy Gift Search...');
+  
+  // Initialize dark mode and language switcher
+  initializeDarkMode();
+  initializeLanguageSwitcher();
+  
+  // Initialize enhanced search functionality
+  initializeSearchFunctionality();
+  
   // Configurar botão de busca IA
   const btnAIPowered = document.getElementById('btnAIPowered');
   if (btnAIPowered) {
@@ -844,50 +982,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Configurar navegação entre abas
   configurarNavegacaoAbas();
   
-  // Detectar localização automaticamente (opcional)
-  // detectarLocalizacao(); // Descomentari se quiser detecção automática
-  
-  // Melhorar busca tradicional para usar APIs aprimoradas
-  const searchForm = document.getElementById('searchForm');
-  const originalSubmit = searchForm.onsubmit;
-    searchForm.onsubmit = async (e) => {
-    e.preventDefault();
-    
-    // Obter parâmetros do formulário
-    const params = {
-      precoMax: document.getElementById('precoMax').value,
-      idade: document.getElementById('idadeInput').value,
-      genero: document.getElementById('generoSelect').value,
-      page: 1
-    };
-    
-    // Mostrar seção de produtos
-    document.getElementById('produtos').style.display = '';
-    
-    // Executar busca tradicional primeiro
-    await carregarProdutos(params);
-    
-    // Se tem parâmetros de IA, tentar também recomendação IA
-    if (params.idade || params.genero) {
-      try {
-        const recomendacaoIA = await gerarRecomendacaoIA({
-          idade: params.idade,
-          genero: params.genero,
-          orcamento: params.precoMax
-        });
-        
-        if (recomendacaoIA.sucesso && recomendacaoIA.dados) {
-          document.getElementById('recomendacao').style.display = '';
-          document.getElementById('sugestao').innerHTML = `
-            <strong>🤖 Recomendação IA:</strong><br>
-            ${recomendacaoIA.dados.resposta || recomendacaoIA.dados}
-          `;
-        }
-      } catch (error) {
-        console.log('Recomendação IA opcional falhou:', error);
-      }
-    }
-  };
+  console.log('✅ Easy Gift Search initialized successfully');
 });
 
 // Expor funções globalmente para uso em outros contextos
