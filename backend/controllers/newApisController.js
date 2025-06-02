@@ -22,6 +22,8 @@ exports.gerarRecomendacao = async (req, res) => {
   try {
     const { message, webAccess } = req.body;
 
+    console.log('[Llama] Requisição recebida:', { message, webAccess });
+
     if (!message) {
       return res.status(400).json({
         erro: 'Parâmetro "message" é obrigatório'
@@ -33,10 +35,12 @@ exports.gerarRecomendacao = async (req, res) => {
       webAccess: webAccess || false
     });
 
+    console.log('[Llama] Resposta enviada:', resultado);
+
     res.json(resultado);
 
   } catch (error) {
-    console.error('Erro no controller de recomendação:', error);
+    console.error('[Llama] Erro no controller de recomendação:', error);
     res.status(500).json({
       erro: 'Erro interno do servidor',
       detalhes: error.message
@@ -51,6 +55,8 @@ exports.sugerirPresentes = async (req, res) => {
   try {
     const { idade, genero, interesses, orcamento } = req.body;
 
+    console.log('[Llama] Requisição recebida:', { idade, genero, interesses, orcamento });
+
     if (!idade || !genero || !interesses || !orcamento) {
       return res.status(400).json({
         erro: 'Parâmetros obrigatórios: idade, genero, interesses, orcamento'
@@ -64,10 +70,12 @@ exports.sugerirPresentes = async (req, res) => {
       orcamento
     });
 
+    console.log('[Llama] Resposta enviada:', resultado);
+
     res.json(resultado);
 
   } catch (error) {
-    console.error('Erro no controller de sugestões:', error);
+    console.error('[Llama] Erro no controller de sugestões:', error);
     res.status(500).json({
       erro: 'Erro interno do servidor',
       detalhes: error.message
@@ -81,6 +89,8 @@ exports.sugerirPresentes = async (req, res) => {
 exports.buscarGoogle = async (req, res) => {
   try {
     const { query, api = 'both' } = req.query;
+
+    console.log('[GoogleSearch] Requisição recebida:', { query, api });
 
     if (!query) {
       return res.status(400).json({
@@ -103,10 +113,12 @@ exports.buscarGoogle = async (req, res) => {
         break;
     }
 
+    console.log('[GoogleSearch] Resposta enviada:', resultado);
+
     res.json(resultado);
 
   } catch (error) {
-    console.error('Erro no controller Google Search:', error);
+    console.error('[GoogleSearch] Erro no controller Google Search:', error);
     res.status(500).json({
       erro: 'Erro interno do servidor',
       detalhes: error.message
@@ -121,6 +133,8 @@ exports.detalheAliExpress = async (req, res) => {
   try {
     const { itemId } = req.params;
 
+    console.log('[AliExpress] Requisição recebida:', { itemId });
+
     if (!itemId) {
       return res.status(400).json({
         erro: 'Parâmetro "itemId" é obrigatório'
@@ -129,10 +143,12 @@ exports.detalheAliExpress = async (req, res) => {
 
     const resultado = await aliexpressService.buscarDetalheProdutoAliExpress(itemId);
 
+    console.log('[AliExpress] Resposta enviada:', resultado);
+
     res.json(resultado);
 
   } catch (error) {
-    console.error('Erro no controller AliExpress:', error);
+    console.error('[AliExpress] Erro no controller AliExpress:', error);
     res.status(500).json({
       erro: 'Erro interno do servidor',
       detalhes: error.message
@@ -146,6 +162,8 @@ exports.detalheAliExpress = async (req, res) => {
 exports.buscarWeb = async (req, res) => {
   try {
     const { query, mkt, safeSearch, freshness, count, offset } = req.query;
+
+    console.log('[BingWeb] Requisição recebida:', { query, mkt, safeSearch, freshness, count, offset });
 
     if (!query) {
       return res.status(400).json({
@@ -162,10 +180,12 @@ exports.buscarWeb = async (req, res) => {
       offset: parseInt(offset) || 0
     });
 
+    console.log('[BingWeb] Resposta enviada:', resultado);
+
     res.json(resultado);
 
   } catch (error) {
-    console.error('Erro na busca web:', error);
+    console.error('[BingWeb] Erro na busca web:', error);
     res.status(500).json({
       erro: 'Erro interno do servidor',
       detalhes: error.message
@@ -554,6 +574,149 @@ exports.gerarRespostaLlama2 = async (req, res) => {
   } catch (error) {
     console.error('Erro no controller Llama-2:', error);
     res.status(500).json({ erro: 'Erro interno do servidor', detalhes: error.message });
+  }
+};
+
+/**
+ * Busca produtos na Amazon (real-time-amazon-data)
+ * Query: ?genero=string&precoMin=number&precoMax=number
+ */
+exports.buscarProdutosAmazon = async (req, res) => {
+  try {
+    const filtros = req.query;
+    console.log('[Amazon] Requisição recebida:', filtros);
+    const amazonService = require('../services/amazonService');
+    const resultado = await amazonService.buscarProdutos(filtros);
+    console.log('[Amazon] Resposta enviada:', resultado);
+    res.json({ produtos: resultado, total: resultado.length });
+  } catch (error) {
+    console.error('[Amazon] Erro no controller:', error);
+    res.status(500).json({ erro: 'Erro interno do servidor', detalhes: error.message });
+  }
+};
+
+/**
+ * Busca produtos best sellers na Amazon (real-time-amazon-data)
+ * Query: ?categoria=string&country=string
+ */
+exports.buscarBestSellersAmazon = async (req, res) => {
+  try {
+    const { categoria = 'electronics', country = 'US' } = req.query;
+    const axios = require('axios');
+    const https = require('https');
+    const RAPIDAPI_KEY = process.env.RAPIDAPI_KEY_NEW || process.env.RAPIDAPI_KEY;
+    if (!RAPIDAPI_KEY) throw new Error('RAPIDAPI_KEY_NEW não configurada');
+    const options = {
+      method: 'GET',
+      url: 'https://real-time-amazon-data.p.rapidapi.com/best-sellers',
+      params: { category: categoria, country },
+      headers: {
+        'X-RapidAPI-Key': RAPIDAPI_KEY,
+        'X-RapidAPI-Host': 'real-time-amazon-data.p.rapidapi.com'
+      },
+      timeout: 10000,
+      httpsAgent: new https.Agent({ rejectUnauthorized: false })
+    };
+    console.log('[Amazon] Buscando Best Sellers:', options.params);
+    const response = await axios.request(options);
+    res.json({ produtos: response.data.data?.products || [], total: response.data.data?.products?.length || 0 });
+  } catch (error) {
+    console.error('[Amazon] Erro Best Sellers:', error);
+    res.status(500).json({ erro: 'Erro ao buscar best sellers', detalhes: error.message });
+  }
+};
+
+/**
+ * Busca perfil de influencer Amazon (real-time-amazon-data)
+ * Query: ?profile_url=string
+ */
+exports.buscarInfluencerAmazon = async (req, res) => {
+  try {
+    const { profile_url } = req.query;
+    if (!profile_url) return res.status(400).json({ erro: 'Parâmetro "profile_url" é obrigatório' });
+    const axios = require('axios');
+    const https = require('https');
+    const RAPIDAPI_KEY = process.env.RAPIDAPI_KEY_NEW || process.env.RAPIDAPI_KEY;
+    if (!RAPIDAPI_KEY) throw new Error('RAPIDAPI_KEY_NEW não configurada');
+    const options = {
+      method: 'GET',
+      url: 'https://real-time-amazon-data.p.rapidapi.com/influencer-profile',
+      params: { profile_url },
+      headers: {
+        'X-RapidAPI-Key': RAPIDAPI_KEY,
+        'X-RapidAPI-Host': 'real-time-amazon-data.p.rapidapi.com'
+      },
+      timeout: 10000,
+      httpsAgent: new https.Agent({ rejectUnauthorized: false })
+    };
+    console.log('[Amazon] Buscando Influencer Profile:', profile_url);
+    const response = await axios.request(options);
+    res.json(response.data);
+  } catch (error) {
+    console.error('[Amazon] Erro Influencer Profile:', error);
+    res.status(500).json({ erro: 'Erro ao buscar influencer', detalhes: error.message });
+  }
+};
+
+/**
+ * Busca hot products do AliExpress (free-aliexpress-api)
+ * Query: ?category=string&page=number
+ */
+exports.buscarHotAliExpress = async (req, res) => {
+  try {
+    const { category = 'electronics', page = 1 } = req.query;
+    const axios = require('axios');
+    const https = require('https');
+    const RAPIDAPI_KEY = process.env.RAPIDAPI_KEY_NEW || process.env.RAPIDAPI_KEY;
+    if (!RAPIDAPI_KEY) throw new Error('RAPIDAPI_KEY_NEW não configurada');
+    const options = {
+      method: 'GET',
+      url: 'https://free-aliexpress-api.p.rapidapi.com/hot-products',
+      params: { category, page },
+      headers: {
+        'X-RapidAPI-Key': RAPIDAPI_KEY,
+        'X-RapidAPI-Host': 'free-aliexpress-api.p.rapidapi.com'
+      },
+      timeout: 10000,
+      httpsAgent: new https.Agent({ rejectUnauthorized: false })
+    };
+    console.log('[AliExpress] Buscando Hot Products:', options.params);
+    const response = await axios.request(options);
+    res.json({ produtos: response.data.products || [], total: response.data.products?.length || 0 });
+  } catch (error) {
+    console.error('[AliExpress] Erro Hot Products:', error);
+    res.status(500).json({ erro: 'Erro ao buscar hot products', detalhes: error.message });
+  }
+};
+
+/**
+ * Busca produtos AliExpress DataHub (aliexpress-datahub)
+ * Query: ?q=string&page=number&min_price=number
+ */
+exports.buscarAliExpressDataHub = async (req, res) => {
+  try {
+    const { q = 'gift', page = 1, min_price = 0 } = req.query;
+    const axios = require('axios');
+    const https = require('https');
+    const RAPIDAPI_KEY = process.env.RAPIDAPI_KEY_NEW || process.env.RAPIDAPI_KEY;
+    if (!RAPIDAPI_KEY) throw new Error('RAPIDAPI_KEY_NEW não configurada');
+    const options = {
+      method: 'GET',
+      url: 'https://aliexpress-datahub.p.rapidapi.com/item_search',
+      params: { q, page, min_price },
+      headers: {
+        'X-RapidAPI-Key': RAPIDAPI_KEY,
+        'X-RapidAPI-Host': 'aliexpress-datahub.p.rapidapi.com'
+      },
+      timeout: 10000,
+      httpsAgent: new https.Agent({ rejectUnauthorized: false })
+    };
+    console.log('[AliExpress] Buscando DataHub:', options.params);
+    const response = await axios.request(options);
+    res.json({ produtos: response.data.result?.resultList || [], total: response.data.result?.resultList?.length || 0 });
+  } catch (error) {
+    console.error('[AliExpress] Erro DataHub:', error);
+    res.status(500).json({ erro: 'Erro ao buscar DataHub', detalhes: error.message });
   }
 };
 

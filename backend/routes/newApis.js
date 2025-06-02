@@ -112,6 +112,43 @@ router.get('/maps/entrega', newApisController.buscarInfoEntrega);
  */
 router.get('/aliexpress/detalhes/:itemId', newApisController.detalheAliExpress);
 
+/**
+ * GET /api/new-apis/aliexpress/hot-products
+ * Busca hot products do AliExpress
+ * Query: ?category=string&page=number
+ */
+router.get('/aliexpress/hot-products', newApisController.buscarHotAliExpress);
+
+/**
+ * GET /api/new-apis/aliexpress/datahub
+ * Busca produtos AliExpress DataHub
+ * Query: ?q=string&page=number&min_price=number
+ */
+router.get('/aliexpress/datahub', newApisController.buscarAliExpressDataHub);
+
+// ===== ROTAS AMAZON =====
+
+/**
+ * GET /api/new-apis/amazon/produtos
+ * Busca produtos na Amazon (real-time-amazon-data)
+ * Query: ?genero=string&precoMin=number&precoMax=number
+ */
+router.get('/amazon/produtos', newApisController.buscarProdutosAmazon);
+
+/**
+ * GET /api/new-apis/amazon/best-sellers
+ * Busca best sellers na Amazon
+ * Query: ?categoria=string&country=string
+ */
+router.get('/amazon/best-sellers', newApisController.buscarBestSellersAmazon);
+
+/**
+ * GET /api/new-apis/amazon/influencer
+ * Busca perfil de influencer Amazon
+ * Query: ?profile_url=string
+ */
+router.get('/amazon/influencer', newApisController.buscarInfluencerAmazon);
+
 // ===== ROTAS INTEGRADAS =====
 
 /**
@@ -275,6 +312,20 @@ router.get('/info', (req, res) => {
           "GET /api/new-apis/maps/shoppings",
           "GET /api/new-apis/maps/entrega"
         ]
+      },
+      amazon: {
+        nome: "Amazon APIs",
+        endpoint: "https://real-time-amazon-data.p.rapidapi.com/products",
+        funcionalidades: [
+          "Busca de produtos na Amazon",
+          "Acesso a best sellers",
+          "Informações sobre influenciadores"
+        ],
+        rotas: [
+          "GET /api/new-apis/amazon/produtos",
+          "GET /api/new-apis/amazon/best-sellers",
+          "GET /api/new-apis/amazon/influencer"
+        ]
       }
     },
     rotas_especiais: {
@@ -294,7 +345,8 @@ router.get('/info', (req, res) => {
       google_ativo: process.env.USE_GOOGLE_SEARCH_API === 'true' ? "✅ Ativo" : "❌ Inativo",
       aliexpress_ativo: process.env.USE_ALIEXPRESS_DATAHUB_API === 'true' ? "✅ Ativo" : "❌ Inativo",
       bing_ativo: process.env.USE_BING_WEB_SEARCH_API === 'true' ? "✅ Ativo" : "❌ Inativo",
-      maps_ativo: process.env.USE_GOOGLE_MAPS_API === 'true' ? "✅ Ativo" : "❌ Inativo"
+      maps_ativo: process.env.USE_GOOGLE_MAPS_API === 'true' ? "✅ Ativo" : "❌ Inativo",
+      amazon_ativo: process.env.USE_AMAZON_API === 'true' ? "✅ Ativo" : "❌ Inativo"
     },
     timestamp: new Date().toISOString()
   });
