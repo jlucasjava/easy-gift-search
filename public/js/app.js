@@ -3,7 +3,7 @@
 const API_URL =
   window.location.hostname === 'localhost'
     ? 'http://localhost:3000/api'
-    : 'https://easy-gift-35cs.onrender.com/api';
+    : 'https://easy-gift-search.onrender.com/api';
 
 function showLoader(show) {
   document.getElementById('loader').style.display = show ? 'block' : 'none';

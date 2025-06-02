@@ -17,7 +17,8 @@ const allowedOrigins = [
   'http://localhost:8080',
   'https://easygiftsearch.com', // exemplo de domínio de produção
   'https://easy-gift.vercel.app', // domínio do frontend na Vercel
-  'https://easy-gift-git-main-jlucasjavas-projects.vercel.app' // novo domínio Vercel preview
+  'https://easy-gift-git-main-jlucasjavas-projects.vercel.app', // novo domínio Vercel preview
+  'https://easy-gift-search.onrender.com' // novo backend/frontend Render
 ];
 app.use(cors({
   origin: function (origin, callback) {
