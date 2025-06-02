@@ -289,7 +289,26 @@ class AnalyticsService {
     
     if (this.isEnabled) {
       gtag('config', newId);
-      console.log('📊 Analytics: Measurement ID atualizado para:', newId);
+    }
+  }
+
+  // Método genérico para trackear eventos customizados
+  trackEvent(eventName, eventCategory, eventLabel, eventValue) {
+    if (!this.isEnabled) return;
+    
+    const eventData = {
+      event_category: eventCategory,
+      event_label: eventLabel
+    };
+    
+    if (eventValue !== undefined) {
+      eventData.value = eventValue;
+    }
+    
+    gtag('event', eventName, eventData);
+    
+    if (this.debugMode) {
+      console.log('📊 Analytics: Evento customizado', eventName, eventData);
     }
   }
 }

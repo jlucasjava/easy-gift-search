@@ -20,6 +20,39 @@ function clearMensagem() {
   showMensagem('');
 }
 
+// Função para mostrar/esconder seções
+function mostrarSecao(secaoId) {
+  // Esconder todas as seções principais
+  const secoes = ['produtos', 'favoritos', 'locais', 'recomendacao'];
+  secoes.forEach(id => {
+    const secao = document.getElementById(id);
+    if (secao) {
+      secao.style.display = 'none';
+    }
+  });
+  
+  // Mostrar a seção solicitada
+  const secaoAlvo = document.getElementById(secaoId);
+  if (secaoAlvo) {
+    secaoAlvo.style.display = '';
+  }
+  
+  // Atualizar botões de navegação
+  const botoes = document.querySelectorAll('.tab-btn');
+  botoes.forEach(btn => btn.classList.remove('active'));
+  
+  const btnMap = {
+    'produtos': 'btnVerResultados',
+    'favoritos': 'btnVerFavoritos', 
+    'locais': 'btnVerLocais'
+  };
+  
+  const btnAtivo = document.getElementById(btnMap[secaoId]);
+  if (btnAtivo) {
+    btnAtivo.classList.add('active');
+  }
+}
+
 // Busca produtos
 async function buscarProdutos(params = {}) {
   showLoader(true);
