@@ -1,4 +1,3 @@
-# Vercel ignore file - Keep only public/ directory
 backend/
 frontend/
 docs/
@@ -16,5 +15,3 @@ node_modules/
 *.log
 .DS_Store
 .vscode/
-
-# Keep only public/ directory for static deployment
