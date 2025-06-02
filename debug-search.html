@@ -32,24 +32,29 @@
             background: #f8f9fa;
             padding: 10px;
             margin: 10px 0;
-            border-left: 4px solid #007bff;
+            border-left: 4px solid #375a8c; /* azul escuro mais suave */
             font-family: monospace;
             white-space: pre-wrap;
+            text-align: center; /* centraliza o texto */
+            color: #1a2233; /* texto mais escuro para contraste */
         }
         .error {
             background: #f8d7da;
             border-left-color: #dc3545;
             color: #721c24;
+            text-align: center;
         }
         .success {
-            background: #d4edda;
-            border-left-color: #28a745;
-            color: #155724;
+            background: #e3f0fa;
+            border-left-color: #375a8c;
+            color: #1a2233;
+            text-align: center;
         }
         .warning {
             background: #fff3cd;
             border-left-color: #ffc107;
             color: #856404;
+            text-align: center;
         }
         button {
             background: #007bff;
@@ -87,14 +92,14 @@
         <!-- Status do Sistema -->
         <div class="test-section">
             <h3>📊 Status do Sistema</h3>
-            <button onclick="checkSystemStatus()">Verificar Status</button>
+            <button onclick="checkSystemStatus()" aria-label="Verificar Status do Sistema">Verificar Status</button>
             <div id="systemStatus" class="result"></div>
         </div>
 
         <!-- Teste de Conectividade API -->
         <div class="test-section">
             <h3>🔗 Conectividade API</h3>
-            <button onclick="testAPIConnectivity()">Testar Conectividade</button>
+            <button onclick="testAPIConnectivity()" aria-label="Testar Conectividade da API">Testar Conectividade</button>
             <div id="apiStatus" class="result"></div>
         </div>
 
@@ -103,7 +108,7 @@
             <h3>🛍️ Busca de Produtos</h3>
             <div class="form-group">
                 <label>Preço Máximo:</label>
-                <input type="number" id="precoMax" value="100" placeholder="100">
+                <input type="number" id="precoMax" value="100" placeholder="100" aria-label="Preço Máximo">
             </div>
             <div class="form-group">
                 <label>Categoria:</label>
@@ -118,9 +123,9 @@
             </div>
             <div class="form-group">
                 <label>Busca:</label>
-                <input type="text" id="searchQuery" placeholder="Ex: smartphone">
+                <input type="text" id="searchQuery" placeholder="Ex: smartphone" aria-label="Busca de Produto">
             </div>
-            <button onclick="searchProducts()">Buscar Produtos</button>
+            <button onclick="searchProducts()" aria-label="Buscar Produtos">Buscar Produtos</button>
             <div id="productResults" class="result"></div>
         </div>
 
@@ -129,9 +134,9 @@
             <h3>🤖 Busca com IA</h3>
             <div class="form-group">
                 <label>Pergunta:</label>
-                <input type="text" id="aiQuery" placeholder="Ex: presente para namorada que gosta de livros" style="width: 300px;">
+                <input type="text" id="aiQuery" placeholder="Ex: presente para namorada que gosta de livros" style="width: 300px;" aria-label="Pergunta para IA">
             </div>
-            <button onclick="testAISearch()">Buscar com IA</button>
+            <button onclick="testAISearch()" aria-label="Buscar com IA">Buscar com IA</button>
             <div id="aiResults" class="result"></div>
         </div>
 
@@ -140,9 +145,9 @@
             <h3>🔍 Google Search</h3>
             <div class="form-group">
                 <label>Termo:</label>
-                <input type="text" id="googleQuery" placeholder="Ex: melhor presente tecnologia 2024" style="width: 300px;">
+                <input type="text" id="googleQuery" placeholder="Ex: melhor presente tecnologia 2024" style="width: 300px;" aria-label="Termo para Google Search">
             </div>
-            <button onclick="testGoogleSearch()">Buscar no Google</button>
+            <button onclick="testGoogleSearch()" aria-label="Buscar no Google">Buscar no Google</button>
             <div id="googleResults" class="result"></div>
         </div>
 
@@ -151,16 +156,27 @@
             <h3>🎯 Busca Integrada (Como no App Principal)</h3>
             <div class="form-group">
                 <label>Pergunta:</label>
-                <input type="text" id="integratedQuery" placeholder="Ex: presente até R$150 para homem de 30 anos" style="width: 400px;">
+                <input type="text" id="integratedQuery" placeholder="Ex: presente até R$150 para homem de 30 anos" style="width: 400px;" aria-label="Pergunta para Busca Integrada">
             </div>
-            <button onclick="testIntegratedSearch()">Executar Busca Completa</button>
+            <button onclick="testIntegratedSearch()" aria-label="Executar Busca Completa">Executar Busca Completa</button>
             <div id="integratedResults" class="result"></div>
+        </div>
+
+        <!-- Teste Meta Llama-2 API -->
+        <div class="test-section">
+            <h3>🦙 Meta Llama-2 API</h3>
+            <div class="form-group">
+                <label>Pergunta:</label>
+                <input type="text" id="llama2Query" placeholder="Ex: sugestão de presente criativo" style="width: 300px;" aria-label="Pergunta para Llama-2">
+            </div>
+            <button onclick="testLlama2API()" aria-label="Testar Llama-2 API">Testar Llama-2 API</button>
+            <div id="llama2Results" class="result"></div>
         </div>
 
         <!-- Console de Logs -->
         <div class="test-section">
             <h3>📝 Console de Logs</h3>
-            <button onclick="clearLogs()">Limpar Logs</button>
+            <button onclick="clearLogs()" aria-label="Limpar Logs">Limpar Logs</button>
             <div id="consoleLog" class="result" style="max-height: 300px; overflow-y: auto;"></div>
         </div>
     </div>
@@ -365,6 +381,25 @@
                     results += `Erro: ${aiError.message}\n\n`;
                 }
 
+                // 1b. Busca com Meta Llama-2 API
+                log('Fase 1b: Consultando Meta Llama-2...');
+                results += '🦙 RESPOSTA META LLAMA-2:\n';
+                try {
+                    const llama2Response = await fetch(`${API_URL}/api/new-apis/llama2/conversar`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ query })
+                    });
+                    if (llama2Response.ok) {
+                        const llama2Data = await llama2Response.json();
+                        results += JSON.stringify(llama2Data, null, 2) + '\n\n';
+                    } else {
+                        results += `Erro: HTTP ${llama2Response.status}\n\n`;
+                    }
+                } catch (llama2Error) {
+                    results += `Erro: ${llama2Error.message}\n\n`;
+                }
+
                 // 2. Busca no Google
                 log('Fase 2: Buscando no Google...');
                 results += '🔍 RESULTADOS DO GOOGLE:\n';
@@ -410,6 +445,34 @@
             }
         }
 
+        // Teste Meta Llama-2 API
+        async function testLlama2API() {
+            log('Testando Meta Llama-2 API...');
+            const query = document.getElementById('llama2Query').value;
+            if (!query.trim()) {
+                displayResult('llama2Results', '⚠️ Digite uma pergunta para testar', false);
+                return;
+            }
+            try {
+                log(`Enviando pergunta para Llama-2: ${query}`);
+                const response = await fetch(`${API_URL}/api/new-apis/llama2/conversar`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ query })
+                });
+                if (response.ok) {
+                    const data = await response.json();
+                    displayResult('llama2Results', `✅ Resposta Llama-2:\n${JSON.stringify(data, null, 2)}`, true);
+                    log('Resposta da Llama-2 recebida com sucesso');
+                } else {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+            } catch (error) {
+                displayResult('llama2Results', `❌ Erro na Llama-2: ${error.message}`, false);
+                log(`Erro na Llama-2: ${error.message}`, 'error');
+            }
+        }
+
         // Inicializar
         window.addEventListener('load', () => {
             log('Debug page carregada');
@@ -425,6 +488,9 @@
         window.addEventListener('unhandledrejection', (event) => {
             log(`Promise rejeitada: ${event.reason}`, 'error');
         });
+
+        window.testLlama2 = testLlama2;
+        const promptLlama2 = document.getElementById('promptLlama2');
     </script>
 </body>
 </html>
