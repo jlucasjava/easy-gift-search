@@ -1,11 +1,20 @@
-# Vercel ignore file
+# Vercel ignore file - Keep only public/ directory
 backend/
+frontend/
 docs/
 *.md
-!frontend/README.md
-!public/README.md
+*.txt
+*.ps1
+*.zip
+*.yml
+docker-compose.yml
+Dockerfile
+.env*
 .git/
 node_modules/
-frontend/package*.json*
-frontend/node_modules/
 *.backup
+*.log
+.DS_Store
+.vscode/
+
+# Keep only public/ directory for static deployment
