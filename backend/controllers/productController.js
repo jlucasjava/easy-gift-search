@@ -6,29 +6,51 @@ const aliexpressService = require('../services/aliexpressService');
 // Controller de produtos: busca mockada Mercado Livre + Elasticsearch
 exports.searchProducts = async (req, res) => {
   try {
+    console.log('🔍 API /products chamada com query:', req.query);
+    
     // Filtros recebidos via query string
     const { precoMin, precoMax, idade, genero, page = 1 } = req.query;
     console.log('🔍 Filtros recebidos:', { precoMin, precoMax, idade, genero, page });
     
-    // Novo: accessToken pode vir do header ("x-ml-access-token")
-    const accessToken = req.headers['x-ml-access-token'] || null;
-      // Busca em todos os marketplaces em paralelo
-    const [ml, shopee, amazon, ali] = await Promise.all([
-      mercadoLivreService.buscarProdutos({ precoMin, precoMax, idade, genero }, accessToken),
-      shopeeService.buscarProdutosShopee({ precoMin, precoMax, idade, genero }),
-      amazonService.buscarProdutos({ precoMin, precoMax, idade, genero }), // Usando nova função principal
-      aliexpressService.buscarProdutosAliExpress({ precoMin, precoMax, idade, genero })
-    ]);
+    // Resposta mock simples para teste
+    const mockProducts = [
+      {
+        id: '1',
+        titulo: `Presente ${genero || 'unissex'} para ${idade || '25'} anos`,
+        preco: precoMin ? parseFloat(precoMin) + 10 : 75,
+        descricao: 'Produto de teste mock',
+        imagem: 'https://via.placeholder.com/300x300/007BFF/FFFFFF?text=Produto+Teste',
+        marketplace: 'teste',
+        url: '#'
+      },
+      {
+        id: '2',
+        titulo: 'Produto Teste 2',
+        preco: precoMax ? parseFloat(precoMax) - 10 : 90,
+        descricao: 'Segundo produto de teste',
+        imagem: 'https://via.placeholder.com/300x300/28A745/FFFFFF?text=Teste+2',
+        marketplace: 'teste',
+        url: '#'
+      }
+    ];
+
+    console.log('📦 Retornando produtos mock:', mockProducts.length);
     
-    // Junta todos os produtos
-    const todosProdutos = [...ml, ...shopee, ...amazon, ...ali];
-    console.log(`📦 Total de produtos encontrados: ${todosProdutos.length}`);
+    res.json({
+      produtos: mockProducts,
+      total: mockProducts.length,
+      pagina: parseInt(page),
+      totalPaginas: 1
+    });
     
-    // Aplicar filtros globais se necessário (backup caso algum serviço não tenha aplicado)
-    let produtosFiltrados = todosProdutos;
-    if (precoMin || precoMax) {
-      const min = precoMin ? parseFloat(precoMin) : 0;
-      const max = precoMax ? parseFloat(precoMax) : Infinity;
+  } catch (error) {
+    console.error('❌ Erro no searchProducts:', error);
+    res.status(500).json({ 
+      erro: 'Erro interno do servidor',
+      detalhes: error.message 
+    });
+  }
+};
       
       produtosFiltrados = todosProdutos.filter(produto => {
         return produto.preco >= min && produto.preco <= max;
