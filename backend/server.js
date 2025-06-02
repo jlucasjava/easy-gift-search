@@ -4,6 +4,7 @@ const express = require('express');
 const cors = require('cors');
 const morgan = require('morgan');
 const rateLimit = require('express-rate-limit');
+const path = require('path');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -58,8 +59,16 @@ app.use('/api/mercadolivre/auth', mercadoLivreAuthRoutes);
 app.use('/api/test', testRoutes);
 app.use('/api/new-apis', newApisRoutes);
 
+// Servir arquivos estáticos do frontend
+app.use(express.static(path.join(__dirname, '../public')));
+
 app.get('/', (req, res) => {
-  res.send('Easy Gift Search API rodando!');
+  res.sendFile(path.join(__dirname, '../public/index.html'));
+});
+
+// Fallback para SPA - serve index.html para rotas não encontradas
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, '../public/index.html'));
 });
 
 // Middleware de tratamento de erros centralizado
