@@ -36,7 +36,22 @@ exports.searchProducts = async (req, res) => {
         marketplace: 'Americanas',
         url: 'https://www.americanas.com.br/produto/123456789'
       }
-    ];
+    ].map(prod => {
+      // Validação extra para garantir que as cores estejam corretas
+      // Se algum parâmetro de cor estiver faltando, usa fallback seguro
+      const urlRegex = /https:\/\/via\.placeholder\.com\/(\d+x\d+)(?:\/([0-9A-Fa-f]{6}))?(?:\/([0-9A-Fa-f]{6}))?\?text=(.+)/;
+      if (prod.imagem && prod.imagem.startsWith('https://via.placeholder.com/')) {
+        const match = prod.imagem.match(urlRegex);
+        if (match) {
+          const size = match[1] || '300x300';
+          const bg = match[2] && match[2].length === 6 ? match[2] : 'CCCCCC';
+          const fg = match[3] && match[3].length === 6 ? match[3] : '333333';
+          const text = match[4] || 'Produto';
+          prod.imagem = `https://via.placeholder.com/${size}/${bg}/${fg}?text=${encodeURIComponent(text)}`;
+        }
+      }
+      return prod;
+    });
 
     console.log('📦 Retornando produtos mock:', mockProducts.length);
     
