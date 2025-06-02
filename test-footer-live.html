@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teste Footer - Easy Gift Search</title>
+    <style>
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            margin: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            line-height: 1.6;
+        }
+        .test-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .test-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+        }
+        .test-link {
+            display: inline-block;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 10px 20px;
+            border-radius: 10px;
+            color: white;
+            text-decoration: none;
+            margin: 10px 10px 10px 0;
+            transition: all 0.3s ease;
+        }
+        .test-link:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+        .status {
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        .success { background: rgba(76, 175, 80, 0.3); }
+        .warning { background: rgba(255, 193, 7, 0.3); }
+        .error { background: rgba(244, 67, 54, 0.3); }
+        iframe {
+            width: 100%;
+            height: 500px;
+            border: none;
+            border-radius: 10px;
+            background: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>🔍 Teste do Footer - Easy Gift Search</h1>
+        
+        <div class="test-section">
+            <h2>🚀 Status do Deployment</h2>
+            <div id="deploymentStatus" class="status warning">
+                Verificando status do deployment...
+            </div>
+            <p><strong>Site Principal:</strong></p>
+            <a href="https://easy-gift-search.vercel.app" target="_blank" class="test-link">
+                🌐 Abrir Site Principal
+            </a>
+            
+            <p><strong>Página de Verificação:</strong></p>
+            <a href="https://easy-gift-search.vercel.app/vercel-fix-verification.html" target="_blank" class="test-link">
+                🔧 Página de Verificação
+            </a>
+            
+            <p><strong>Teste do Footer:</strong></p>
+            <a href="https://easy-gift-search.vercel.app/footer-verification.html" target="_blank" class="test-link">
+                👇 Página Teste Footer
+            </a>
+        </div>
+
+        <div class="test-section">
+            <h2>📋 Checklist do Footer</h2>
+            <div id="footerChecklist">
+                <p>✅ Nome do site: "Easy Gift Search"</p>
+                <p>✅ Versão: "2.1.0"</p>
+                <p>✅ Email de suporte: "contato@easygift.com"</p>
+                <p>✅ Copyright: "© 2025 Easy Gift Search. Todos os direitos reservados."</p>
+                <p>✅ Links: "Política de Privacidade" e "Termos de Uso"</p>
+                <p>✅ Design responsivo com glassmorphism</p>
+                <p>✅ Modais funcionais para Privacy/Terms</p>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>🎯 Teste Direto do Site</h2>
+            <p>Visualização do site principal:</p>
+            <iframe src="https://easy-gift-search.vercel.app" title="Easy Gift Search Site"></iframe>
+        </div>
+
+        <div class="test-section">
+            <h2>📊 Informações Técnicas</h2>
+            <p><strong>Commit Atual Esperado:</strong> 69f81ff</p>
+            <p><strong>Branch:</strong> production</p>
+            <p><strong>Problema Anterior:</strong> Vercel estava usando commit antigo 22d0530</p>
+            <p><strong>Solução:</strong> Force push + public/ directory structure</p>
+            <p><strong>Data/Hora:</strong> <span id="currentTime"></span></p>
+        </div>
+    </div>
+
+    <script>
+        // Atualizar data/hora
+        document.getElementById('currentTime').textContent = new Date().toLocaleString('pt-BR');
+        
+        // Verificar se o footer está presente
+        async function verificarFooter() {
+            try {
+                const response = await fetch('https://easy-gift-search.vercel.app');
+                const html = await response.text();
+                
+                const hasFooter = html.includes('Easy Gift Search') && 
+                                 html.includes('Versão 2.1.0') && 
+                                 html.includes('contato@easygift.com') &&
+                                 html.includes('Política de Privacidade');
+                
+                const statusEl = document.getElementById('deploymentStatus');
+                if (hasFooter) {
+                    statusEl.className = 'status success';
+                    statusEl.textContent = '✅ Footer detectado no site! Deployment funcionando corretamente.';
+                } else {
+                    statusEl.className = 'status error';
+                    statusEl.textContent = '❌ Footer não encontrado. Vercel pode estar usando commit antigo.';
+                }
+            } catch (error) {
+                const statusEl = document.getElementById('deploymentStatus');
+                statusEl.className = 'status error';
+                statusEl.textContent = '❌ Erro ao verificar site: ' + error.message;
+            }
+        }
+        
+        // Executar verificação
+        verificarFooter();
+    </script>
+</body>
+</html>
