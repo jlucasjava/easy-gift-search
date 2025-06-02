@@ -49,17 +49,23 @@
       <button id="btnLang" class="control-btn" aria-label="Trocar idioma / Switch language" title="Trocar idioma">🇺🇸</button>
     </div>
     <h1 id="mainTitle" tabindex="0">Easy Gift Search</h1>    <form id="searchForm" aria-label="Formulário de busca de presentes" role="search">
-      <label for="precoMax" class="sr-only">Preço máximo</label>
-      <input type="number" id="precoMax" placeholder="Preço máximo" aria-label="Preço máximo" />
-      <label for="idadeInput" class="sr-only">Idade</label>
-      <input type="number" id="idadeInput" placeholder="Idade" aria-label="Idade" min="0" max="120" />      <label for="generoSelect" class="sr-only">Gênero</label>      <select id="generoSelect" aria-label="Gênero">
-        <option value="">Gênero</option>
-        <option value="masculino">Masculino</option>
-        <option value="feminino">Feminino</option>
-        <option value="unisex">Unissex</option>
-      </select>
-      <button type="submit" aria-label="Buscar">Buscar</button>
-      <button type="button" id="btnAIPowered" class="ai-btn" aria-label="Busca com IA" title="Busca inteligente com múltiplas APIs">🤖 IA</button>
+      <div class="form-inputs">
+        <label for="precoMax" class="sr-only">Preço máximo</label>
+        <input type="number" id="precoMax" placeholder="Preço máximo" aria-label="Preço máximo" />
+        <label for="idadeInput" class="sr-only">Idade</label>
+        <input type="number" id="idadeInput" placeholder="Idade" aria-label="Idade" min="0" max="120" />
+        <label for="generoSelect" class="sr-only">Gênero</label>
+        <select id="generoSelect" aria-label="Gênero">
+          <option value="">Gênero</option>
+          <option value="masculino">Masculino</option>
+          <option value="feminino">Feminino</option>
+          <option value="unisex">Unissex</option>
+        </select>
+      </div>
+      <div class="form-buttons">
+        <button type="submit" aria-label="Buscar">BUSCAR</button>
+        <button type="button" id="btnAIPowered" class="ai-btn" aria-label="Busca com IA" title="Busca inteligente com múltiplas APIs">🤖 IA</button>
+      </div>
     </form>
   </header>
   <main>

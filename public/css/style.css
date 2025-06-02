@@ -93,11 +93,32 @@ body.dark .control-btn:hover {
 
 /* Formulário mobile-first */
 form {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-  gap: 1rem;
-  max-width: 600px;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  max-width: 700px;
   margin: 0 auto;
+  padding: 0 1rem;
+}
+
+.form-inputs {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 1rem;
+}
+
+.form-buttons {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 0.5rem;
+}
+
+.form-buttons button {
+  flex: 0 0 auto;
+  min-width: 140px;
+  max-width: 180px;
 }
 /* Inputs e botões com design moderno */
 input, select, button {
@@ -1392,4 +1413,50 @@ button:focus-visible, .tab-btn:focus-visible, #btnMaisRecomendacoes:focus-visibl
 @keyframes loading {
   0% { background-position: 200% 0; }
   100% { background-position: -200% 0; }
+}
+
+/* Mobile responsive adjustments */
+@media (max-width: 600px) {
+  .form-inputs {
+    grid-template-columns: 1fr;
+  }
+  
+  .form-buttons {
+    flex-direction: column;
+    gap: 0.8rem;
+  }
+  
+  .form-buttons button {
+    min-width: 100%;
+    max-width: 100%;
+  }
+  
+  header {
+    padding: 1rem 0.5rem;
+  }
+  
+  .header-controls {
+    top: 0.5rem;
+    right: 0.5rem;
+  }
+  
+  form {
+    padding: 0 0.5rem;
+  }
+}
+
+@media (min-width: 601px) and (max-width: 900px) {
+  .form-inputs {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .form-buttons {
+    justify-content: center;
+  }
+}
+
+@media (min-width: 901px) {
+  .form-inputs {
+    grid-template-columns: repeat(3, 1fr);
+  }
 }

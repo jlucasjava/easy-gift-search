@@ -826,14 +826,22 @@ function initializeDarkMode() {
 
   // Load saved theme
   const savedTheme = localStorage.getItem('theme') || 'light';
-  document.body.setAttribute('data-theme', savedTheme);
+  if (savedTheme === 'dark') {
+    document.body.classList.add('dark');
+  } else {
+    document.body.classList.remove('dark');
+  }
   updateDarkModeButton(savedTheme);
 
   toggleBtn.addEventListener('click', () => {
-    const currentTheme = document.body.getAttribute('data-theme');
-    const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+    const isDark = document.body.classList.contains('dark');
+    const newTheme = isDark ? 'light' : 'dark';
     
-    document.body.setAttribute('data-theme', newTheme);
+    if (newTheme === 'dark') {
+      document.body.classList.add('dark');
+    } else {
+      document.body.classList.remove('dark');
+    }
     localStorage.setItem('theme', newTheme);
     updateDarkModeButton(newTheme);
     
@@ -877,7 +885,6 @@ function initializeLanguageSwitcher() {
     const currentLang = localStorage.getItem('language') || 'pt';
     const newLang = currentLang === 'pt' ? 'en' : 'pt';
     
-    localStorage.setItem('language', newLang);
     updateLanguage(newLang);
     
     // Analytics tracking
@@ -890,6 +897,8 @@ function initializeLanguageSwitcher() {
 function updateLanguage(lang) {
   const langBtn = document.getElementById('btnLang');
   if (!langBtn) return;
+  
+  localStorage.setItem('language', lang);
   
   if (lang === 'en') {
     langBtn.textContent = '🇧🇷';
@@ -905,6 +914,70 @@ function updateLanguage(lang) {
   if (typeof updateInterfaceLanguage === 'function') {
     updateInterfaceLanguage(lang);
   }
+  
+  // Update form placeholders and text
+  updateFormLanguage(lang);
+}
+
+// Function to update form language
+function updateFormLanguage(lang) {
+  const translations = {
+    pt: {
+      precoMax: 'Preço máximo',
+      idade: 'Idade',
+      genero: 'Gênero',
+      buscar: 'BUSCAR',
+      ia: '🤖 IA',
+      masculino: 'Masculino',
+      feminino: 'Feminino',
+      unisex: 'Unissex'
+    },
+    en: {
+      precoMax: 'Max price',
+      idade: 'Age',
+      genero: 'Gender',
+      buscar: 'SEARCH',
+      ia: '🤖 AI',
+      masculino: 'Male',
+      feminino: 'Female',
+      unisex: 'Unisex'
+    }
+  };
+  
+  const t = translations[lang] || translations.pt;
+  
+  // Update form placeholders
+  const precoMaxInput = document.getElementById('precoMax');
+  if (precoMaxInput) precoMaxInput.placeholder = t.precoMax;
+  
+  const idadeInput = document.getElementById('idadeInput');
+  if (idadeInput) idadeInput.placeholder = t.idade;
+  
+  // Update select options
+  const generoSelect = document.getElementById('generoSelect');
+  if (generoSelect) {
+    generoSelect.options[0].textContent = t.genero;
+    generoSelect.options[1].textContent = t.masculino;
+    generoSelect.options[2].textContent = t.feminino;
+    generoSelect.options[3].textContent = t.unisex;
+  }
+  
+  // Update button texts
+  const submitBtn = document.querySelector('button[type="submit"]');
+  if (submitBtn) submitBtn.textContent = t.buscar;
+  
+  const aiBtn = document.getElementById('btnAIPowered');
+  if (aiBtn) aiBtn.textContent = t.ia;
+  
+  // Update navigation buttons
+  const btnResultados = document.getElementById('btnVerResultados');
+  if (btnResultados) btnResultados.textContent = lang === 'en' ? 'Results' : 'Resultados';
+  
+  const btnFavoritos = document.getElementById('btnVerFavoritos');
+  if (btnFavoritos) btnFavoritos.textContent = lang === 'en' ? 'Favorites' : 'Favoritos';
+  
+  const btnLocais = document.getElementById('btnVerLocais');
+  if (btnLocais) btnLocais.textContent = lang === 'en' ? 'Nearby Stores' : 'Lojas Próximas';
 }
 
 // Enhanced search functionality with validation
