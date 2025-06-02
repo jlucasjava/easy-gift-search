@@ -1,4 +1,3 @@
-
 // Controller de produtos: API mock simplificada para teste
 exports.searchProducts = async (req, res) => {
   try {
@@ -16,8 +15,8 @@ exports.searchProducts = async (req, res) => {
         preco: precoMin ? parseFloat(precoMin) + 10 : 75,
         descricao: 'Produto de teste mock',
         imagem: 'https://via.placeholder.com/300x300/007BFF/FFFFFF?text=Produto+Teste',
-        marketplace: 'teste',
-        url: '#'
+        marketplace: 'Mercado Livre',
+        url: 'https://produto.mercadolivre.com.br/MLB-123456789-presente-exemplo-1'
       },
       {
         id: '2',
@@ -25,8 +24,8 @@ exports.searchProducts = async (req, res) => {
         preco: precoMax ? parseFloat(precoMax) - 10 : 90,
         descricao: 'Segundo produto de teste',
         imagem: 'https://via.placeholder.com/300x300/28A745/FFFFFF?text=Teste+2',
-        marketplace: 'teste',
-        url: '#'
+        marketplace: 'Amazon',
+        url: 'https://www.amazon.com.br/dp/B0C1234567'
       },
       {
         id: '3',
@@ -34,8 +33,8 @@ exports.searchProducts = async (req, res) => {
         preco: 120,
         descricao: 'Terceiro produto de teste',
         imagem: 'https://via.placeholder.com/300x300/FFC107/000000?text=Teste+3',
-        marketplace: 'teste',
-        url: '#'
+        marketplace: 'Americanas',
+        url: 'https://www.americanas.com.br/produto/123456789'
       }
     ];
 
