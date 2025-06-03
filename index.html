@@ -4,11 +4,11 @@
     <title>Deploy Test - Easy Gift Search</title>
     <style>
         body { background: #f7f9fb; color: #222; }
-        .container, .main-content { background: #fcfcfd; border-radius: 10px; box-shadow: 0 2px 8px rgba(60,80,120,0.04); border: 1px solid #e3e6ed; }
-        .test-section, .result-block, .card { background: #f8fafc; border: 1px solid #e3e6ed; border-radius: 8px; }
-        .success { background: #eafaf1; border: 1px solid #b7e4c7; color: #256029; }
-        .error { background: #fbeaea; border: 1px solid #f5c2c7; color: #842029; }
-        .loading { background: #fdf6e3; border: 1px solid #ffeaa7; color: #856404; }
+        .container, .main-content { background: #f0f6fb; border-radius: 10px; box-shadow: 0 2px 8px rgba(60,80,120,0.04); border: 1px solid #b6d0ee; }
+        .test-section, .result-block, .card { background: #f0f6fb; border: 1px solid #b6d0ee; border-radius: 8px; }
+        .success { background: #eafaf1; border: 1px solid #b7e4c7; color: #256029; text-align: center; }
+        .error { background: #fbeaea; border: 1px solid #f5c2c7; color: #842029; text-align: center; }
+        .loading { background: #fdf6e3; border: 1px solid #ffeaa7; color: #856404; text-align: center; }
         input, select, textarea { background: #f4f6fb; border: 1px solid #e3e6ed; color: #333; border-radius: 5px; padding: 8px; }
         button { background: #e3e6ed; color: #007bff; border: none; border-radius: 5px; padding: 10px 18px; transition: background 0.2s; }
         button:hover, button:focus { background: #d0d7e6; color: #0056b3; }
@@ -22,6 +22,25 @@
             button { width: 100%; margin: 8px 0; font-size: 1em; padding: 12px 0; }
             pre { font-size: 0.95em; padding: 6px; }
         }
+        .footer-simples {
+            width: 100%;
+            background: #eaf2fb;
+            border-top: 1px solid #b6d0ee;
+            padding: 18px 0 10px 0;
+            text-align: center;
+            font-size: 1em;
+            color: #3a4a6b;
+            margin-top: 32px;
+        }
+        .footer-simples a {
+            color: #337ab7;
+            text-decoration: underline;
+            margin: 0 10px;
+            font-weight: 500;
+        }
+        .footer-simples a:hover {
+            color: #0056b3;
+        }
     </style>
 </head>
 <body>
@@ -29,5 +48,18 @@
     <p>Se você está vendo esta página, o deploy do Vercel está funcionando.</p>
     <p>Timestamp: June 2, 2025 - 09:35</p>
     <a href="/public/index.html">Ir para o site principal</a>
+    <footer class="footer-simples">
+        <span>© 2025 Easy Gift Search.</span>
+        <a href="#" onclick="mostrarPoliticaPrivacidade()">Política de Privacidade</a> |
+        <a href="#" onclick="mostrarTermosUso()">Termos de Uso</a>
+    </footer>
+    <script>
+      function mostrarPoliticaPrivacidade() {
+        alert('Política de Privacidade: Em breve nesta página.');
+      }
+      function mostrarTermosUso() {
+        alert('Termos de Uso: Em breve nesta página.');
+      }
+    </script>
 </body>
 </html>
