@@ -172,6 +172,52 @@
       padding: 1rem;
     }
     
+    /* Centralizar cards de produtos e garantir exibição das imagens */
+    #grid {
+      justify-items: center;
+      align-items: start;
+    }
+    .card {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      background: rgba(255,255,255,0.97);
+      border-radius: 12px;
+      box-shadow: 0 2px 12px rgba(59,130,246,0.08);
+      padding: 1.2rem 1rem 1.5rem 1rem;
+      margin: 0 auto;
+      max-width: 320px;
+      min-width: 220px;
+      text-align: center;
+      transition: box-shadow 0.2s;
+    }
+    .card img {
+      width: 160px;
+      height: 160px;
+      object-fit: contain;
+      border-radius: 10px;
+      margin-bottom: 0.7rem;
+      background: #e0e7ef;
+      box-shadow: 0 1px 6px rgba(59,130,246,0.07);
+      display: block;
+    }
+    .card h3 {
+      font-size: 1.08rem;
+      margin: 0.5rem 0 0.2rem 0;
+      color: #1e3a8a;
+      font-weight: 600;
+    }
+    .card p {
+      color: #2563eb;
+      font-size: 1.05rem;
+      margin: 0.2rem 0 0.7rem 0;
+      font-weight: 500;
+    }
+    .card a {
+      margin-bottom: 0.5rem;
+      display: inline-block;
+    }
+    
     /* Seções de destaque */
     #sugestao, #mapaInfo {
       text-align: center;
