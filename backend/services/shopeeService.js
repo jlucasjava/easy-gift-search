@@ -9,35 +9,35 @@ exports.buscarProdutosShopee = async (filtros) => {
       id: 'shopee123456',
       nome: 'Kit Maquiagem Completo Ruby Rose',
       preco: 89.90,
-      imagem: 'https://cf.shopee.com.br/file/e8b3c8c9b1a5d4e6f7c8b9a0b1c2d3e4',
+      imagem: 'https://cf.shopee.com.br/file/0e2e3b4c5d6f7a8b9c0d1e2f3a4b5c6d',
       url: 'https://shopee.com.br/Kit-Maquiagem-Completo-Ruby-Rose-i.123456.789012345',
       marketplace: 'Shopee'
     },    {
       id: 'shopee654321',
       nome: 'Tênis Esportivo Nike Air Max',
       preco: 299.90,
-      imagem: 'https://cf.shopee.com.br/file/a1b2c3d4e5f6789012345678901234567',
+      imagem: 'https://cf.shopee.com.br/file/1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d',
       url: 'https://shopee.com.br/Tenis-Esportivo-Nike-Air-Max-i.654321.987654321',
       marketplace: 'Shopee'
     },    {
       id: 'shopee777888',
       nome: 'Perfume Importado Feminino 100ml',
       preco: 159.90,
-      imagem: 'https://cf.shopee.com.br/file/f6e7d8c9b0a19283746501928374650',
+      imagem: 'https://cf.shopee.com.br/file/2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e',
       url: 'https://shopee.com.br/Perfume-Importado-Feminino-i.777888.123456789',
       marketplace: 'Shopee'
     },    {
       id: 'shopee999000',
       nome: 'Conjunto de Panelas Antiaderente',
       preco: 199.90,
-      imagem: 'https://cf.shopee.com.br/file/123456789abcdef0123456789abcdef01',
+      imagem: 'https://cf.shopee.com.br/file/3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f',
       url: 'https://shopee.com.br/Conjunto-Panelas-Antiaderente-i.999000.987654321',
       marketplace: 'Shopee'
     },    {
       id: 'shopee111333',
       nome: 'Caneca Térmica Personalizada',
       preco: 39.90,
-      imagem: 'https://cf.shopee.com.br/file/987654321fedcba0987654321fedcba0',
+      imagem: 'https://cf.shopee.com.br/file/4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a',
       url: 'https://shopee.com.br/Caneca-Termica-Personalizada-i.111333.456789012',
       marketplace: 'Shopee'
     }
