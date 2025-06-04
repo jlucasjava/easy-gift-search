@@ -643,18 +643,9 @@ function updateFormLanguage(lang) {
   const submitBtn = document.querySelector('button[type="submit"]');
   if (submitBtn) submitBtn.textContent = t.buscar;
   
+  // Remover botão de IA
   const aiBtn = document.getElementById('btnAIPowered');
-  if (aiBtn) aiBtn.textContent = t.ia;
-  
-  // Update navigation buttons
-  const btnResultados = document.getElementById('btnVerResultados');
-  if (btnResultados) btnResultados.textContent = lang === 'en' ? 'Results' : 'Resultados';
-  
-  const btnFavoritos = document.getElementById('btnVerFavoritos');
-  if (btnFavoritos) btnFavoritos.textContent = lang === 'en' ? 'Favorites' : 'Favoritos';
-  
-  const btnLocais = document.getElementById('btnVerLocais');
-  if (btnLocais) btnLocais.textContent = lang === 'en' ? 'Nearby Stores' : 'Lojas Próximas';
+  if (aiBtn) aiBtn.remove();
 }
 
 // Enhanced search functionality with validation
@@ -678,7 +669,7 @@ function initializeSearchFunctionality() {
 
     // Exigir pelo menos um campo preenchido
     if (!precoMax && !idade && !genero) {
-      showMensagem('Preencha pelo menos um filtro.', true);
+      showMensagem('Por favor, preencha pelo menos um filtro para buscar.', true);
       return;
     }
 
