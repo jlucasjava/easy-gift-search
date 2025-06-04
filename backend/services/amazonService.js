@@ -86,44 +86,51 @@ exports.buscarProdutosAmazonReal = async (filtros) => {
   }
 };
 
+const PLACEHOLDER_IMG = 'https://via.placeholder.com/300x300/cccccc/4e54c8?text=Produto+Indisponível';
+
 exports.buscarProdutosAmazon = async (filtros) => {
   // MODO DEMO: retorna produtos mock com links reais para demonstração
   console.log('🔧 MODO DEMO: Retornando produtos mock da Amazon');
   console.log('Filtros recebidos:', filtros);
-    const produtosMock = [    {
+    const produtosMock = [
+    {
       id: 'B08N5WRWNW',
       nome: 'Echo Dot (4ª Geração) - Smart Speaker com Alexa',
       preco: 249.90,
-      imagem: 'https://m.media-amazon.com/images/I/61SUj2aKoEL._AC_SL1000_.jpg',
+      imagem: PLACEHOLDER_IMG,
       url: 'https://www.amazon.com.br/dp/B08N5WRWNW',
       marketplace: 'Amazon'
-    },    {
-      id: 'B08C1W5N87',
-      nome: 'Fire TV Stick | Streaming em Full HD com Alexa',
+    },
+    {
+      id: 'B07ZQRL9XY',
+      nome: 'Fire TV Stick Lite com Alexa',
       preco: 199.90,
-      imagem: 'https://m.media-amazon.com/images/I/51TjJOTfslL._AC_SL1000_.jpg',
-      url: 'https://www.amazon.com.br/dp/B08C1W5N87',
+      imagem: PLACEHOLDER_IMG,
+      url: 'https://www.amazon.com.br/dp/B07ZQRL9XY',
       marketplace: 'Amazon'
-    },    {
-      id: 'B09BFG5ZQW',
-      nome: 'Kindle (11ª geração) - O eReader mais vendido do mundo',
-      preco: 349.90,
-      imagem: 'https://m.media-amazon.com/images/I/61YUYhWbn5L._AC_SL1000_.jpg',
-      url: 'https://www.amazon.com.br/dp/B09BFG5ZQW',
+    },
+    {
+      id: 'B09V3HN1L3',
+      nome: 'Kindle 11ª Geração',
+      preco: 399.90,
+      imagem: PLACEHOLDER_IMG,
+      url: 'https://www.amazon.com.br/dp/B09V3HN1L3',
       marketplace: 'Amazon'
-    },    {
-      id: 'B08F5M1W6Q',
-      nome: 'Bose QuietComfort 35 II - Fone Bluetooth',
-      preco: 899.90,
-      imagem: 'https://m.media-amazon.com/images/I/81+jNVOUsJL._AC_SL1500_.jpg',
-      url: 'https://www.amazon.com.br/dp/B08F5M1W6Q',
+    },
+    {
+      id: 'B08X1Z1W4Z',
+      nome: 'Cafeteira Expresso Nespresso',
+      preco: 499.90,
+      imagem: PLACEHOLDER_IMG,
+      url: 'https://www.amazon.com.br/dp/B08X1Z1W4Z',
       marketplace: 'Amazon'
-    },    {
-      id: 'B07Y8J1W3K',
-      nome: 'Caderno Inteligente Grande 80 Folhas',
-      preco: 59.90,
-      imagem: 'https://m.media-amazon.com/images/I/71KxLJwI2FL._AC_SL1500_.jpg',
-      url: 'https://www.amazon.com.br/dp/B07Y8J1W3K',
+    },
+    {
+      id: 'B07P8MQG6Z',
+      nome: 'Relógio Smartwatch Amazfit Bip',
+      preco: 299.90,
+      imagem: PLACEHOLDER_IMG,
+      url: 'https://www.amazon.com.br/dp/B07P8MQG6Z',
       marketplace: 'Amazon'
     }
   ];

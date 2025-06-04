@@ -8,43 +8,50 @@ const httpsAgent = new https.Agent({
   rejectUnauthorized: false
 });
 
+const PLACEHOLDER_IMG = 'https://via.placeholder.com/300x300/cccccc/4e54c8?text=Produto+Indisponível';
+
 exports.buscarProdutosAliExpress = async (filtros) => {
   // MODO DEMO: retorna produtos mock com links reais para demonstração
   console.log('🔧 MODO DEMO: Retornando produtos mock do AliExpress');
   console.log('Filtros recebidos:', filtros);
-    const produtosMock = [    {
+    const produtosMock = [
+    {
       id: '1005004123456789',
       nome: 'Fone de Ouvido Sem Fio i12 TWS Bluetooth',
       preco: 45.90,
-      imagem: 'https://img.alicdn.com/imgextra/i4/1005004123456789/O1CN01i12TWS.jpg',
+      imagem: PLACEHOLDER_IMG,
       url: 'https://pt.aliexpress.com/item/1005004123456789.html',
       marketplace: 'AliExpress'
-    },    {
+    },
+    {
       id: '1005003987654321',
       nome: 'Smartwatch DT100 Pro Max Serie 8',
       preco: 78.90,
-      imagem: 'https://img.alicdn.com/imgextra/i4/1005003987654321/O1CN01DT100ProMax.jpg',
+      imagem: PLACEHOLDER_IMG,
       url: 'https://pt.aliexpress.com/item/1005003987654321.html',
       marketplace: 'AliExpress'
-    },    {
+    },
+    {
       id: '1005002555666777',
       nome: 'Kit Ferramentas Celular 115 em 1',
       preco: 89.90,
-      imagem: 'https://img.alicdn.com/imgextra/i4/1005002555666777/O1CN01KitFerramentas.jpg',
+      imagem: PLACEHOLDER_IMG,
       url: 'https://pt.aliexpress.com/item/1005002555666777.html',
       marketplace: 'AliExpress'
-    },    {
+    },
+    {
       id: '1005001888999000',
       nome: 'Carregador Sem Fio 15W Qi Fast Charge',
       preco: 129.90,
-      imagem: 'https://img.alicdn.com/imgextra/i4/1005001888999000/O1CN01CarregadorSemFio.jpg',
+      imagem: PLACEHOLDER_IMG,
       url: 'https://pt.aliexpress.com/item/1005001888999000.html',
       marketplace: 'AliExpress'
-    },    {
+    },
+    {
       id: '1005000111222333',
       nome: 'Capa Protetora Para iPhone Universal',
       preco: 19.90,
-      imagem: 'https://img.alicdn.com/imgextra/i4/1005000111222333/O1CN01CapaProtetora.jpg',
+      imagem: PLACEHOLDER_IMG,
       url: 'https://pt.aliexpress.com/item/1005000111222333.html',
       marketplace: 'AliExpress'
     }
