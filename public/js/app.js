@@ -451,11 +451,11 @@ function configurarNavegacaoAbas() {
         const res = await fetch(`${API_URL}/new-apis/maps/reverse-geocode?lat=${lat}&lng=${lng}`);
         if (!res.ok) throw new Error('Erro ao obter cidade');
         let data;
+        let rawText = await res.text();
         try {
-          data = await res.json();
+          data = JSON.parse(rawText);
         } catch (jsonErr) {
           // Se não for JSON, mostrar o texto bruto para debug
-          const rawText = await res.text();
           console.error('Resposta inesperada da API (esperado JSON):', rawText);
           document.getElementById('mapaInfo').innerHTML = `<strong>📍 Erro ao identificar localização</strong><br><small>Resposta inesperada da API. Veja o console para detalhes.</small>`;
           return;
