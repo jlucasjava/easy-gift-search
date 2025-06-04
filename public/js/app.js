@@ -216,6 +216,7 @@ function renderGrid(produtos) {
   const produtosValidos = (produtos || []).filter(prod => prod.url && /^https?:\/\//.test(prod.url));
   if (!produtosValidos.length) {
     showMensagem(t('nenhum_produto'));
+    document.getElementById('recomendacao').style.display = 'none'; // Esconde recomendação se não há produtos válidos
     return;
   }
   clearMensagem();
@@ -341,7 +342,7 @@ async function carregarProdutos(params = {}) {
     renderPaginacao(pagina, totalPaginas, params);
     // Mostrar seção de recomendação apenas na aba de resultados e se houver produtos válidos
     const produtosValidos = (produtos || []).filter(prod => prod.url && /^https?:\/\//.test(prod.url));
-    if (produtosValidos.length > 0) {
+    if (produtosValidos.length > 0 && document.getElementById('produtos').style.display !== 'none') {
       document.getElementById('recomendacao').style.display = 'block';
       carregarRecomendacao();
     } else {
@@ -787,6 +788,7 @@ function configurarNavegacaoAbas() {
     esconderTodasSecoes();
     removerActiveButtons();
     secFavoritos.style.display = '';
+    secRecomendacao.style.display = 'none'; // Garante que recomendação nunca aparece em favoritos
     btnVerFavoritos.classList.add('active');
     renderFavoritos();
     if (window.analyticsService) {
@@ -797,6 +799,7 @@ function configurarNavegacaoAbas() {
     esconderTodasSecoes();
     removerActiveButtons();
     secLocais.style.display = '';
+    secRecomendacao.style.display = 'none'; // Garante que recomendação nunca aparece em locais
     btnVerLocais.classList.add('active');
     if (!currentLocais.length) {
       document.getElementById('mapaInfo').innerHTML = `

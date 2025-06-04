@@ -168,19 +168,23 @@
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
       gap: 1.2rem;
+      justify-items: center;
+      align-items: start;
       text-align: center;
       padding: 1rem;
     }
     
     /* Centralizar grid de produtos e garantir alinhamento central dos cards */
     #grid {
-      display: flex !important;
-      flex-wrap: wrap;
-      justify-content: center !important;
-      align-items: flex-start;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 1.2rem;
+      justify-items: center;
+      align-items: start;
       text-align: center;
-      gap: 1.5rem;
       padding: 1rem;
+      max-width: 1200px;
+      margin: 0 auto;
     }
     .card {
       display: flex;
@@ -390,6 +394,21 @@
         padding: 16px 0; 
         font-size: 16px;
       }
+    }
+    
+    #mainTitle {
+      color: #0a1931; /* Azul escuro para contraste real */
+      text-shadow: 0 2px 8px #eaf2fb;
+      font-weight: 800;
+      letter-spacing: 1px;
+    }
+    
+    /* Centralizar toda a seção de resultados */
+    #produtos {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 100%;
     }
   </style>
 </head>
