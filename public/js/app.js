@@ -450,7 +450,16 @@ function configurarNavegacaoAbas() {
         // Buscar cidade via API de geocodificação reversa do backend
         const res = await fetch(`${API_URL}/new-apis/maps/reverse-geocode?lat=${lat}&lng=${lng}`);
         if (!res.ok) throw new Error('Erro ao obter cidade');
-        const data = await res.json();
+        let data;
+        try {
+          data = await res.json();
+        } catch (jsonErr) {
+          // Se não for JSON, mostrar o texto bruto para debug
+          const rawText = await res.text();
+          console.error('Resposta inesperada da API (esperado JSON):', rawText);
+          document.getElementById('mapaInfo').innerHTML = `<strong>📍 Erro ao identificar localização</strong><br><small>Resposta inesperada da API. Veja o console para detalhes.</small>`;
+          return;
+        }
         const cidade = data.cidade || data.city || '';
         const estado = data.estado || data.state || '';
         if (!cidade) {
