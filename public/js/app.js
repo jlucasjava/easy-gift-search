@@ -106,7 +106,6 @@ function renderGrid(produtos) {
   const produtosValidos = (produtos || []).filter(prod => prod.url && /^https?:\/\//.test(prod.url));
   if (!produtosValidos.length) {
     showMensagem(t('nenhum_produto'));
-    document.getElementById('recomendacao').style.display = 'none'; // Esconde recomendação se não há produtos válidos
     return;
   }
   clearMensagem();
@@ -230,14 +229,6 @@ async function carregarProdutos(params = {}) {
     const { produtos, pagina, totalPaginas } = await buscarProdutos(params);
     renderGrid(produtos);
     renderPaginacao(pagina, totalPaginas, params);
-    // Mostrar seção de recomendação apenas na aba de resultados e se houver produtos válidos
-    const produtosValidos = (produtos || []).filter(prod => prod.url && /^https?:\/\//.test(prod.url));
-    if (produtosValidos.length > 0 && document.getElementById('produtos').style.display !== 'none') {
-      document.getElementById('recomendacao').style.display = 'block';
-      // carregarRecomendacao(); // Removido: chamada não será mais usada
-    } else {
-      document.getElementById('recomendacao').style.display = 'none';
-    }
   } finally {
     showLoader(false);
   }
@@ -250,109 +241,6 @@ async function carregarProdutos(params = {}) {
 // Current active locations and data
 let currentLocais = [];
 let currentMapaInfo = null;
-
-// ===== AI-POWERED SEARCH FUNCTIONALITY =====
-
-/**
- * Executa busca integrada usando múltiplas APIs (IA, Maps, Bing, etc.)
- */
-async function executarBuscaIA() {
-  showLoader(true);
-  clearMensagem();
-  
-  try {
-    // Obter dados do formulário - Note: não temos campo 'query', então usar termo genérico
-    const query = 'presentes inteligentes'; // Termo genérico para busca IA
-    const idade = document.getElementById('idadeInput')?.value;
-    const genero = document.getElementById('generoSelect')?.value;
-    
-    // Determinar categoria baseada nos filtros
-    let categoria = 'presentes';
-    if (idade && parseInt(idade) < 12) categoria = 'presentes infantis';
-    else if (idade && parseInt(idade) > 60) categoria = 'presentes idosos';
-    
-    // Construir query params
-    const params = new URLSearchParams({
-      query,
-      ...(categoria && { categoria }),
-      ...(idade && { idade }),
-      ...(genero && { genero })
-    });
-    
-    // Analytics: Track AI search
-    if (window.analyticsService) {
-      window.analyticsService.trackEvent('ai_search', 'user_action', query, {
-        idade, genero, categoria
-      });
-    }
-    
-    // Chamar API de busca integrada
-    const response = await fetch(`${API_URL}/new-apis/busca-integrada?${params}`);
-    if (!response.ok) throw new Error('Erro na busca integrada');
-    
-    const resultado = await response.json();
-      // Processar e exibir resultados
-    await processarResultadosIA(resultado);
-    
-    showMensagem(`✨ Busca IA concluída! Encontrados múltiplos resultados integrados.`);
-    
-  } catch (error) {
-    console.error('Erro na busca IA:', error);
-    showMensagem('Erro na busca inteligente. Tente novamente.', true);
-    
-    // Analytics: Track error
-    if (window.analyticsService) {
-      window.analyticsService.trackError('AI_Search_Error', error.message, 'executarBuscaIA');
-    }
-  } finally {
-    showLoader(false);
-  }
-}
-
-/**
- * Processa e exibe os resultados da busca IA
- */
-async function processarResultadosIA(resultado) {
-  // Mostrar seção de produtos se temos resultados
-  if (resultado.produtos && resultado.produtos.length > 0) {
-    document.getElementById('produtos').style.display = '';
-    renderGrid(resultado.produtos);
-    
-    // Atualizar paginação se disponível
-    if (resultado.paginacao) {
-      renderPaginacao(resultado.paginacao.atual, resultado.paginacao.total, {});
-    }
-  }
-  
-  // Mostrar recomendação IA se disponível
-  if (resultado.recomendacao) {
-    document.getElementById('recomendacao').style.display = '';
-    document.getElementById('sugestao').innerHTML = `
-      <strong>🤖 Recomendação IA:</strong><br>
-      ${resultado.recomendacao.texto || resultado.recomendacao}
-    `;
-    
-    // Se tem produtos recomendados, mostrá-los
-    if (resultado.recomendacao.produtos) {
-      renderSugestao(resultado.recomendacao.texto, resultado.recomendacao.produtos);
-    }
-  }
-  
-  // Se tem resultados web do Bing, mostrar informação adicional
-  if (resultado.webSearch && resultado.webSearch.length > 0) {
-    const infoExtra = document.createElement('div');
-    infoExtra.style.cssText = 'margin: 1rem 0; padding: 1rem; background: var(--card-bg); border-radius: 8px; border-left: 4px solid #10b981;';
-    infoExtra.innerHTML = `
-      <strong>🌐 Informações Adicionais da Web:</strong><br>
-      <small>Encontrados ${resultado.webSearch.length} resultados relevantes online</small>
-    `;
-    
-    const grid = document.getElementById('grid');
-    if (grid) {
-      grid.insertBefore(infoExtra, grid.firstChild);
-    }
-  }
-}
 
 // ===== LOCATION-BASED SERVICES =====
 
@@ -816,35 +704,12 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Executar busca tradicional primeiro
     await carregarProdutos(params);
-    
-    // Se tem parâmetros de IA, tentar também recomendação IA
-    if (params.idade || params.genero) {
-      try {
-        const recomendacaoIA = await gerarRecomendacaoIA({
-          idade: params.idade,
-          genero: params.genero,
-          orcamento: params.precoMax
-        });
-        
-        if (recomendacaoIA.sucesso && recomendacaoIA.dados) {
-          document.getElementById('recomendacao').style.display = '';
-          document.getElementById('sugestao').innerHTML = `
-            <strong>🤖 Recomendação IA:</strong><br>
-            ${recomendacaoIA.dados.resposta || recomendacaoIA.dados}
-          `;
-        }
-      } catch (error) {
-        console.log('Recomendação IA opcional falhou:', error);
-      }
-    }
   };
 });
 
 // Expor funções globalmente para uso em outros contextos
-window.executarBuscaIA = executarBuscaIA;
 window.buscarLojasProximas = buscarLojasProximas;
 window.buscarShoppings = buscarShoppings;
-window.gerarRecomendacaoIA = gerarRecomendacaoIA;
 
 // Funções para footer - Política de Privacidade e Termos de Uso
 window.mostrarPoliticaPrivacidade = function() {
