@@ -953,10 +953,6 @@ function updateFormLanguage(lang) {
   const idadeInput = document.getElementById('idadeInput');
   if (idadeInput) idadeInput.placeholder = t.idade;
 
-  // Novo: traduzir campo de busca
-  const queryInput = document.getElementById('queryInput');
-  if (queryInput) queryInput.placeholder = lang === 'en' ? 'Search product or keyword' : 'Buscar produto ou palavra-chave';
-  
   // Update select options
   const generoSelect = document.getElementById('generoSelect');
   if (generoSelect) {
@@ -992,7 +988,7 @@ function initializeSearchFunctionality() {
   form.addEventListener('submit', (e) => {
     e.preventDefault();
     // Get form values with null checks
-    const query = document.getElementById('queryInput')?.value.trim() || '';
+    // const query = document.getElementById('queryInput')?.value.trim() || '';
     const precoMax = document.getElementById('precoMax')?.value || '';
     const idade = document.getElementById('idadeInput')?.value || '';
     const genero = document.getElementById('generoSelect')?.value || '';
@@ -1004,14 +1000,14 @@ function initializeSearchFunctionality() {
     }
 
     // Exigir pelo menos um campo preenchido
-    if (!query && !precoMax && !idade && !genero) {
-      showMensagem('Preencha pelo menos um filtro ou digite o que deseja buscar.', true);
+    if (!precoMax && !idade && !genero) {
+      showMensagem('Preencha pelo menos um filtro.', true);
       return;
     }
 
     // Build search parameters
     const params = {};
-    if (query) params.query = query;
+    // if (query) params.query = query;
     if (precoMax) params.precoMax = precoMax;
     if (idade) params.idade = idade;
     if (genero) params.genero = genero;
