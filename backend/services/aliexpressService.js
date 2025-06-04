@@ -99,9 +99,8 @@ exports.buscarProdutosAliExpress = async (filtros) => {
     })) || [];
   } catch (err) {
     console.error('Erro AliExpress:', err.response?.data || err.message);
-  return [];
+    return [];
   }
-  */
 };
 
 /**
