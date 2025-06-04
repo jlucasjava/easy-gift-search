@@ -431,17 +431,42 @@ function configurarNavegacaoAbas() {
       window.analyticsService.trackEvent('tab_switch', 'navigation', 'favoritos');
     }
   };
-  btnVerLocais.onclick = () => {
+  btnVerLocais.onclick = async () => {
     esconderTodasSecoes();
     removerActiveButtons();
     secLocais.style.display = '';
     btnVerLocais.classList.add('active');
-    if (!currentLocais.length) {
-      document.getElementById('mapaInfo').innerHTML = `
-        <strong>📍 Busca de Lojas Próximas</strong><br>
-        <small>Use a busca IA (🤖 IA) para encontrar lojas próximas baseado nos seus critérios</small>
-      `;
+    document.getElementById('mapaInfo').innerHTML = `<strong>📍 Localizando...</strong><br><small>Tentando detectar sua localização para buscar lojas e shoppings próximos.</small>`;
+
+    if (!navigator.geolocation) {
+      document.getElementById('mapaInfo').innerHTML = `<strong>📍 Localização não suportada</strong><br><small>Seu navegador não suporta geolocalização. Informe a cidade manualmente.</small>`;
+      return;
     }
+
+    navigator.geolocation.getCurrentPosition(async (position) => {
+      const lat = position.coords.latitude;
+      const lng = position.coords.longitude;
+      try {
+        // Buscar cidade via API de geocodificação reversa do backend
+        const res = await fetch(`${API_URL}/new-apis/maps/reverse-geocode?lat=${lat}&lng=${lng}`);
+        if (!res.ok) throw new Error('Erro ao obter cidade');
+        const data = await res.json();
+        const cidade = data.cidade || data.city || '';
+        const estado = data.estado || data.state || '';
+        if (!cidade) {
+          document.getElementById('mapaInfo').innerHTML = `<strong>📍 Não foi possível identificar sua cidade</strong><br><small>Tente novamente ou permita o acesso à localização.</small>`;
+          return;
+        }
+        // Buscar lojas e shoppings próximos automaticamente
+        await buscarLojasProximas(cidade);
+        await buscarShoppings(cidade, estado);
+      } catch (e) {
+        document.getElementById('mapaInfo').innerHTML = `<strong>📍 Erro ao identificar localização</strong><br><small>${e.message}</small>`;
+      }
+    }, (err) => {
+      document.getElementById('mapaInfo').innerHTML = `<strong>📍 Permissão negada</strong><br><small>Não foi possível acessar sua localização. Permita o acesso ou use outro navegador.</small>`;
+    });
+
     if (window.analyticsService) {
       window.analyticsService.trackEvent('tab_switch', 'navigation', 'locais');
     }
