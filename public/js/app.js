@@ -122,10 +122,10 @@ function renderGrid(produtos) {
     const marketplaceProduto = prod.marketplace || 'marketplace';
     
     // Escapar aspas simples nos nomes para evitar erros JavaScript
-    const nomeEscapado = nomeProduto.replace(/'/g, '\\\'');
-    
+    const nomeEscapado = nomeProduto.replace(/'/g, "\\'");
+
     card.innerHTML = `
-      <img src="${imagemProduto}" alt="${nomeProduto}" loading="lazy">
+      <img src="${imagemProduto}" alt="${nomeProduto}" loading="lazy" onerror="this.onerror=null;this.src='/images/placeholder.jpg';">
       <h3>${nomeProduto}</h3>
       <p>R$ ${precoProduto}</p>
       <a href="${urlProduto}" target="_blank" onclick="trackProductClick('${idProduto}', '${nomeEscapado}', '${precoProduto}', '${marketplaceProduto}', ${index}, '${urlProduto}')">${t('ver_marketplace')}</a>
