@@ -10,27 +10,33 @@ exports.buscarProdutosShopee = async (filtros) => {
     const produtosMock = [
     {
       id: 'shopee123456',
-      nome: 'Kit Maquiagem Completo Ruby Rose',
-      preco: 89.90,
+      nome: 'Macacão Bebê Menino Algodão',
+      preco: 59.90,
       imagem: PLACEHOLDER_IMG,
-      url: 'https://shopee.com.br/Kit-Maquiagem-Completo-Ruby-Rose-i.123456.789012345',
-      marketplace: 'Shopee'
+      url: 'https://shopee.com.br/Kit-Macacao-Bebe-Menino-i.123456.789012345',
+      marketplace: 'Shopee',
+      genero: 'masculino',
+      idadeMin: 0
     },
     {
       id: 'shopee654321',
-      nome: 'Tênis Esportivo Nike Air Max',
-      preco: 299.90,
+      nome: 'Mordedor de Silicone Unissex',
+      preco: 29.90,
       imagem: PLACEHOLDER_IMG,
-      url: 'https://shopee.com.br/Tenis-Esportivo-Nike-Air-Max-i.654321.987654321',
-      marketplace: 'Shopee'
+      url: 'https://shopee.com.br/Mordedor-Silicone-Bebe-i.654321.987654321',
+      marketplace: 'Shopee',
+      genero: 'unisex',
+      idadeMin: 0
     },
     {
       id: 'shopee777888',
-      nome: 'Perfume Importado Feminino 100ml',
-      preco: 159.90,
+      nome: 'Kit Higiene Bebê Azul',
+      preco: 79.90,
       imagem: PLACEHOLDER_IMG,
-      url: 'https://shopee.com.br/Perfume-Importado-Feminino-i.777888.123456789',
-      marketplace: 'Shopee'
+      url: 'https://shopee.com.br/Kit-Higiene-Bebe-Azul-i.777888.123456789',
+      marketplace: 'Shopee',
+      genero: 'masculino',
+      idadeMin: 0
     },
     {
       id: 'shopee999000',
@@ -38,7 +44,9 @@ exports.buscarProdutosShopee = async (filtros) => {
       preco: 199.90,
       imagem: PLACEHOLDER_IMG,
       url: 'https://shopee.com.br/Conjunto-Panelas-Antiaderente-i.999000.987654321',
-      marketplace: 'Shopee'
+      marketplace: 'Shopee',
+      genero: 'unisex',
+      idadeMin: 18
     },
     {
       id: 'shopee111333',
@@ -46,23 +54,29 @@ exports.buscarProdutosShopee = async (filtros) => {
       preco: 39.90,
       imagem: PLACEHOLDER_IMG,
       url: 'https://shopee.com.br/Caneca-Termica-Personalizada-i.111333.456789012',
-      marketplace: 'Shopee'
+      marketplace: 'Shopee',
+      genero: 'unisex',
+      idadeMin: 14
     }
   ];
-  // Aplicar filtro de preço mínimo se fornecido
+  // Filtro integrado preço, gênero e idade
   let produtosFiltrados = produtosMock;
   if (filtros.precoMin || filtros.precoMax) {
     const precoMinimo = filtros.precoMin ? parseFloat(filtros.precoMin) : 0;
     const precoMaximo = filtros.precoMax ? parseFloat(filtros.precoMax) : Infinity;
-    
-    if (!isNaN(precoMinimo) || !isNaN(precoMaximo)) {
-      produtosFiltrados = produtosMock.filter(produto => {
-        return produto.preco >= precoMinimo && produto.preco <= precoMaximo;
-      });
-      console.log(`Filtro preço R$ ${precoMinimo} - R$ ${precoMaximo === Infinity ? '∞' : precoMaximo}: ${produtosFiltrados.length} produtos encontrados`);
-    }
+    produtosFiltrados = produtosFiltrados.filter(produto => produto.preco >= precoMinimo && produto.preco <= precoMaximo);
   }
-
+  if (filtros.genero && filtros.genero.toLowerCase() !== 'nao informado' && filtros.genero.toLowerCase() !== '') {
+    const genero = filtros.genero.toLowerCase();
+    produtosFiltrados = produtosFiltrados.filter(p => {
+      const produtoGenero = p.genero.toLowerCase();
+      return produtoGenero === 'unisex' || produtoGenero === genero;
+    });
+  }
+  if (filtros.idade) {
+    const idade = parseInt(filtros.idade);
+    produtosFiltrados = produtosFiltrados.filter(p => idade >= p.idadeMin);
+  }
   return produtosFiltrados;
   
   /* CÓDIGO ORIGINAL (desabilitado para demo):

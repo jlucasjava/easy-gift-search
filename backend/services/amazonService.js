@@ -95,27 +95,33 @@ exports.buscarProdutosAmazon = async (filtros) => {
     const produtosMock = [
     {
       id: 'B08N5WRWNW',
-      nome: 'Echo Dot (4ª Geração) - Smart Speaker com Alexa',
-      preco: 249.90,
+      nome: 'Mordedor de Silicone para Bebê',
+      preco: 39.90,
       imagem: PLACEHOLDER_IMG,
       url: 'https://www.amazon.com.br/dp/B08N5WRWNW',
-      marketplace: 'Amazon'
+      marketplace: 'Amazon',
+      genero: 'unisex',
+      idadeMin: 0
     },
     {
       id: 'B07ZQRL9XY',
-      nome: 'Fire TV Stick Lite com Alexa',
-      preco: 199.90,
+      nome: 'Body Algodão Bebê Menino 0-6 meses',
+      preco: 49.90,
       imagem: PLACEHOLDER_IMG,
       url: 'https://www.amazon.com.br/dp/B07ZQRL9XY',
-      marketplace: 'Amazon'
+      marketplace: 'Amazon',
+      genero: 'masculino',
+      idadeMin: 0
     },
     {
       id: 'B09V3HN1L3',
-      nome: 'Kindle 11ª Geração',
-      preco: 399.90,
+      nome: 'Kit Fraldas Pampers RN',
+      preco: 89.90,
       imagem: PLACEHOLDER_IMG,
       url: 'https://www.amazon.com.br/dp/B09V3HN1L3',
-      marketplace: 'Amazon'
+      marketplace: 'Amazon',
+      genero: 'unisex',
+      idadeMin: 0
     },
     {
       id: 'B08X1Z1W4Z',
@@ -123,7 +129,9 @@ exports.buscarProdutosAmazon = async (filtros) => {
       preco: 499.90,
       imagem: PLACEHOLDER_IMG,
       url: 'https://www.amazon.com.br/dp/B08X1Z1W4Z',
-      marketplace: 'Amazon'
+      marketplace: 'Amazon',
+      genero: 'unisex',
+      idadeMin: 18
     },
     {
       id: 'B07P8MQG6Z',
@@ -131,23 +139,29 @@ exports.buscarProdutosAmazon = async (filtros) => {
       preco: 299.90,
       imagem: PLACEHOLDER_IMG,
       url: 'https://www.amazon.com.br/dp/B07P8MQG6Z',
-      marketplace: 'Amazon'
+      marketplace: 'Amazon',
+      genero: 'masculino',
+      idadeMin: 14
     }
   ];
-  // Aplicar filtro de preço mínimo se fornecido
+  // Filtro integrado preço, gênero e idade
   let produtosFiltrados = produtosMock;
   if (filtros.precoMin || filtros.precoMax) {
     const precoMinimo = filtros.precoMin ? parseFloat(filtros.precoMin) : 0;
     const precoMaximo = filtros.precoMax ? parseFloat(filtros.precoMax) : Infinity;
-    
-    if (!isNaN(precoMinimo) || !isNaN(precoMaximo)) {
-      produtosFiltrados = produtosMock.filter(produto => {
-        return produto.preco >= precoMinimo && produto.preco <= precoMaximo;
-      });
-      console.log(`Filtro preço R$ ${precoMinimo} - R$ ${precoMaximo === Infinity ? '∞' : precoMaximo}: ${produtosFiltrados.length} produtos encontrados`);
-    }
+    produtosFiltrados = produtosFiltrados.filter(produto => produto.preco >= precoMinimo && produto.preco <= precoMaximo);
   }
-
+  if (filtros.genero && filtros.genero.toLowerCase() !== 'nao informado' && filtros.genero.toLowerCase() !== '') {
+    const genero = filtros.genero.toLowerCase();
+    produtosFiltrados = produtosFiltrados.filter(p => {
+      const produtoGenero = p.genero.toLowerCase();
+      return produtoGenero === 'unisex' || produtoGenero === genero;
+    });
+  }
+  if (filtros.idade) {
+    const idade = parseInt(filtros.idade);
+    produtosFiltrados = produtosFiltrados.filter(p => idade >= p.idadeMin);
+  }
   return produtosFiltrados;
   
   /* CÓDIGO ORIGINAL (desabilitado para demo):

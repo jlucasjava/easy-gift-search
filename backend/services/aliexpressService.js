@@ -17,27 +17,33 @@ exports.buscarProdutosAliExpress = async (filtros) => {
     const produtosMock = [
     {
       id: '1005004123456789',
-      nome: 'Fone de Ouvido Sem Fio i12 TWS Bluetooth',
+      nome: 'Mordedor de Silicone Unissex',
       preco: 45.90,
       imagem: PLACEHOLDER_IMG,
       url: 'https://pt.aliexpress.com/item/1005004123456789.html',
-      marketplace: 'AliExpress'
+      marketplace: 'AliExpress',
+      genero: 'unisex',
+      idadeMin: 0
     },
     {
       id: '1005003987654321',
-      nome: 'Smartwatch DT100 Pro Max Serie 8',
-      preco: 78.90,
+      nome: 'Body Bebê Menino Algodão',
+      preco: 59.90,
       imagem: PLACEHOLDER_IMG,
       url: 'https://pt.aliexpress.com/item/1005003987654321.html',
-      marketplace: 'AliExpress'
+      marketplace: 'AliExpress',
+      genero: 'masculino',
+      idadeMin: 0
     },
     {
       id: '1005002555666777',
-      nome: 'Kit Ferramentas Celular 115 em 1',
+      nome: 'Kit Higiene Bebê Azul',
       preco: 89.90,
       imagem: PLACEHOLDER_IMG,
       url: 'https://pt.aliexpress.com/item/1005002555666777.html',
-      marketplace: 'AliExpress'
+      marketplace: 'AliExpress',
+      genero: 'masculino',
+      idadeMin: 0
     },
     {
       id: '1005001888999000',
@@ -45,7 +51,9 @@ exports.buscarProdutosAliExpress = async (filtros) => {
       preco: 129.90,
       imagem: PLACEHOLDER_IMG,
       url: 'https://pt.aliexpress.com/item/1005001888999000.html',
-      marketplace: 'AliExpress'
+      marketplace: 'AliExpress',
+      genero: 'unisex',
+      idadeMin: 18
     },
     {
       id: '1005000111222333',
@@ -53,26 +61,18 @@ exports.buscarProdutosAliExpress = async (filtros) => {
       preco: 19.90,
       imagem: PLACEHOLDER_IMG,
       url: 'https://pt.aliexpress.com/item/1005000111222333.html',
-      marketplace: 'AliExpress'
+      marketplace: 'AliExpress',
+      genero: 'unisex',
+      idadeMin: 14
     }
   ];
-  // Aplicar filtro de preço mínimo se fornecido
+  // Filtro integrado preço, gênero e idade
   let produtosFiltrados = produtosMock;
   if (filtros.precoMin || filtros.precoMax) {
     const precoMinimo = filtros.precoMin ? parseFloat(filtros.precoMin) : 0;
     const precoMaximo = filtros.precoMax ? parseFloat(filtros.precoMax) : Infinity;
-    
-    if (!isNaN(precoMinimo) || !isNaN(precoMaximo)) {
-      produtosFiltrados = produtosMock.filter(produto => {
-        return produto.preco >= precoMinimo && produto.preco <= precoMaximo;
-      });
-      console.log(`Filtro preço R$ ${precoMinimo} - R$ ${precoMaximo === Infinity ? '∞' : precoMaximo}: ${produtosFiltrados.length} produtos encontrados`);
-    }
+    produtosFiltrados = produtosFiltrados.filter(produto => produto.preco >= precoMinimo && produto.preco <= precoMaximo);
   }
-
-  return produtosFiltrados;
-  
-  /* CÓDIGO ORIGINAL (desabilitado para demo):
   const options = {
     method: 'GET',
     url: 'https://aliexpress-datahub.p.rapidapi.com/item_search',
