@@ -673,12 +673,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Configurar eventos quando a página carregar
 document.addEventListener('DOMContentLoaded', () => {
-  // Configurar botão de busca IA
-  const btnAIPowered = document.getElementById('btnAIPowered');
-  if (btnAIPowered) {
-    btnAIPowered.onclick = executarBuscaIA;
-  }
-  
   // Configurar navegação entre abas
   configurarNavegacaoAbas();
   
