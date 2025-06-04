@@ -174,9 +174,13 @@
     
     /* Centralizar grid de produtos e garantir alinhamento central dos cards */
     #grid {
-      justify-items: center;
-      align-items: start;
+      display: flex !important;
+      flex-wrap: wrap;
+      justify-content: center !important;
+      align-items: flex-start;
       text-align: center;
+      gap: 1.5rem;
+      padding: 1rem;
     }
     .card {
       display: flex;
@@ -186,7 +190,7 @@
       border-radius: 12px;
       box-shadow: 0 2px 12px rgba(59,130,246,0.08);
       padding: 1.2rem 1rem 1.5rem 1rem;
-      margin: 0 auto;
+      margin: 0.5rem;
       max-width: 320px;
       min-width: 220px;
       text-align: center;
@@ -381,6 +385,8 @@
     </div>
     <h1 id="mainTitle" tabindex="0">Easy Gift Search</h1>    <form id="searchForm" aria-label="Formulário de busca de presentes" role="search">
       <div class="form-inputs">
+        <label for="queryInput" class="sr-only">Buscar produto</label>
+        <input type="text" id="queryInput" placeholder="Buscar produto ou palavra-chave" aria-label="Buscar produto" />
         <label for="precoMax" class="sr-only">Preço máximo</label>
         <input type="number" id="precoMax" placeholder="Preço máximo" aria-label="Preço máximo" />
         <label for="idadeInput" class="sr-only">Idade</label>
