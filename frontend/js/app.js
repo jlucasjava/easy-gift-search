@@ -210,12 +210,15 @@ function mostrarMensagemInicial() {
 // Renderiza grid de produtos
 function renderGrid(produtos) {
   const grid = document.getElementById('grid');
+  const btnVerFavoritos = document.getElementById('btnVerFavoritos');
   grid.innerHTML = '';
   if (!produtos || produtos.length === 0) {
     showMensagem(t('nenhum_produto'));
+    if (btnVerFavoritos) btnVerFavoritos.style.display = 'none';
     return;
   }
   clearMensagem();
+  if (btnVerFavoritos) btnVerFavoritos.style.display = '';
   produtos.forEach((prod, index) => {
     const card = document.createElement('div');
     card.className = 'card';
@@ -991,11 +994,29 @@ function initializeSearchFunctionality() {
   });
 }
 
-// =============================================================================
-// EVENT LISTENERS E INICIALIZAÇÃO
-// =============================================================================
+// Habilita/desabilita o botão de busca conforme filtros
+function configurarBotaoBusca() {
+  const precoMax = document.getElementById('precoMax');
+  const idade = document.getElementById('idadeInput');
+  const genero = document.getElementById('generoSelect');
+  const btnBuscar = document.querySelector('#searchForm button[type="submit"]');
+  if (!precoMax || !idade || !genero || !btnBuscar) return;
 
-// Configurar eventos quando a página carregar
+  function atualizarEstadoBotao() {
+    const algumPreenchido =
+      (precoMax.value && precoMax.value !== '') ||
+      (idade.value && idade.value !== '') ||
+      (genero.value && genero.value !== '' && genero.value.toLowerCase() !== 'nao informado');
+    btnBuscar.disabled = !algumPreenchido;
+    btnBuscar.classList.toggle('disabled', !algumPreenchido);
+  }
+
+  precoMax.addEventListener('input', atualizarEstadoBotao);
+  idade.addEventListener('input', atualizarEstadoBotao);
+  genero.addEventListener('change', atualizarEstadoBotao);
+  atualizarEstadoBotao(); // Estado inicial
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   console.log('🚀 Initializing Easy Gift Search...');
   
@@ -1014,6 +1035,12 @@ document.addEventListener('DOMContentLoaded', () => {
   
   // Configurar navegação entre abas
   configurarNavegacaoAbas();
+  
+  // Configurar botão de busca
+  configurarBotaoBusca();
+  
+  const btnVerFavoritos = document.getElementById('btnVerFavoritos');
+  if (btnVerFavoritos) btnVerFavoritos.style.display = 'none';
   
   console.log('✅ Easy Gift Search initialized successfully');
 });
