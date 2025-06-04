@@ -338,9 +338,15 @@ function renderLocais() {
   
   if (!currentLocais.length) {
     gridLocais.innerHTML = `
-      <div style="grid-column:1/-1;text-align:center;color:#888;padding:2rem;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:180px;">
+      <div style="grid-column:1/-1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;color:#888;padding:2rem;min-height:200px;">
         <p style="font-size:1.2rem;font-weight:500;margin-bottom:0.5rem;">🏪 Nenhuma loja encontrada na região</p>
-        <small style="font-size:1rem;">Tente uma cidade diferente ou verifique a conectividade</small>
+        <small style="font-size:1rem;margin-bottom:1.2rem;">Como não encontramos uma loja próxima à sua casa, não se preocupe! Você pode comprar online em grandes marketplaces:</small>
+        <div style="display:flex;flex-wrap:wrap;gap:1rem;justify-content:center;">
+          <a href='https://www.amazon.com.br/' target='_blank' rel='noopener' style='background:#232f3e;color:#fff;padding:0.7rem 1.2rem;border-radius:8px;font-weight:500;text-decoration:none;'>Amazon Brasil</a>
+          <a href='https://shopee.com.br/' target='_blank' rel='noopener' style='background:#ee4d2d;color:#fff;padding:0.7rem 1.2rem;border-radius:8px;font-weight:500;text-decoration:none;'>Shopee</a>
+          <a href='https://pt.aliexpress.com/' target='_blank' rel='noopener' style='background:#ff6a00;color:#fff;padding:0.7rem 1.2rem;border-radius:8px;font-weight:500;text-decoration:none;'>AliExpress</a>
+          <a href='https://www.mercadolivre.com.br/' target='_blank' rel='noopener' style='background:#ffe600;color:#222;padding:0.7rem 1.2rem;border-radius:8px;font-weight:500;text-decoration:none;'>Mercado Livre</a>
+        </div>
       </div>
     `;
     return;
