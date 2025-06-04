@@ -102,9 +102,10 @@ function renderSugestao(sugestao, produtosRelacionados = [], start = 0, limit = 
   document.getElementById('sugestao').innerHTML = `<strong>${sugestao}</strong>`;
   const grid = document.getElementById('sugestaoProdutos');
   grid.innerHTML = '';
-  if (produtosRelacionados && produtosRelacionados.length) {
-    // Randomizar os produtos antes de exibir
-    const produtosRandomizados = [...produtosRelacionados].sort(() => Math.random() - 0.5);
+  // Filtrar produtos com url válida
+  const produtosValidos = (produtosRelacionados || []).filter(prod => prod.url && /^https?:\/\//.test(prod.url));
+  if (produtosValidos.length) {
+    const produtosRandomizados = [...produtosValidos].sort(() => Math.random() - 0.5);
     produtosRandomizados.slice(start, start + limit).forEach(prod => {
       const card = document.createElement('div');
       card.className = 'card';
@@ -211,12 +212,14 @@ function mostrarMensagemInicial() {
 function renderGrid(produtos) {
   const grid = document.getElementById('grid');
   grid.innerHTML = '';
-  if (!produtos || produtos.length === 0) {
+  // Filtrar produtos com url válida (começa com http)
+  const produtosValidos = (produtos || []).filter(prod => prod.url && /^https?:\/\//.test(prod.url));
+  if (!produtosValidos.length) {
     showMensagem(t('nenhum_produto'));
     return;
   }
   clearMensagem();
-  produtos.forEach((prod, index) => {
+  produtosValidos.forEach((prod, index) => {
     const card = document.createElement('div');
     card.className = 'card';
     
@@ -336,12 +339,13 @@ async function carregarProdutos(params = {}) {
     const { produtos, pagina, totalPaginas } = await buscarProdutos(params);
     renderGrid(produtos);
     renderPaginacao(pagina, totalPaginas, params);
-    
-    // Mostrar seção de recomendação após carregar produtos
-    if (produtos && produtos.length > 0) {
+    // Mostrar seção de recomendação apenas na aba de resultados e se houver produtos válidos
+    const produtosValidos = (produtos || []).filter(prod => prod.url && /^https?:\/\//.test(prod.url));
+    if (produtosValidos.length > 0) {
       document.getElementById('recomendacao').style.display = 'block';
-      // Carregar recomendação automaticamente
       carregarRecomendacao();
+    } else {
+      document.getElementById('recomendacao').style.display = 'none';
     }
   } finally {
     showLoader(false);
@@ -748,71 +752,58 @@ function configurarNavegacaoAbas() {
   const btnVerResultados = document.getElementById('btnVerResultados');
   const btnVerFavoritos = document.getElementById('btnVerFavoritos');
   const btnVerLocais = document.getElementById('btnVerLocais');
-  
   const secResultados = document.getElementById('produtos');
   const secFavoritos = document.getElementById('favoritos');
   const secLocais = document.getElementById('locais');
   const secRecomendacao = document.getElementById('recomendacao');
-  
-  // Função auxiliar para esconder todas as seções
   function esconderTodasSecoes() {
     secResultados.style.display = 'none';
     secFavoritos.style.display = 'none';
     secLocais.style.display = 'none';
+    secRecomendacao.style.display = 'none'; // Sempre esconder recomendação ao trocar de aba
   }
-  
-  // Função auxiliar para remover classe active de todos os botões
   function removerActiveButtons() {
     [btnVerResultados, btnVerFavoritos, btnVerLocais].forEach(btn => {
       btn.classList.remove('active');
     });
   }
-  
-  // Event listeners para cada aba
   btnVerResultados.onclick = () => {
     esconderTodasSecoes();
     removerActiveButtons();
-    
     secResultados.style.display = '';
-    secRecomendacao.style.display = secRecomendacao.innerHTML ? '' : 'none';
+    // Só mostrar recomendação se houver produtos válidos no grid
+    const grid = document.getElementById('grid');
+    if (grid && grid.children.length > 0) {
+      secRecomendacao.style.display = 'block';
+    } else {
+      secRecomendacao.style.display = 'none';
+    }
     btnVerResultados.classList.add('active');
-    
-    // Analytics: Track tab switch
     if (window.analyticsService) {
       window.analyticsService.trackEvent('tab_switch', 'navigation', 'resultados');
     }
   };
-  
   btnVerFavoritos.onclick = () => {
     esconderTodasSecoes();
     removerActiveButtons();
-    
     secFavoritos.style.display = '';
     btnVerFavoritos.classList.add('active');
     renderFavoritos();
-    
-    // Analytics: Track tab switch
     if (window.analyticsService) {
       window.analyticsService.trackEvent('tab_switch', 'navigation', 'favoritos');
     }
   };
-  
   btnVerLocais.onclick = () => {
     esconderTodasSecoes();
     removerActiveButtons();
-    
     secLocais.style.display = '';
     btnVerLocais.classList.add('active');
-      // Se não tem locais carregados, mostrar mensagem informativa
     if (!currentLocais.length) {
-      // Mostrar mensagem pedindo para usar busca IA para encontrar lojas
       document.getElementById('mapaInfo').innerHTML = `
         <strong>📍 Busca de Lojas Próximas</strong><br>
         <small>Use a busca IA (🤖 IA) para encontrar lojas próximas baseado nos seus critérios</small>
       `;
     }
-    
-    // Analytics: Track tab switch
     if (window.analyticsService) {
       window.analyticsService.trackEvent('tab_switch', 'navigation', 'locais');
     }
