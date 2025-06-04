@@ -23,7 +23,7 @@ function clearMensagem() {
 // Função para mostrar/esconder seções
 function mostrarSecao(secaoId) {
   // Esconder todas as seções principais
-  const secoes = ['produtos', 'favoritos', 'locais', 'recomendacao'];
+  const secoes = ['produtos', 'favoritos', 'locais'];
   secoes.forEach(id => {
     const secao = document.getElementById(id);
     if (secao) {
@@ -96,116 +96,6 @@ async function buscarProdutos(params = {}) {
   } finally {
     showLoader(false);
   }
-}
-
-function renderSugestao(sugestao, produtosRelacionados = [], start = 0, limit = 3) {
-  document.getElementById('sugestao').innerHTML = `<strong>${sugestao}</strong>`;
-  const grid = document.getElementById('sugestaoProdutos');
-  grid.innerHTML = '';
-  // Filtrar produtos com url válida
-  const produtosValidos = (produtosRelacionados || []).filter(prod => prod.url && /^https?:\/\//.test(prod.url));
-  if (produtosValidos.length) {
-    const produtosRandomizados = [...produtosValidos].sort(() => Math.random() - 0.5);
-    produtosRandomizados.slice(start, start + limit).forEach(prod => {
-      const card = document.createElement('div');
-      card.className = 'card';
-      card.innerHTML = `
-        <img src="${prod.imagem}" alt="${prod.nome}" loading="lazy">
-        <h3>${prod.nome}</h3>
-        <p>R$ ${prod.preco}</p>
-        <a href="${prod.url}" target="_blank" rel="noopener noreferrer">${t('ver_marketplace')}</a>
-        <button onclick="favoritarProduto('${prod.id}', '${prod.nome.replace(/'/g, '')}')">${t('favoritar')}</button>
-      `;
-      grid.appendChild(card);
-    });
-    // Exibir dica de swipe no mobile
-    const swipeHint = document.getElementById('swipeHint');
-    if (window.innerWidth <= 600) {
-      swipeHint.style.display = 'block';
-      setTimeout(() => { swipeHint.style.display = 'none'; }, 3500);
-    } else {
-      swipeHint.style.display = 'none';
-    }
-  } else {
-    grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;color:#888;">${t('nenhum_produto')}</div>`;
-  }
-}
-
-let sugestaoProdutos = [];
-let sugestaoTexto = '';
-let sugestaoIndex = 0;
-const SUGESTAO_LIMIT = 3;
-
-// Recomenda presente
-async function recomendarPresente(perfil) {
-  showLoader(true);
-  clearMensagem();
-  
-  const startTime = Date.now();
-  
-  // Analytics: Track recommendation request
-  if (window.analyticsService) {
-    const query = `idade:${perfil.idade || 'não_informado'} genero:${perfil.genero || 'não_informado'}`;
-    window.analyticsService.trackRecommendationRequest(query, null);
-  }
-  
-  try {
-    const res = await fetch(`${API_URL}/recommend`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(perfil)
-    });
-    if (!res.ok) throw new Error('Erro ao buscar sugestão.');
-    
-    const result = await res.json();
-    const responseTime = Date.now() - startTime;
-    
-    // Analytics: Track recommendation response
-    if (window.analyticsService) {
-      const query = `idade:${perfil.idade || 'não_informado'} genero:${perfil.genero || 'não_informado'}`;
-      const productsCount = result.produtosRelacionados ? result.produtosRelacionados.length : 0;
-      window.analyticsService.trackRecommendationResponse(query, productsCount, responseTime);
-    }
-    
-    return result;
-  } catch (e) {
-    // Analytics: Track error
-    if (window.analyticsService) {
-      window.analyticsService.trackError('Recommendation_Error', e.message, 'recomendarPresente');
-    }
-    showMensagem('Erro ao buscar sugestão. Tente novamente.', true);
-    return { sugestao: '', produtosRelacionados: [] };
-  } finally {
-    showLoader(false);
-  }
-}
-
-async function carregarRecomendacao(refazer = false) {
-  const idade = document.getElementById('idadeInput').value;
-  const genero = document.getElementById('generoSelect').value;
-  const perfil = { idade, genero };
-  if (refazer) {
-    sugestaoIndex = 0;
-  }
-  recomendarPresente(perfil).then(({ sugestao, produtosRelacionados }) => {
-    sugestaoProdutos = produtosRelacionados || [];
-    sugestaoTexto = sugestao || '';
-    renderSugestao(sugestaoTexto, sugestaoProdutos, sugestaoIndex, SUGESTAO_LIMIT);
-  });
-}
-
-// Exibe mensagem inicial convidativa
-function mostrarMensagemInicial() {
-  const grid = document.getElementById('grid');
-  grid.innerHTML = `
-    <div class="mensagem-inicial" style="grid-column:1/-1;text-align:center;padding:40px 20px;">
-      <h3 style="margin-bottom:20px;">🎁 ${t('benvindo_titulo')}</h3>
-      <p style="margin-bottom:15px;font-size:16px;">${t('benvindo_descricao')}</p>
-      <p style="font-size:14px;opacity:0.8;">${t('benvindo_instrucoes')}</p>
-    </div>
-  `;
-  // Esconder a seção de recomendação inicialmente
-  document.getElementById('recomendacao').style.display = 'none';
 }
 
 // Renderiza grid de produtos
@@ -344,25 +234,13 @@ async function carregarProdutos(params = {}) {
     const produtosValidos = (produtos || []).filter(prod => prod.url && /^https?:\/\//.test(prod.url));
     if (produtosValidos.length > 0 && document.getElementById('produtos').style.display !== 'none') {
       document.getElementById('recomendacao').style.display = 'block';
-      carregarRecomendacao();
+      // carregarRecomendacao(); // Removido: chamada não será mais usada
     } else {
       document.getElementById('recomendacao').style.display = 'none';
     }
   } finally {
     showLoader(false);
   }
-}
-
-// Carrega recomendação inteligente
-async function carregarRecomendacao() {
-  const idade = document.getElementById('idadeInput').value;
-  const genero = document.getElementById('generoSelect').value;
-  const perfil = { idade, genero };
-  const { sugestao, produtosRelacionados } = await recomendarPresente(perfil);
-  document.getElementById('sugestao').innerHTML = `
-    <strong>${sugestao}</strong><br>
-    ${produtosRelacionados?.map(p => `<span>${p.nome} - R$ ${p.preco}</span>`).join('<br>') || ''}
-  `;
 }
 
 // =============================================================================
@@ -624,126 +502,6 @@ function renderLocais() {
   });
 }
 
-// ===== ENHANCED AI RECOMMENDATIONS =====
-
-/**
- * Gera recomendações usando Llama AI
- */
-async function gerarRecomendacaoIA(perfil) {
-  try {
-    const { idade, genero, interesses, orcamento } = perfil;
-    
-    // Construir mensagem contextual para o Llama
-    let message = `Preciso de sugestões de presentes`;
-    if (idade) message += ` para uma pessoa de ${idade} anos`;
-    if (genero && genero !== '') message += ` do gênero ${genero}`;
-    if (interesses) message += ` que gosta de ${interesses}`;
-    if (orcamento) message += ` com orçamento de até R$ ${orcamento}`;
-    
-    const response = await fetch(`${API_URL}/new-apis/llama/recomendacao`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        message,
-        webAccess: false
-      })
-    });
-    
-    if (!response.ok) throw new Error('Erro na recomendação IA');
-    
-    const resultado = await response.json();
-    
-    // Analytics: Track AI recommendation
-    if (window.analyticsService) {
-      window.analyticsService.trackEvent('ai_recommendation', 'llama_api', message, {
-        idade, genero, orcamento
-      });
-    }
-    
-    return resultado;
-    
-  } catch (error) {
-    console.error('Erro na recomendação IA:', error);
-    return { erro: 'Erro ao gerar recomendação IA', detalhes: error.message };
-  }
-}
-
-/**
- * Busca produtos usando APIs aprimoradas (Bing + Google)
- */
-async function buscarProdutosAprimorados(query, filtros = {}) {
-  try {
-    const params = new URLSearchParams({
-      query,
-      ...filtros
-    });
-    
-    // Tentar primeiro com Google Search
-    let response = await fetch(`${API_URL}/new-apis/google/buscar?${params}&api=both`);
-    let resultadoGoogle = null;
-    
-    if (response.ok) {
-      resultadoGoogle = await response.json();
-    }
-    
-    // Tentar também com Bing para produtos específicos
-    response = await fetch(`${API_URL}/new-apis/bing/produtos?produto=${encodeURIComponent(query)}`);
-    let resultadoBing = null;
-    
-    if (response.ok) {
-      resultadoBing = await response.json();
-    }
-    
-    // Combinar resultados
-    const produtosCombinados = [];
-    
-    if (resultadoGoogle?.sucesso && resultadoGoogle.dados) {
-      // Processar resultados do Google
-      const googleResults = resultadoGoogle.dados.api1?.items || resultadoGoogle.dados.api2?.items || [];
-      googleResults.forEach(item => {
-        produtosCombinados.push({
-          id: `google_${item.title?.hashCode() || Math.random()}`,
-          nome: item.title || item.displayLink,
-          url: item.link,
-          imagem: item.pagemap?.cse_image?.[0]?.src || '/images/placeholder.jpg',
-          preco: 'Ver no site',
-          marketplace: item.displayLink,
-          fonte: 'Google'
-        });
-      });
-    }
-    
-    if (resultadoBing?.sucesso && resultadoBing.dados) {
-      // Processar resultados do Bing
-      const bingResults = resultadoBing.dados.webPages?.value || [];
-      bingResults.forEach(item => {
-        produtosCombinados.push({
-          id: `bing_${item.name?.hashCode() || Math.random()}`,
-          nome: item.name,
-          url: item.url,
-          imagem: '/images/placeholder.jpg',
-          preco: 'Ver no site',
-          marketplace: new URL(item.url).hostname,
-          fonte: 'Bing'
-        });
-      });
-    }
-    
-    return {
-      produtos: produtosCombinados,
-      total: produtosCombinados.length,
-      fontes: {
-        google: resultadoGoogle?.sucesso || false,
-        bing: resultadoBing?.sucesso || false
-      }
-    };
-    
-  } catch (error) {
-    console.error('Erro na busca aprimorada:', error);
-    return { produtos: [], total: 0, erro: error.message };
-  }
-}
-
 // ===== TAB SWITCHING WITH NEW LOCATIONS TAB =====
 
 /**
@@ -756,12 +514,10 @@ function configurarNavegacaoAbas() {
   const secResultados = document.getElementById('produtos');
   const secFavoritos = document.getElementById('favoritos');
   const secLocais = document.getElementById('locais');
-  const secRecomendacao = document.getElementById('recomendacao');
   function esconderTodasSecoes() {
     secResultados.style.display = 'none';
     secFavoritos.style.display = 'none';
     secLocais.style.display = 'none';
-    secRecomendacao.style.display = 'none'; // Sempre esconder recomendação ao trocar de aba
   }
   function removerActiveButtons() {
     [btnVerResultados, btnVerFavoritos, btnVerLocais].forEach(btn => {
@@ -772,13 +528,6 @@ function configurarNavegacaoAbas() {
     esconderTodasSecoes();
     removerActiveButtons();
     secResultados.style.display = '';
-    // Só mostrar recomendação se houver produtos válidos no grid
-    const grid = document.getElementById('grid');
-    if (grid && grid.children.length > 0) {
-      secRecomendacao.style.display = 'block';
-    } else {
-      secRecomendacao.style.display = 'none';
-    }
     btnVerResultados.classList.add('active');
     if (window.analyticsService) {
       window.analyticsService.trackEvent('tab_switch', 'navigation', 'resultados');
@@ -788,7 +537,6 @@ function configurarNavegacaoAbas() {
     esconderTodasSecoes();
     removerActiveButtons();
     secFavoritos.style.display = '';
-    secRecomendacao.style.display = 'none'; // Garante que recomendação nunca aparece em favoritos
     btnVerFavoritos.classList.add('active');
     renderFavoritos();
     if (window.analyticsService) {
@@ -799,7 +547,6 @@ function configurarNavegacaoAbas() {
     esconderTodasSecoes();
     removerActiveButtons();
     secLocais.style.display = '';
-    secRecomendacao.style.display = 'none'; // Garante que recomendação nunca aparece em locais
     btnVerLocais.classList.add('active');
     if (!currentLocais.length) {
       document.getElementById('mapaInfo').innerHTML = `
