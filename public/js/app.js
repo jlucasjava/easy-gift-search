@@ -338,9 +338,9 @@ function renderLocais() {
   
   if (!currentLocais.length) {
     gridLocais.innerHTML = `
-      <div style="grid-column:1/-1;text-align:center;color:#888;padding:2rem;">
-        <p>🏪 Nenhuma loja encontrada na região</p>
-        <small>Tente uma cidade diferente ou verifique a conectividade</small>
+      <div style="grid-column:1/-1;text-align:center;color:#888;padding:2rem;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:180px;">
+        <p style="font-size:1.2rem;font-weight:500;margin-bottom:0.5rem;">🏪 Nenhuma loja encontrada na região</p>
+        <small style="font-size:1rem;">Tente uma cidade diferente ou verifique a conectividade</small>
       </div>
     `;
     return;
