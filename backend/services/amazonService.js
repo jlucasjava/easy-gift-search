@@ -86,7 +86,7 @@ exports.buscarProdutosAmazonReal = async (filtros) => {
   }
 };
 
-const PLACEHOLDER_IMG = 'https://via.placeholder.com/300x300/cccccc/4e54c8?text=Produto+Indisponível';
+const PLACEHOLDER_IMG = '/images/placeholder.jpg';
 
 exports.buscarProdutosAmazon = async (filtros) => {
   // MODO DEMO: retorna produtos mock com links reais para demonstração

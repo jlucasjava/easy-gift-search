@@ -1,7 +1,7 @@
 // Serviço de integração real com Shopee (exemplo via RapidAPI)
 const axios = require('axios');
 
-const PLACEHOLDER_IMG = 'https://via.placeholder.com/300x300/cccccc/4e54c8?text=Produto+Indisponível';
+const PLACEHOLDER_IMG = '/images/placeholder.jpg';
 
 exports.buscarProdutosShopee = async (filtros) => {
   // MODO DEMO: retorna produtos mock com links reais para demonstração
