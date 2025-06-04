@@ -83,34 +83,18 @@ exports.buscarProdutosAliExpress = async (filtros) => {
     const precoMaximo = filtros.precoMax ? parseFloat(filtros.precoMax) : Infinity;
     produtosFiltrados = produtosFiltrados.filter(produto => produto.preco >= precoMinimo && produto.preco <= precoMaximo);
   }
-  const options = {
-    method: 'GET',
-    url: 'https://aliexpress-datahub.p.rapidapi.com/item_search',
-    params: {
-      q: filtros.genero || 'gift',
-      page: '1',
-      sort: 'default',
-      min_price: filtros.precoMin || 0,
-    },
-    headers: {
-      'X-RapidAPI-Key': process.env.RAPIDAPI_KEY,
-      'X-RapidAPI-Host': 'aliexpress-datahub.p.rapidapi.com'
-    }
-  };
-  try {
-    const { data } = await axios.request(options);
-    return data.result?.resultList?.map(item => ({
-      id: item.productId,
-      nome: item.productTitle,
-      preco: item.salePrice,
-      imagem: item.imageUrl,
-      url: item.productDetailUrl,
-      marketplace: 'AliExpress'
-    })) || [];
-  } catch (err) {
-    console.error('Erro AliExpress:', err.response?.data || err.message);
-    return [];
+  if (filtros.genero && filtros.genero.toLowerCase() !== 'nao informado' && filtros.genero !== '') {
+    const genero = filtros.genero.toLowerCase();
+    produtosFiltrados = produtosFiltrados.filter(p => {
+      const produtoGenero = p.genero.toLowerCase();
+      return produtoGenero === 'unisex' || produtoGenero === genero;
+    });
   }
+  if (filtros.idade && filtros.idade !== '') {
+    const idade = parseInt(filtros.idade);
+    produtosFiltrados = produtosFiltrados.filter(p => idade >= p.idadeMin);
+  }
+  return produtosFiltrados;
 };
 
 /**
