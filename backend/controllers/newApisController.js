@@ -5,6 +5,7 @@ const bingSearchService = require('../services/bingSearchService');
 const googleMapsService = require('../services/googleMapsService');
 const gpt35Service = require('../services/gpt35Service');
 const llama2Service = require('../services/llama2Service');
+const overpassService = require('../services/overpassService');
 
 /**
  * Controller para gerenciar as novas APIs integradas:
@@ -313,26 +314,21 @@ exports.buscarLocalizacao = async (req, res) => {
  */
 exports.buscarLojasProximas = async (req, res) => {
   try {
-    const { categoria, latitude, longitude, radius, cidade } = req.query;
+    const { categoria, cidade } = req.query;
 
     if (!categoria) {
-      return res.status(400).json({
-        erro: 'Parâmetro "categoria" é obrigatório'
-      });
+      return res.status(400).json({ erro: 'Parâmetro "categoria" é obrigatório' });
+    }
+    if (!cidade) {
+      return res.status(400).json({ erro: 'Parâmetro "cidade" é obrigatório' });
     }
 
-    const resultado = await googleMapsService.buscarLojasProximas({
-      categoria,
-      latitude,
-      longitude,
-      radius,
-      cidade: cidade || 'São Paulo'
-    });
+    const resultado = await overpassService.buscarLojasProximas({ categoria, cidade });
 
     res.json(resultado);
 
   } catch (error) {
-    console.error('Erro na busca de lojas próximas:', error);
+    console.error('Erro na busca de lojas próximas (Overpass):', error);
     res.status(500).json({
       erro: 'Erro interno do servidor',
       detalhes: error.message
@@ -345,17 +341,18 @@ exports.buscarLojasProximas = async (req, res) => {
  */
 exports.buscarShoppings = async (req, res) => {
   try {
-    const { cidade, estado } = req.query;
+    const { cidade } = req.query;
 
-    const resultado = await googleMapsService.buscarShoppings({
-      cidade: cidade || 'São Paulo',
-      estado: estado || 'SP'
-    });
+    if (!cidade) {
+      return res.status(400).json({ erro: 'Parâmetro "cidade" é obrigatório' });
+    }
+
+    const resultado = await overpassService.buscarShoppings({ cidade });
 
     res.json(resultado);
 
   } catch (error) {
-    console.error('Erro na busca de shoppings:', error);
+    console.error('Erro na busca de shoppings (Overpass):', error);
     res.status(500).json({
       erro: 'Erro interno do servidor',
       detalhes: error.message
