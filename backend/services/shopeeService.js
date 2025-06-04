@@ -77,6 +77,16 @@ exports.buscarProdutosShopee = async (filtros) => {
     const idade = parseInt(filtros.idade);
     produtosFiltrados = produtosFiltrados.filter(p => idade >= p.idadeMin);
   }
+  // Se todos os filtros estiverem vazios, retorna array vazio
+  const filtrosVazios = (
+    (!filtros.precoMin || filtros.precoMin === '') &&
+    (!filtros.precoMax || filtros.precoMax === '') &&
+    (!filtros.genero || filtros.genero === '' || filtros.genero.toLowerCase() === 'nao informado') &&
+    (!filtros.idade || filtros.idade === '')
+  );
+  if (filtrosVazios) {
+    return [];
+  }
   return produtosFiltrados;
   
   /* CÓDIGO ORIGINAL (desabilitado para demo):
