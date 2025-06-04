@@ -656,7 +656,6 @@ function initializeSearchFunctionality() {
   form.addEventListener('submit', (e) => {
     e.preventDefault();
     // Get form values with null checks
-    // const query = document.getElementById('queryInput')?.value.trim() || '';
     const precoMax = document.getElementById('precoMax')?.value || '';
     const idade = document.getElementById('idadeInput')?.value || '';
     const genero = document.getElementById('generoSelect')?.value || '';
@@ -675,7 +674,6 @@ function initializeSearchFunctionality() {
 
     // Build search parameters
     const params = {};
-    // if (query) params.query = query;
     if (precoMax) params.precoMax = precoMax;
     if (idade) params.idade = idade;
     if (genero) params.genero = genero;
