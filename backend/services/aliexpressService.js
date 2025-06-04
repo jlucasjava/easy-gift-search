@@ -14,7 +14,7 @@ exports.buscarProdutosAliExpress = async (filtros) => {
   // MODO DEMO: retorna produtos mock com links reais para demonstração
   console.log('🔧 MODO DEMO: Retornando produtos mock do AliExpress');
   console.log('Filtros recebidos:', filtros);
-    const produtosMock = [
+  const produtosMock = [
     {
       id: '1005004123456789',
       nome: 'Mordedor de Silicone Unissex',
@@ -66,6 +66,16 @@ exports.buscarProdutosAliExpress = async (filtros) => {
       idadeMin: 14
     }
   ];
+  // Se todos os filtros estiverem vazios, retorna array vazio
+  const filtrosVazios = (
+    (!filtros.precoMin || filtros.precoMin === '') &&
+    (!filtros.precoMax || filtros.precoMax === '') &&
+    (!filtros.genero || filtros.genero === '' || filtros.genero.toLowerCase() === 'nao informado') &&
+    (!filtros.idade || filtros.idade === '')
+  );
+  if (filtrosVazios) {
+    return [];
+  }
   // Filtro integrado preço, gênero e idade
   let produtosFiltrados = produtosMock;
   if (filtros.precoMin || filtros.precoMax) {
