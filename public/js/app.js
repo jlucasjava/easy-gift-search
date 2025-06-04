@@ -447,8 +447,11 @@ function configurarNavegacaoAbas() {
       const lat = position.coords.latitude;
       const lng = position.coords.longitude;
       try {
-        // Buscar cidade via API de geocodificação reversa do backend
-        const res = await fetch(`${API_URL}/new-apis/maps/reverse-geocode?lat=${lat}&lng=${lng}`);
+        // Buscar cidade via API Nominatim diretamente (eliminando dependência do backend)
+        const nominatimUrl = `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&accept-language=pt-BR`;
+        const res = await fetch(nominatimUrl, {
+          headers: { 'User-Agent': 'EasyGiftSearch/1.0 (contato@easygift.com)' }
+        });
         if (!res.ok) throw new Error('Erro ao obter cidade');
         let data;
         let rawText = await res.text();
@@ -456,12 +459,13 @@ function configurarNavegacaoAbas() {
           data = JSON.parse(rawText);
         } catch (jsonErr) {
           // Se não for JSON, mostrar o texto bruto para debug
-          console.error('Resposta inesperada da API (esperado JSON):', rawText);
-          document.getElementById('mapaInfo').innerHTML = `<strong>📍 Erro ao identificar localização</strong><br><small>Resposta inesperada da API. Veja o console para detalhes.</small>`;
+          console.error('Resposta inesperada da API Nominatim (esperado JSON):', rawText);
+          document.getElementById('mapaInfo').innerHTML = `<strong>📍 Erro ao identificar localização</strong><br><small>Resposta inesperada da API Nominatim. Veja o console para detalhes.</small>`;
           return;
         }
-        const cidade = data.cidade || data.city || '';
-        const estado = data.estado || data.state || '';
+        // Extrair cidade e estado de address
+        const cidade = data.address?.city || data.address?.town || data.address?.village || data.address?.municipality || data.address?.county || '';
+        const estado = data.address?.state || '';
         if (!cidade) {
           document.getElementById('mapaInfo').innerHTML = `<strong>📍 Não foi possível identificar sua cidade</strong><br><small>Tente novamente ou permita o acesso à localização.</small>`;
           return;
