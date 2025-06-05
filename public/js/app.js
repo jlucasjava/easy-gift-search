@@ -129,7 +129,7 @@ function renderGrid(produtos) {
       <h3>${nomeProduto}</h3>
       <p>R$ ${precoProduto}</p>
       <a href="${urlProduto}" target="_blank" onclick="trackProductClick('${idProduto}', '${nomeEscapado}', '${precoProduto}', '${marketplaceProduto}', ${index}, '${urlProduto}')">${t('ver_marketplace')}</a>
-      <button onclick="favoritarProduto('${idProduto}', '${nomeEscapado}')">${t('favoritar')}</button>
+      <button onclick="favoritarProduto('${idProduto}', '${nomeEscapado}')" class="btn-favoritar" style="display:inline-block;">${t('favoritar')}</button>
     `;
     
     // Analytics: Track product view
@@ -139,6 +139,9 @@ function renderGrid(produtos) {
     
     grid.appendChild(card);
   });
+  // Exibir botões de favoritar
+  const favBtns = document.querySelectorAll('.btn-favoritar');
+  favBtns.forEach(btn => btn.style.display = 'inline-block');
 }
 
 // Global function for tracking product clicks
@@ -697,11 +700,29 @@ function initializeSearchFunctionality() {
   });
 }
 
-// Initialize all functionality when DOM is loaded
+// Habilitar/desabilitar botão de busca conforme preenchimento dos campos
+function toggleSearchButton() {
+  const precoMax = document.getElementById('precoMax')?.value || '';
+  const idade = document.getElementById('idadeInput')?.value || '';
+  const genero = document.getElementById('generoSelect')?.value || '';
+  const submitBtn = document.querySelector('button[type="submit"]');
+  if (submitBtn) {
+    submitBtn.disabled = !precoMax && !idade && !genero;
+    submitBtn.classList.toggle('disabled', submitBtn.disabled);
+  }
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   initializeDarkMode();
   initializeLanguageSwitcher();
   initializeSearchFunctionality();
+  
+  // Inicializar estado do botão de busca
+  toggleSearchButton();
+  // Adicionar listeners para atualizar o botão
+  document.getElementById('precoMax')?.addEventListener('input', toggleSearchButton);
+  document.getElementById('idadeInput')?.addEventListener('input', toggleSearchButton);
+  document.getElementById('generoSelect')?.addEventListener('change', toggleSearchButton);
 });
 
 // =============================================================================
