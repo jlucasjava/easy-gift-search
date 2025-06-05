@@ -196,6 +196,7 @@ async function carregarRecomendacao(refazer = false) {
 // Exibe mensagem inicial convidativa
 function mostrarMensagemInicial() {
   const grid = document.getElementById('grid');
+  const btnVerFavoritos = document.getElementById('btnVerFavoritos');
   grid.innerHTML = `
     <div class="mensagem-inicial" style="grid-column:1/-1;text-align:center;padding:40px 20px;">
       <h3 style="margin-bottom:20px;">🎁 ${t('benvindo_titulo')}</h3>
@@ -205,6 +206,8 @@ function mostrarMensagemInicial() {
   `;
   // Esconder a seção de recomendação inicialmente
   document.getElementById('recomendacao').style.display = 'none';
+  // Esconder botão Favoritos ao mostrar mensagem inicial
+  if (btnVerFavoritos) btnVerFavoritos.style.display = 'none';
 }
 
 // Renderiza grid de produtos
@@ -1041,7 +1044,7 @@ document.addEventListener('DOMContentLoaded', () => {
   
   const btnVerFavoritos = document.getElementById('btnVerFavoritos');
   if (btnVerFavoritos) btnVerFavoritos.style.display = 'none';
-  
+  mostrarMensagemInicial(); // Garante mensagem inicial e botão oculto
   console.log('✅ Easy Gift Search initialized successfully');
 });
 
