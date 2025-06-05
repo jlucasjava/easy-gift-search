@@ -23,7 +23,8 @@ exports.buscarProdutosAliExpress = async (filtros) => {
       url: 'https://pt.aliexpress.com/item/1005004123456789.html',
       marketplace: 'AliExpress',
       genero: 'unisex',
-      idadeMin: 0
+      idadeMin: 0,
+      idadeMax: 2
     },
     {
       id: '1005003987654321',
@@ -33,7 +34,8 @@ exports.buscarProdutosAliExpress = async (filtros) => {
       url: 'https://pt.aliexpress.com/item/1005003987654321.html',
       marketplace: 'AliExpress',
       genero: 'masculino',
-      idadeMin: 0
+      idadeMin: 0,
+      idadeMax: 2
     },
     {
       id: '1005002555666777',
@@ -43,7 +45,8 @@ exports.buscarProdutosAliExpress = async (filtros) => {
       url: 'https://pt.aliexpress.com/item/1005002555666777.html',
       marketplace: 'AliExpress',
       genero: 'masculino',
-      idadeMin: 0
+      idadeMin: 0,
+      idadeMax: 2
     },
     {
       id: '1005001888999000',
@@ -53,7 +56,8 @@ exports.buscarProdutosAliExpress = async (filtros) => {
       url: 'https://pt.aliexpress.com/item/1005001888999000.html',
       marketplace: 'AliExpress',
       genero: 'unisex',
-      idadeMin: 18
+      idadeMin: 18,
+      idadeMax: 120
     },
     {
       id: '1005000111222333',
@@ -63,7 +67,8 @@ exports.buscarProdutosAliExpress = async (filtros) => {
       url: 'https://pt.aliexpress.com/item/1005000111222333.html',
       marketplace: 'AliExpress',
       genero: 'unisex',
-      idadeMin: 14
+      idadeMin: 14,
+      idadeMax: 120
     }
   ];
   // Se todos os filtros estiverem vazios, retorna array vazio
@@ -76,7 +81,7 @@ exports.buscarProdutosAliExpress = async (filtros) => {
   if (filtrosVazios) {
     return [];
   }
-  // Filtro integrado preço, gênero e idade
+  // Filtro integrado preço, gênero e idade (faixa etária)
   let produtosFiltrados = produtosMock;
   if (filtros.precoMin || filtros.precoMax) {
     const precoMinimo = filtros.precoMin ? parseFloat(filtros.precoMin) : 0;
@@ -92,7 +97,11 @@ exports.buscarProdutosAliExpress = async (filtros) => {
   }
   if (filtros.idade && filtros.idade !== '') {
     const idade = parseInt(filtros.idade);
-    produtosFiltrados = produtosFiltrados.filter(p => idade >= p.idadeMin);
+    produtosFiltrados = produtosFiltrados.filter(p => {
+      const min = p.idadeMin || 0;
+      const max = p.idadeMax !== undefined ? p.idadeMax : 120;
+      return idade >= min && idade <= max;
+    });
   }
   return produtosFiltrados;
 };

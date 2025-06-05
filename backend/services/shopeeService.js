@@ -16,7 +16,8 @@ exports.buscarProdutosShopee = async (filtros) => {
       url: 'https://shopee.com.br/Kit-Macacao-Bebe-Menino-i.123456.789012345',
       marketplace: 'Shopee',
       genero: 'masculino',
-      idadeMin: 0
+      idadeMin: 0,
+      idadeMax: 2
     },
     {
       id: 'shopee654321',
@@ -26,7 +27,8 @@ exports.buscarProdutosShopee = async (filtros) => {
       url: 'https://shopee.com.br/Mordedor-Silicone-Bebe-i.654321.987654321',
       marketplace: 'Shopee',
       genero: 'unisex',
-      idadeMin: 0
+      idadeMin: 0,
+      idadeMax: 2
     },
     {
       id: 'shopee777888',
@@ -36,7 +38,8 @@ exports.buscarProdutosShopee = async (filtros) => {
       url: 'https://shopee.com.br/Kit-Higiene-Bebe-Azul-i.777888.123456789',
       marketplace: 'Shopee',
       genero: 'masculino',
-      idadeMin: 0
+      idadeMin: 0,
+      idadeMax: 2
     },
     {
       id: 'shopee999000',
@@ -46,7 +49,8 @@ exports.buscarProdutosShopee = async (filtros) => {
       url: 'https://shopee.com.br/Conjunto-Panelas-Antiaderente-i.999000.987654321',
       marketplace: 'Shopee',
       genero: 'unisex',
-      idadeMin: 18
+      idadeMin: 18,
+      idadeMax: 120
     },
     {
       id: 'shopee111333',
@@ -56,10 +60,11 @@ exports.buscarProdutosShopee = async (filtros) => {
       url: 'https://shopee.com.br/Caneca-Termica-Personalizada-i.111333.456789012',
       marketplace: 'Shopee',
       genero: 'unisex',
-      idadeMin: 14
+      idadeMin: 14,
+      idadeMax: 120
     }
   ];
-  // Filtro integrado preço, gênero e idade
+  // Filtro integrado preço, gênero e idade (faixa etária)
   let produtosFiltrados = produtosMock;
   if (filtros.precoMin || filtros.precoMax) {
     const precoMinimo = filtros.precoMin ? parseFloat(filtros.precoMin) : 0;
@@ -75,7 +80,11 @@ exports.buscarProdutosShopee = async (filtros) => {
   }
   if (filtros.idade) {
     const idade = parseInt(filtros.idade);
-    produtosFiltrados = produtosFiltrados.filter(p => idade >= p.idadeMin);
+    produtosFiltrados = produtosFiltrados.filter(p => {
+      const min = p.idadeMin || 0;
+      const max = p.idadeMax !== undefined ? p.idadeMax : 120;
+      return idade >= min && idade <= max;
+    });
   }
   // Se todos os filtros estiverem vazios, retorna array vazio
   const filtrosVazios = (

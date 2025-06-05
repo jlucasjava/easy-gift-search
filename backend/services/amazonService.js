@@ -101,7 +101,8 @@ exports.buscarProdutosAmazon = async (filtros) => {
       url: 'https://www.amazon.com.br/dp/B08N5WRWNW',
       marketplace: 'Amazon',
       genero: 'unisex',
-      idadeMin: 0
+      idadeMin: 0,
+      idadeMax: 2
     },
     {
       id: 'B07ZQRL9XY',
@@ -111,7 +112,8 @@ exports.buscarProdutosAmazon = async (filtros) => {
       url: 'https://www.amazon.com.br/dp/B07ZQRL9XY',
       marketplace: 'Amazon',
       genero: 'masculino',
-      idadeMin: 0
+      idadeMin: 0,
+      idadeMax: 2
     },
     {
       id: 'B09V3HN1L3',
@@ -121,7 +123,8 @@ exports.buscarProdutosAmazon = async (filtros) => {
       url: 'https://www.amazon.com.br/dp/B09V3HN1L3',
       marketplace: 'Amazon',
       genero: 'unisex',
-      idadeMin: 0
+      idadeMin: 0,
+      idadeMax: 2
     },
     {
       id: 'B08X1Z1W4Z',
@@ -131,7 +134,8 @@ exports.buscarProdutosAmazon = async (filtros) => {
       url: 'https://www.amazon.com.br/dp/B08X1Z1W4Z',
       marketplace: 'Amazon',
       genero: 'unisex',
-      idadeMin: 18
+      idadeMin: 18,
+      idadeMax: 120
     },
     {
       id: 'B07P8MQG6Z',
@@ -141,10 +145,11 @@ exports.buscarProdutosAmazon = async (filtros) => {
       url: 'https://www.amazon.com.br/dp/B07P8MQG6Z',
       marketplace: 'Amazon',
       genero: 'masculino',
-      idadeMin: 14
+      idadeMin: 14,
+      idadeMax: 120
     }
   ];
-  // Filtro integrado preço, gênero e idade
+  // Filtro integrado preço, gênero e idade (faixa etária)
   let produtosFiltrados = produtosMock;
   if (filtros.precoMin || filtros.precoMax) {
     const precoMinimo = filtros.precoMin ? parseFloat(filtros.precoMin) : 0;
@@ -160,7 +165,11 @@ exports.buscarProdutosAmazon = async (filtros) => {
   }
   if (filtros.idade) {
     const idade = parseInt(filtros.idade);
-    produtosFiltrados = produtosFiltrados.filter(p => idade >= p.idadeMin);
+    produtosFiltrados = produtosFiltrados.filter(p => {
+      const min = p.idadeMin || 0;
+      const max = p.idadeMax !== undefined ? p.idadeMax : 120;
+      return idade >= min && idade <= max;
+    });
   }
   return produtosFiltrados;
   

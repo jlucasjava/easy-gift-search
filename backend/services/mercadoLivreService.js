@@ -7,7 +7,8 @@ const produtosVerificados = [
     url: 'https://produto.mercadolivre.com.br/MLB-2791789442-smartphone-motorola-moto-g24-128gb-4gb-ram-_JM',
     marketplace: 'Mercado Livre',
     genero: 'unisex',
-    idadeMin: 16
+    idadeMin: 16,
+    idadeMax: 120
   },
   {
     id: 'MLB1259788087',
@@ -17,7 +18,8 @@ const produtosVerificados = [
     url: 'https://produto.mercadolivre.com.br/MLB-1259788087-fone-de-ouvido-bluetooth-jbl-tune-510bt-_JM',
     marketplace: 'Mercado Livre',
     genero: 'unisex',
-    idadeMin: 12
+    idadeMin: 12,
+    idadeMax: 120
   },
   {
     id: 'MLB3263665661',
@@ -27,7 +29,8 @@ const produtosVerificados = [
     url: 'https://produto.mercadolivre.com.br/MLB-3263665661-smartwatch-relogio-inteligente-d20-plus-_JM',
     marketplace: 'Mercado Livre',
     genero: 'unisex',
-    idadeMin: 14
+    idadeMin: 14,
+    idadeMax: 120
   },
   {
     id: 'MLB1924516102',
@@ -37,7 +40,8 @@ const produtosVerificados = [
     url: 'https://produto.mercadolivre.com.br/MLB-1924516102-kit-presente-perfume-importado-brinde-_JM',
     marketplace: 'Mercado Livre',
     genero: 'feminino',
-    idadeMin: 16
+    idadeMin: 16,
+    idadeMax: 120
   },
   {
     id: 'MLB3541857447',
@@ -47,7 +51,8 @@ const produtosVerificados = [
     url: 'https://produto.mercadolivre.com.br/MLB-3541857447-tablet-samsung-galaxy-tab-a8-64gb-wifi-_JM',
     marketplace: 'Mercado Livre',
     genero: 'unisex',
-    idadeMin: 12
+    idadeMin: 12,
+    idadeMax: 120
   },
   {
     id: 'MLB2095551045',
@@ -57,7 +62,8 @@ const produtosVerificados = [
     url: 'https://produto.mercadolivre.com.br/MLB-2095551045-livro-box-harry-potter-colecao-completa-_JM',
     marketplace: 'Mercado Livre',
     genero: 'unisex',
-    idadeMin: 10
+    idadeMin: 10,
+    idadeMax: 14
   },
   {
     id: 'MLB1847694513',
@@ -67,8 +73,10 @@ const produtosVerificados = [
     url: 'https://produto.mercadolivre.com.br/MLB-1847694513-caixa-de-som-bluetooth-jbl-go-3-original-_JM',
     marketplace: 'Mercado Livre',
     genero: 'unisex',
-    idadeMin: 12
-  },  {
+    idadeMin: 12,
+    idadeMax: 120
+  },
+  {
     id: 'MLB3039876209',
     nome: 'Mouse Gamer Led Rgb 3200dpi Ergonomico',
     preco: '49.90',
@@ -76,8 +84,10 @@ const produtosVerificados = [
     url: 'https://produto.mercadolivre.com.br/MLB-3039876209-mouse-gamer-led-rgb-3200dpi-ergonomico-_JM',
     marketplace: 'Mercado Livre',
     genero: 'masculino',
-    idadeMin: 12
-  },  {
+    idadeMin: 12,
+    idadeMax: 120
+  },
+  {
     id: 'MLB1535098263',
     nome: 'Carregador Portatil Power Bank 10000mah',
     preco: '69.90',
@@ -85,8 +95,10 @@ const produtosVerificados = [
     url: 'https://produto.mercadolivre.com.br/MLB-1535098263-carregador-portatil-power-bank-10000mah-_JM',
     marketplace: 'Mercado Livre',
     genero: 'unisex',
-    idadeMin: 14
-  },  {
+    idadeMin: 14,
+    idadeMax: 120
+  },
+  {
     id: 'MLB9876543210',
     nome: 'Relógio Masculino Esportivo Digital',
     preco: '89.90',
@@ -94,8 +106,10 @@ const produtosVerificados = [
     url: 'https://produto.mercadolivre.com.br/MLB-9876543210-relogio-masculino-esportivo-digital-_JM',
     marketplace: 'Mercado Livre',
     genero: 'masculino',
-    idadeMin: 16
-  },  {
+    idadeMin: 16,
+    idadeMax: 120
+  },
+  {
     id: 'MLB1122334455',
     nome: 'Carteira Masculina Couro Porta Cartão',
     preco: '45.90',
@@ -103,8 +117,10 @@ const produtosVerificados = [
     url: 'https://produto.mercadolivre.com.br/MLB-1122334455-carteira-masculina-couro-porta-cartao-_JM',
     marketplace: 'Mercado Livre',
     genero: 'masculino',
-    idadeMin: 18
-  },  {
+    idadeMin: 18,
+    idadeMax: 120
+  },
+  {
     id: 'MLB5566778899',
     nome: 'Kit Barba Masculino Completo',
     preco: '79.90',
@@ -112,7 +128,8 @@ const produtosVerificados = [
     url: 'https://produto.mercadolivre.com.br/MLB-5566778899-kit-barba-masculino-completo-_JM',
     marketplace: 'Mercado Livre',
     genero: 'masculino',
-    idadeMin: 18
+    idadeMin: 18,
+    idadeMax: 120
   }
 ];
 
@@ -141,7 +158,11 @@ function aplicarFiltros(produtos, filtros) {
 
   if (filtros.idade) {
     const idade = parseInt(filtros.idade);
-    resultado = resultado.filter(p => idade >= p.idadeMin);
+    resultado = resultado.filter(p => {
+      const min = p.idadeMin || 0;
+      const max = p.idadeMax !== undefined ? p.idadeMax : 120;
+      return idade >= min && idade <= max;
+    });
     console.log(`Filtro idade: ${resultado.length} produtos`);
   }
 
