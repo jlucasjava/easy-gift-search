@@ -1,9 +1,35 @@
 const axios = require('axios');
+const { gerarRespostaGPT35 } = require('../services/gpt35Service');
 
 // Integração real com OpenAI para recomendação inteligente
 exports.getRecommendation = async (req, res) => {
   try {
     const { idade, genero, interesses } = req.body;
+
+    // Tenta usar OpenAI (GPT-3.5 via RapidAPI) se chave configurada
+    if (process.env.RAPIDAPI_KEY_NEW) {
+      const prompt = `Sugira até 3 ideias de presentes para uma pessoa de ${idade} anos, gênero ${genero}, com interesses em: ${interesses}. Responda em formato JSON: [{nome, preco, imagem, url, descricao}]. Seja criativo, prático e relevante para a faixa etária.`;
+      try {
+        const resposta = await gerarRespostaGPT35({ message: prompt, webAccess: true });
+        // Tenta extrair JSON da resposta da IA
+        let produtosRelacionados = [];
+        let sugestao = '';
+        if (resposta && resposta.result) {
+          // Busca JSON na resposta
+          const match = resposta.result.match(/\[.*\]/s);
+          if (match) {
+            produtosRelacionados = JSON.parse(match[0]);
+            sugestao = 'Sugestão personalizada via IA';
+          } else {
+            sugestao = resposta.result;
+          }
+        }
+        return res.json({ sugestao, produtosRelacionados });
+      } catch (err) {
+        console.error('Erro ao usar OpenAI:', err.message);
+        // fallback para lógica simples abaixo
+      }
+    }
     
     // Fallback: sugestão baseada em regras simples (ignora OpenAI)
     let sugestao = '';

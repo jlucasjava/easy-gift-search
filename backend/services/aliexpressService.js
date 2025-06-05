@@ -185,12 +185,43 @@ exports.buscarDetalheProdutoAliExpress = async (itemId) => {
  */
 exports.buscarProdutosAliExpressReal = async (filtros) => {
   try {
-    console.log('🔧 MODO DESENVOLVIMENTO: Nova API AliExpress ainda não implementada para busca');
-    console.log('Use buscarDetalheProdutoAliExpress() para detalhes de produtos específicos');
-    
-    // Por enquanto, retorna os produtos mock
-    return await exports.buscarProdutosAliExpress(filtros);
-    
+    if (!process.env.RAPIDAPI_KEY_NEW) {
+      throw new Error('RAPIDAPI_KEY_NEW não configurada');
+    }
+    const { precoMin, precoMax, genero } = filtros;
+    const keyword = genero || 'presente';
+    const requestConfig = {
+      method: 'GET',
+      url: 'https://aliexpress-datahub.p.rapidapi.com/item_search',
+      params: {
+        query: keyword,
+        page: 1,
+        size: 30
+      },
+      headers: {
+        'x-rapidapi-host': 'aliexpress-datahub.p.rapidapi.com',
+        'x-rapidapi-key': process.env.RAPIDAPI_KEY_NEW
+      },
+      timeout: 10000,
+      httpsAgent
+    };
+    const response = await axios(requestConfig);
+    let produtos = response.data.result?.products || [];
+    // Adapta para o formato padrão
+    produtos = produtos.map(p => ({
+      id: p.productId,
+      nome: p.subject,
+      preco: p.salePrice,
+      imagem: p.imageUrl,
+      url: p.productDetailUrl,
+      marketplace: 'AliExpress',
+      genero: genero || 'unisex',
+      idadeMin: 0,
+      idadeMax: 120
+    }));
+    if (precoMin) produtos = produtos.filter(p => p.preco >= precoMin);
+    if (precoMax) produtos = produtos.filter(p => p.preco <= precoMax);
+    return produtos;
   } catch (error) {
     console.error('❌ Erro na busca AliExpress Real:', error.message);
     return [];
@@ -215,4 +246,12 @@ exports.testarAPIAliExpress = async () => {
       use_aliexpress_datahub_api: process.env.USE_ALIEXPRESS_DATAHUB_API === 'true'
     }
   };
+};
+
+exports.buscarProdutos = async (filtros) => {
+  // Sempre tenta usar a API real se a chave estiver configurada
+  if (process.env.USE_REAL_ALIEXPRESS_API === 'true' && process.env.RAPIDAPI_KEY_NEW) {
+    return await exports.buscarProdutosAliExpressReal(filtros);
+  }
+  return await exports.buscarProdutosAliExpress(filtros);
 };

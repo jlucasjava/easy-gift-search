@@ -121,3 +121,50 @@ exports.buscarProdutosShopee = async (filtros) => {
   }
   */
 };
+
+// Função real para buscar produtos na Shopee via RapidAPI
+exports.buscarProdutosShopeeReal = async (filtros) => {
+  const { precoMin, precoMax, genero } = filtros;
+  const keyword = genero || 'presente';
+  const options = {
+    method: 'GET',
+    url: 'https://shopee-api3.p.rapidapi.com/api/v2/search_items/',
+    params: {
+      by: 'relevancy',
+      keyword,
+      limit: '30',
+      newest: '0',
+      price_min: precoMin || 0,
+    },
+    headers: {
+      'X-RapidAPI-Key': process.env.RAPIDAPI_KEY,
+      'X-RapidAPI-Host': 'shopee-api3.p.rapidapi.com'
+    }
+  };
+  try {
+    const { data } = await axios.request(options);
+    let produtos = data.items?.map(item => ({
+      id: item.itemid,
+      nome: item.name,
+      preco: item.price / 100000,
+      imagem: item.image,
+      url: `https://shopee.com.br/product/${item.shopid}/${item.itemid}`,
+      marketplace: 'Shopee',
+      genero: genero || 'unisex',
+      idadeMin: 0,
+      idadeMax: 120
+    })) || [];
+    if (precoMax) produtos = produtos.filter(p => p.preco <= precoMax);
+    return produtos;
+  } catch (err) {
+    console.error('Erro Shopee:', err.response?.data || err.message);
+    return [];
+  }
+};
+
+exports.buscarProdutos = async (filtros) => {
+  if (process.env.USE_REAL_SHOPEE_API === 'true' && process.env.RAPIDAPI_KEY) {
+    return await exports.buscarProdutosShopeeReal(filtros);
+  }
+  return await exports.buscarProdutosShopee(filtros);
+};

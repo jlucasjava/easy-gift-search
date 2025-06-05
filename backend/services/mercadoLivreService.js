@@ -169,11 +169,48 @@ function aplicarFiltros(produtos, filtros) {
   return resultado.sort(() => Math.random() - 0.5).slice(0, 30);
 }
 
+const axios = require('axios');
+
+async function buscarProdutosMercadoLivreReal(filtros) {
+  // Busca real na API pública do Mercado Livre
+  const { precoMin, precoMax, idade, genero } = filtros;
+  let termo = 'presente';
+  if (genero) {
+    termo += ` ${genero}`;
+  }
+  const url = `https://api.mercadolibre.com/sites/MLB/search?q=${encodeURIComponent(termo)}`;
+  try {
+    const response = await axios.get(url);
+    let produtos = response.data.results || [];
+    // Filtros adicionais
+    if (precoMin) produtos = produtos.filter(p => p.price >= precoMin);
+    if (precoMax) produtos = produtos.filter(p => p.price <= precoMax);
+    // Adapta para o formato padrão
+    produtos = produtos.slice(0, 30).map(p => ({
+      id: p.id,
+      nome: p.title,
+      preco: p.price,
+      imagem: p.thumbnail,
+      url: p.permalink,
+      marketplace: 'Mercado Livre',
+      genero: genero || 'unisex',
+      idadeMin: 0,
+      idadeMax: 120
+    }));
+    return produtos;
+  } catch (err) {
+    console.error('Erro na busca real Mercado Livre:', err.message);
+    return [];
+  }
+}
+
 module.exports = {
   buscarProdutos: async function(filtros) {
+    if (process.env.USE_REAL_MERCADOLIVRE_API === 'true') {
+      return await buscarProdutosMercadoLivreReal(filtros);
+    }
     console.log('🛒 Buscando produtos do Mercado Livre');
     console.log('Filtros:', filtros);
-    
     const produtos = aplicarFiltros(produtosVerificados, filtros || {});
     console.log(`✅ ${produtos.length} produtos encontrados`);
     return produtos;
