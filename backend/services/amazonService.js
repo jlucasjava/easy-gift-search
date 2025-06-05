@@ -68,8 +68,8 @@ exports.buscarProdutosAmazonReal = async (filtros) => {
         console.log(`💰 Filtro preço aplicado: ${produtos.length} produtos restantes`);
       }
 
-      // Limitar a 9 produtos para manter consistência
-      produtos = produtos.slice(0, 9);
+      // Limitar a 30 produtos para busca mais abrangente
+      produtos = produtos.slice(0, 30);
       
       console.log(`📦 Retornando ${produtos.length} produtos reais da Amazon`);
       return produtos;
@@ -171,7 +171,8 @@ exports.buscarProdutosAmazon = async (filtros) => {
       return idade >= min && idade <= max;
     });
   }
-  return produtosFiltrados;
+  // Retornar até 30 produtos para busca mais abrangente
+  return produtosFiltrados.slice(0, 30);
   
   /* CÓDIGO ORIGINAL (desabilitado para demo):
   const options = {

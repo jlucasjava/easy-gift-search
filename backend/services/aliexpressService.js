@@ -103,7 +103,8 @@ exports.buscarProdutosAliExpress = async (filtros) => {
       return idade >= min && idade <= max;
     });
   }
-  return produtosFiltrados;
+  // Retornar até 30 produtos para busca mais abrangente
+  return produtosFiltrados.slice(0, 30);
 };
 
 /**

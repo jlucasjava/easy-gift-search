@@ -166,7 +166,7 @@ function aplicarFiltros(produtos, filtros) {
     console.log(`Filtro idade: ${resultado.length} produtos`);
   }
 
-  return resultado.sort(() => Math.random() - 0.5).slice(0, 9);
+  return resultado.sort(() => Math.random() - 0.5).slice(0, 30);
 }
 
 module.exports = {

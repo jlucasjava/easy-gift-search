@@ -86,17 +86,8 @@ exports.buscarProdutosShopee = async (filtros) => {
       return idade >= min && idade <= max;
     });
   }
-  // Se todos os filtros estiverem vazios, retorna array vazio
-  const filtrosVazios = (
-    (!filtros.precoMin || filtros.precoMin === '') &&
-    (!filtros.precoMax || filtros.precoMax === '') &&
-    (!filtros.genero || filtros.genero === '' || filtros.genero.toLowerCase() === 'nao informado') &&
-    (!filtros.idade || filtros.idade === '')
-  );
-  if (filtrosVazios) {
-    return [];
-  }
-  return produtosFiltrados;
+  // Retornar até 30 produtos para busca mais abrangente
+  return produtosFiltrados.slice(0, 30);
   
   /* CÓDIGO ORIGINAL (desabilitado para demo):
   const options = {
