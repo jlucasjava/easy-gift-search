@@ -1042,6 +1042,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Configurar botão de busca
   configurarBotaoBusca();
   
+  // Garante que o botão Favoritos fique oculto ao iniciar
   const btnVerFavoritos = document.getElementById('btnVerFavoritos');
   if (btnVerFavoritos) btnVerFavoritos.style.display = 'none';
   mostrarMensagemInicial(); // Garante mensagem inicial e botão oculto
