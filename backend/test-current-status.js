@@ -15,6 +15,7 @@ console.log(`   Amazon: ${process.env.USE_REAL_AMAZON_API === 'true' ? '✅ ATIV
 console.log(`   Shopee: ${process.env.USE_REAL_SHOPEE_API === 'true' ? '✅ ATIVA' : '❌ INATIVA'}`);
 console.log(`   AliExpress: ${process.env.USE_REAL_ALIEXPRESS_API === 'true' ? '✅ ATIVA' : '❌ INATIVA'}`);
 console.log(`   Mercado Livre: ${process.env.USE_REAL_MERCADOLIVRE_API === 'true' ? '✅ ATIVA' : '❌ INATIVA'}`);
+console.log(`   Real-Time Search: ${process.env.USE_REAL_REALTIME_API === 'true' ? '✅ ATIVA' : '❌ INATIVA'}`);
 
 console.log('\n🔑 CHAVES DE API:');
 console.log(`   RAPIDAPI_KEY: ${process.env.RAPIDAPI_KEY ? '✅ CONFIGURADA' : '❌ NÃO CONFIGURADA'}`);
@@ -34,6 +35,9 @@ if (process.env.USE_REAL_ALIEXPRESS_API === 'true' && process.env.RAPIDAPI_KEY) 
 }
 if (process.env.USE_REAL_MERCADOLIVRE_API === 'true') {
   apisAtivas.push('Mercado Livre (API Pública)');
+}
+if (process.env.USE_REAL_REALTIME_API === 'true' && process.env.RAPIDAPI_KEY) {
+  apisAtivas.push('Real-Time Product Search (RapidAPI)');
 }
 if (process.env.OPENAI_API_KEY) {
   apisAtivas.push('OpenAI (Recomendações)');

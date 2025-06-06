@@ -3,23 +3,23 @@ const mercadoLivreService = require('../services/mercadoLivreService');
 const amazonService = require('../services/amazonService');
 const shopeeService = require('../services/shopeeService');
 const aliexpressService = require('../services/aliexpressService');
+const realTimeProductService = require('../services/realTimeProductService');
 
 exports.searchProducts = async (req, res) => {
   try {
     console.log('🔍 API /products chamada com query:', req.query);
     const { precoMin, precoMax, idade, genero, page = 1 } = req.query;
-    const filtros = { precoMin, precoMax, idade, genero, page };
-
-    // Chama todos os serviços em paralelo
-    const [ml, amz, shopee, ali] = await Promise.all([
+    const filtros = { precoMin, precoMax, idade, genero, page };    // Chama todos os serviços em paralelo
+    const [ml, amz, shopee, ali, realTime] = await Promise.all([
       mercadoLivreService.buscarProdutos(filtros),
       amazonService.buscarProdutos(filtros),
       shopeeService.buscarProdutosShopee(filtros),
-      aliexpressService.buscarProdutosAliExpress(filtros)
+      aliexpressService.buscarProdutosAliExpress(filtros),
+      realTimeProductService.buscarProdutos(filtros)
     ]);
 
     // Unifica e embaralha os resultados
-    let produtos = [...ml, ...amz, ...shopee, ...ali];
+    let produtos = [...ml, ...amz, ...shopee, ...ali, ...realTime];
     produtos = produtos.sort(() => Math.random() - 0.5);
 
     // Paginação simples (9 por página)

@@ -2,14 +2,44 @@
   "version": 2,
   "builds": [
     {
+      "src": "api/**/*.js",
+      "use": "@vercel/node"
+    },
+    {
       "src": "public/**",
       "use": "@vercel/static"
     }
   ],
   "routes": [
     {
+      "src": "/api/products",
+      "dest": "/api/products.js"
+    },
+    {
+      "src": "/api/(.*)",
+      "dest": "/api/index.js"
+    },
+    {
       "src": "/(.*)",
       "dest": "/public/$1"
     }
-  ]
+  ],
+  "functions": {
+    "api/**/*.js": {
+      "includeFiles": "backend/**"
+    }
+  },
+  "env": {
+    "USE_REAL_AMAZON_API": "false",
+    "USE_REAL_SHOPEE_API": "true",
+    "USE_REAL_ALIEXPRESS_API": "false",
+    "USE_REAL_MERCADOLIVRE_API": "false",
+    "USE_LLAMA_API": "true",
+    "USE_GOOGLE_SEARCH_API": "true",
+    "USE_GOOGLE_SEARCH72_API": "true",
+    "USE_ALIEXPRESS_DATAHUB_API": "true",
+    "USE_BING_WEB_SEARCH_API": "true",
+    "USE_GOOGLE_MAPS_API": "true",
+    "NODE_ENV": "production"
+  }
 }

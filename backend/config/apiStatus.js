@@ -47,7 +47,6 @@ function displayAPIStatus() {
   } else {
     console.log('   🔄 MODO DEMO - Usando dados mock do AliExpress');
   }
-
   // Mercado Livre API Status
   const mercadoLivreReal = process.env.USE_REAL_MERCADOLIVRE_API === 'true';
   console.log('');
@@ -58,22 +57,35 @@ function displayAPIStatus() {
     console.log('   🔄 MODO DEMO - Usando dados mock do Mercado Livre');
   }
 
-  console.log('');  console.log('🔑 CHAVES DE API:');
+  // Real-Time Product Search API Status
+  const realTimeReal = process.env.USE_REAL_REALTIME_API === 'true';
+  console.log('');
+  console.log('🕒 REAL-TIME PRODUCT SEARCH:');
+  if (realTimeReal && amazonKey) {
+    console.log('   ✅ REAL API ATIVA - Usando real-time-product-search.p.rapidapi.com');
+    console.log('   🔑 RAPIDAPI_KEY configurada');
+  } else if (realTimeReal && !amazonKey) {
+    console.log('   ⚠️ CONFIGURAÇÃO INCOMPLETA - USE_REAL_REALTIME_API=true mas RAPIDAPI_KEY não encontrada');
+    console.log('   🔄 Fallback para dados mock');
+  } else {
+    console.log('   🔧 MODO DEMO - Usando dados mock do Real-Time Product Search');
+  }
+
+  console.log('');console.log('🔑 CHAVES DE API:');
   console.log(`   RAPIDAPI_KEY: ${process.env.RAPIDAPI_KEY ? '✅ Configurada' : '❌ Não configurada'}`);
   console.log(`   RAPIDAPI_KEY_NEW: ${process.env.RAPIDAPI_KEY_NEW ? '✅ Configurada' : '❌ Não configurada'}`);
   console.log(`   SHOPEE_SCRAPER_API_KEY: ${process.env.SHOPEE_SCRAPER_API_KEY ? '✅ Configurada' : '❌ Não configurada'}`);
   console.log(`   OPENAI_API_KEY: ${process.env.OPENAI_API_KEY ? '✅ Configurada' : '❌ Não configurada'}`);
 
-  console.log('');
-  console.log('⚙️ CONFIGURAÇÕES AVANÇADAS:');
+  console.log('');  console.log('⚙️ CONFIGURAÇÕES AVANÇADAS:');
   console.log(`   USE_LLAMA_API: ${process.env.USE_LLAMA_API || 'false'}`);
   console.log(`   USE_GOOGLE_SEARCH_API: ${process.env.USE_GOOGLE_SEARCH_API || 'false'}`);
   console.log(`   USE_BING_WEB_SEARCH_API: ${process.env.USE_BING_WEB_SEARCH_API || 'false'}`);
   console.log(`   USE_GOOGLE_MAPS_API: ${process.env.USE_GOOGLE_MAPS_API || 'false'}`);
 
   console.log('');
-  const totalReal = [amazonReal && amazonKey, shopeeReal && shopeeScraperKey, aliExpressReal && amazonKey, mercadoLivreReal].filter(Boolean).length;
-  const totalMarketplaces = 4;
+  const totalReal = [amazonReal && amazonKey, shopeeReal && shopeeScraperKey, aliExpressReal && amazonKey, mercadoLivreReal, realTimeReal && amazonKey].filter(Boolean).length;
+  const totalMarketplaces = 5;
   
   if (totalReal === totalMarketplaces) {
     console.log('🎉 STATUS GERAL: TODAS AS APIS REAIS ATIVAS (' + totalReal + '/' + totalMarketplaces + ')');
@@ -95,12 +107,16 @@ function validateAPIConfiguration() {
   if (process.env.USE_REAL_AMAZON_API === 'true' && !process.env.RAPIDAPI_KEY) {
     missingKeys.push('RAPIDAPI_KEY (para Amazon)');
   }
-    if (process.env.USE_REAL_SHOPEE_API === 'true' && !process.env.SHOPEE_SCRAPER_API_KEY) {
+  if (process.env.USE_REAL_SHOPEE_API === 'true' && !process.env.SHOPEE_SCRAPER_API_KEY) {
     missingKeys.push('SHOPEE_SCRAPER_API_KEY (para Shopee)');
   }
   
   if (process.env.USE_REAL_ALIEXPRESS_API === 'true' && !process.env.RAPIDAPI_KEY) {
     missingKeys.push('RAPIDAPI_KEY (para AliExpress)');
+  }
+
+  if (process.env.USE_REAL_REALTIME_API === 'true' && !process.env.RAPIDAPI_KEY) {
+    missingKeys.push('RAPIDAPI_KEY (para Real-Time Product Search)');
   }
 
   if (missingKeys.length > 0) {
