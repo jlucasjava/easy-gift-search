@@ -1,4 +1,4 @@
-// Serviço de integração real com Shopee (exemplo via RapidAPI)
+// Serviço de integração com Shopee usando Nova API Scraper
 const axios = require('axios');
 const https = require('https');
 
@@ -10,66 +10,92 @@ const httpsAgent = new https.Agent({
 });
 
 exports.buscarProdutosShopee = async (filtros) => {
-  // Detailed logging for configuration check
-  console.log('🛍️ Shopee Service - Verificando configuração...');
-  console.log(`USE_REAL_SHOPEE_API: ${process.env.USE_REAL_SHOPEE_API}`);
-  console.log(`RAPIDAPI_KEY presente: ${!!process.env.RAPIDAPI_KEY}`);
+  // ==================== CONFIGURAÇÃO API SHOPEE SCRAPER ====================
+  console.log('\n🛍️ === SHOPEE SERVICE - VERIFICAÇÃO DE CONFIGURAÇÃO ===');
+  console.log(`📋 USE_REAL_SHOPEE_API: ${process.env.USE_REAL_SHOPEE_API || 'undefined'}`);
+  console.log(`🔑 SHOPEE_SCRAPER_API_KEY disponível: ${process.env.SHOPEE_SCRAPER_API_KEY ? 'SIM ✅' : 'NÃO ❌'}`);
   
-  // Verificar se deve usar API real
-  const useRealAPI = process.env.USE_REAL_SHOPEE_API === 'true';
+  const useRealApi = process.env.USE_REAL_SHOPEE_API === 'true';
+  console.log(`🎯 DECISÃO: ${useRealApi ? 'USAR API REAL (SHOPEE SCRAPER) 🚀' : 'USAR DADOS MOCK 📦'}`);
+  console.log('==================================================================\n');
   
-  if (useRealAPI && process.env.RAPIDAPI_KEY) {
-    console.log('✅ Shopee: Usando API REAL (unofficial-shopee.p.rapidapi.com)');
-  } else {
-    console.log('🔧 Shopee: Usando dados mock (configuração ou chave API faltando)');
-  }
-  console.log('Filtros recebidos:', filtros);
-  if (useRealAPI) {
+  if (useRealApi && process.env.SHOPEE_SCRAPER_API_KEY) {
+    console.log('🌐 Executando busca com API REAL do Shopee Scraper...');
+    console.log('📊 Filtros recebidos:', filtros);
+    
     try {
-      // Implementação real da API Shopee via RapidAPI - usando endpoint alternativo
-      const response = await axios.get('https://unofficial-shopee.p.rapidapi.com/search', {
-        params: {
-          query: filtros.categoria || filtros.query || 'baby gift',
-          limit: 20,
-          page: 1
-        },
+      // Nova implementação usando Shopee Scraper API
+      const shopeeUrl = "https://shopee.com.my/api/v4/pdp/get_pc?shop_id=12851682&item_id=187718196&detail_level=0";
+      
+      console.log('🔍 Iniciando requisição para Shopee Scraper API...');
+      console.log(`🌐 URL sendo enviada: ${shopeeUrl}`);
+      
+      const response = await axios.post('https://shopee-scraper1.p.rapidapi.com/', {
+        url: shopeeUrl
+      }, {
         headers: {
-          'X-RapidAPI-Key': process.env.RAPIDAPI_KEY,
-          'X-RapidAPI-Host': 'unofficial-shopee.p.rapidapi.com'
+          'Content-Type': 'application/json',
+          'x-rapidapi-host': 'shopee-scraper1.p.rapidapi.com',
+          'x-rapidapi-key': process.env.SHOPEE_SCRAPER_API_KEY
         },
         httpsAgent,
-        timeout: 10000
+        timeout: 15000
       });
 
-      console.log('✅ SHOPEE: API real funcionando!', response.data?.data?.length || 0, 'produtos encontrados');
+      console.log(`✅ Resposta recebida! Status: ${response.status}`);
+      console.log('📦 Dados brutos:', JSON.stringify(response.data, null, 2).substring(0, 500) + '...');
       
-      if (response.data && response.data.data && Array.isArray(response.data.data)) {
-        return response.data.data.map(item => ({
-          id: `shopee_${item.itemid || Math.random()}`,
-          nome: item.name || 'Produto Shopee',
+      // Processar dados do Shopee Scraper
+      if (response.data && response.data.data) {
+        const item = response.data.data;
+        const produtos = [{
+          id: `shopee_scraper_${item.itemid || Math.random()}`,
+          nome: item.name || 'Produto Shopee (Scraper)',
           preco: (item.price / 100000) || 0, // Shopee retorna preço em centavos
-          imagem: item.image || PLACEHOLDER_IMG,
-          url: `https://shopee.com.br/product/${item.shopid || 'shop'}/${item.itemid || 'item'}`,
+          imagem: item.images ? `https://cf.shopee.com.my/file/${item.images[0]}` : PLACEHOLDER_IMG,
+          url: `https://shopee.com.my/product/${item.shop_id}/${item.itemid}`,
           marketplace: 'Shopee',
-          genero: 'unisex',
+          genero: filtros.genero || 'unisex',
           idadeMin: 0,
-          idadeMax: 12
-        }));
+          idadeMax: 120,
+          fonte: 'API Real (Shopee Scraper)',
+          api_usado: 'shopee-scraper1.p.rapidapi.com'
+        }];
+        
+        console.log(`🎁 Produtos formatados: ${produtos.length}`);
+        console.log('📋 Fonte: API Real (shopee-scraper1.p.rapidapi.com)');
+        return produtos;
+      } else {
+        console.log('⚠️ Resposta vazia da API, retornando dados mock');
+        return await buscarProdutosMockShopee(filtros);
       }
+      
     } catch (error) {
-      console.error('❌ SHOPEE: Erro na API real:', error.message);
-      console.log('🔄 SHOPEE: Retornando para dados mock...');
+      console.error('❌ Erro na busca real Shopee Scraper:', error.message);
+      console.error('🔄 Retornando dados mock devido ao erro');
+      return await buscarProdutosMockShopee(filtros);
     }
   }
-    const produtosMock = [
+  
+  console.log('📦 Executando busca com DADOS MOCK...');
+  return await buscarProdutosMockShopee(filtros);
+};
+
+// Função para buscar produtos mock do Shopee
+async function buscarProdutosMockShopee(filtros) {
+  console.log('📦 Executando busca MOCK do Shopee...');
+  console.log('🛍️ Buscando produtos do Shopee (MOCK)');
+  console.log('Filtros:', filtros);
+  
+  const produtosMock = [
     {
       id: 'shopee123456',
-      nome: 'Macacão Bebê Menino Algodão',
-      preco: 59.90,
+      nome: 'Roupinha de Bebê Rosa',
+      preco: 49.90,
       imagem: PLACEHOLDER_IMG,
-      url: 'https://shopee.com.br/Kit-Macacao-Bebe-Menino-i.123456.789012345',
+      url: 'https://shopee.com.br/Roupinha-Bebe-Rosa-i.123456.789012345',
       marketplace: 'Shopee',
-      genero: 'masculino',
+      genero: 'feminino',
       idadeMin: 0,
       idadeMax: 2
     },
@@ -118,13 +144,16 @@ exports.buscarProdutosShopee = async (filtros) => {
       idadeMax: 120
     }
   ];
+  
   // Filtro integrado preço, gênero e idade (faixa etária)
   let produtosFiltrados = produtosMock;
+  
   if (filtros.precoMin || filtros.precoMax) {
     const precoMinimo = filtros.precoMin ? parseFloat(filtros.precoMin) : 0;
     const precoMaximo = filtros.precoMax ? parseFloat(filtros.precoMax) : Infinity;
     produtosFiltrados = produtosFiltrados.filter(produto => produto.preco >= precoMinimo && produto.preco <= precoMaximo);
   }
+  
   if (filtros.genero && filtros.genero.toLowerCase() !== 'nao informado' && filtros.genero.toLowerCase() !== '') {
     const genero = filtros.genero.toLowerCase();
     produtosFiltrados = produtosFiltrados.filter(p => {
@@ -132,6 +161,7 @@ exports.buscarProdutosShopee = async (filtros) => {
       return produtoGenero === 'unisex' || produtoGenero === genero;
     });
   }
+  
   if (filtros.idade) {
     const idade = parseInt(filtros.idade);
     produtosFiltrados = produtosFiltrados.filter(p => {
@@ -140,95 +170,12 @@ exports.buscarProdutosShopee = async (filtros) => {
       return idade >= min && idade <= max;
     });
   }
-  // Retornar até 30 produtos para busca mais abrangente
+  
+  console.log(`✅ ${produtosFiltrados.length} produtos encontrados (MOCK)`);
   return produtosFiltrados.slice(0, 30);
-  
-  /* CÓDIGO ORIGINAL (desabilitado para demo):
-  const options = {
-    method: 'GET',
-    url: 'https://shopee-api3.p.rapidapi.com/api/v2/search_items/',
-    params: {
-      by: 'relevancy',
-      keyword: filtros.genero || 'presente',
-      limit: '9',
-      newest: '0',
-      price_min: filtros.precoMin || 0,
-    },
-    headers: {
-      'X-RapidAPI-Key': process.env.RAPIDAPI_KEY,
-      'X-RapidAPI-Host': 'shopee-api3.p.rapidapi.com'
-    }
-  };
-  try {
-    const { data } = await axios.request(options);
-    return data.items?.map(item => ({
-      id: item.itemid,
-      nome: item.name,
-      preco: item.price / 100000,
-      imagem: item.image,
-      url: `https://shopee.com.br/product/${item.shopid}/${item.itemid}`,
-      marketplace: 'Shopee'
-    })) || [];
-  } catch (err) {
-    console.error('Erro Shopee:', err.response?.data || err.message);
-    return [];
-  }
-  */
-};
+}
 
-// Função real para buscar produtos na Shopee via RapidAPI
-exports.buscarProdutosShopeeReal = async (filtros) => {
-  const https = require('https');
-  const { precoMin, precoMax, genero } = filtros;
-  const keyword = genero || 'presente';
-  
-  console.log('🔍 Buscando produtos reais na Shopee via RapidAPI');
-  console.log('Filtros recebidos:', filtros);
-  
-  const options = {
-    method: 'GET',
-    url: 'https://shopee-api3.p.rapidapi.com/api/v2/search_items/',
-    params: {
-      by: 'relevancy',
-      keyword,
-      limit: '30',
-      newest: '0',
-      price_min: precoMin || 0,
-    },
-    headers: {
-      'X-RapidAPI-Key': process.env.RAPIDAPI_KEY,
-      'X-RapidAPI-Host': 'shopee-api3.p.rapidapi.com'
-    },
-    timeout: 10000,
-    // Adicionar configuração SSL para resolver problemas de certificado
-    httpsAgent: new https.Agent({
-      rejectUnauthorized: false
-    })
-  };
-  try {
-    const { data } = await axios.request(options);
-    let produtos = data.items?.map(item => ({
-      id: item.itemid,
-      nome: item.name,
-      preco: item.price / 100000,
-      imagem: item.image,
-      url: `https://shopee.com.br/product/${item.shopid}/${item.itemid}`,
-      marketplace: 'Shopee',
-      genero: genero || 'unisex',
-      idadeMin: 0,
-      idadeMax: 120
-    })) || [];
-    if (precoMax) produtos = produtos.filter(p => p.preco <= precoMax);
-    return produtos;
-  } catch (err) {
-    console.error('Erro Shopee:', err.response?.data || err.message);
-    return [];
-  }
-};
-
+// Função principal que será chamada pelo controller
 exports.buscarProdutos = async (filtros) => {
-  if (process.env.USE_REAL_SHOPEE_API === 'true' && process.env.RAPIDAPI_KEY) {
-    return await exports.buscarProdutosShopeeReal(filtros);
-  }
   return await exports.buscarProdutosShopee(filtros);
 };
