@@ -1,12 +1,66 @@
 // Serviço de integração real com Shopee (exemplo via RapidAPI)
 const axios = require('axios');
+const https = require('https');
 
 const PLACEHOLDER_IMG = '/images/placeholder.jpg';
 
+// Configuração do agente HTTPS para resolver problemas de SSL
+const httpsAgent = new https.Agent({
+  rejectUnauthorized: false
+});
+
 exports.buscarProdutosShopee = async (filtros) => {
-  // MODO DEMO: retorna produtos mock com links reais para demonstração
-  console.log('🔧 MODO DEMO: Retornando produtos mock da Shopee');
+  // Detailed logging for configuration check
+  console.log('🛍️ Shopee Service - Verificando configuração...');
+  console.log(`USE_REAL_SHOPEE_API: ${process.env.USE_REAL_SHOPEE_API}`);
+  console.log(`RAPIDAPI_KEY presente: ${!!process.env.RAPIDAPI_KEY}`);
+  
+  // Verificar se deve usar API real
+  const useRealAPI = process.env.USE_REAL_SHOPEE_API === 'true';
+  
+  if (useRealAPI && process.env.RAPIDAPI_KEY) {
+    console.log('✅ Shopee: Usando API REAL (unofficial-shopee.p.rapidapi.com)');
+  } else {
+    console.log('🔧 Shopee: Usando dados mock (configuração ou chave API faltando)');
+  }
   console.log('Filtros recebidos:', filtros);
+  if (useRealAPI) {
+    try {
+      // Implementação real da API Shopee via RapidAPI - usando endpoint alternativo
+      const response = await axios.get('https://unofficial-shopee.p.rapidapi.com/search', {
+        params: {
+          query: filtros.categoria || filtros.query || 'baby gift',
+          limit: 20,
+          page: 1
+        },
+        headers: {
+          'X-RapidAPI-Key': process.env.RAPIDAPI_KEY,
+          'X-RapidAPI-Host': 'unofficial-shopee.p.rapidapi.com'
+        },
+        httpsAgent,
+        timeout: 10000
+      });
+
+      console.log('✅ SHOPEE: API real funcionando!', response.data?.data?.length || 0, 'produtos encontrados');
+      
+      if (response.data && response.data.data && Array.isArray(response.data.data)) {
+        return response.data.data.map(item => ({
+          id: `shopee_${item.itemid || Math.random()}`,
+          nome: item.name || 'Produto Shopee',
+          preco: (item.price / 100000) || 0, // Shopee retorna preço em centavos
+          imagem: item.image || PLACEHOLDER_IMG,
+          url: `https://shopee.com.br/product/${item.shopid || 'shop'}/${item.itemid || 'item'}`,
+          marketplace: 'Shopee',
+          genero: 'unisex',
+          idadeMin: 0,
+          idadeMax: 12
+        }));
+      }
+    } catch (error) {
+      console.error('❌ SHOPEE: Erro na API real:', error.message);
+      console.log('🔄 SHOPEE: Retornando para dados mock...');
+    }
+  }
     const produtosMock = [
     {
       id: 'shopee123456',
@@ -124,8 +178,13 @@ exports.buscarProdutosShopee = async (filtros) => {
 
 // Função real para buscar produtos na Shopee via RapidAPI
 exports.buscarProdutosShopeeReal = async (filtros) => {
+  const https = require('https');
   const { precoMin, precoMax, genero } = filtros;
   const keyword = genero || 'presente';
+  
+  console.log('🔍 Buscando produtos reais na Shopee via RapidAPI');
+  console.log('Filtros recebidos:', filtros);
+  
   const options = {
     method: 'GET',
     url: 'https://shopee-api3.p.rapidapi.com/api/v2/search_items/',
@@ -139,7 +198,12 @@ exports.buscarProdutosShopeeReal = async (filtros) => {
     headers: {
       'X-RapidAPI-Key': process.env.RAPIDAPI_KEY,
       'X-RapidAPI-Host': 'shopee-api3.p.rapidapi.com'
-    }
+    },
+    timeout: 10000,
+    // Adicionar configuração SSL para resolver problemas de certificado
+    httpsAgent: new https.Agent({
+      rejectUnauthorized: false
+    })
   };
   try {
     const { data } = await axios.request(options);

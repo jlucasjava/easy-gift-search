@@ -11,9 +11,57 @@ const httpsAgent = new https.Agent({
 const PLACEHOLDER_IMG = '/images/placeholder.jpg';
 
 exports.buscarProdutosAliExpress = async (filtros) => {
-  // MODO DEMO: retorna produtos mock com links reais para demonstração
-  console.log('🔧 MODO DEMO: Retornando produtos mock do AliExpress');
+  // Detailed logging for configuration check
+  console.log('🛒 AliExpress Service - Verificando configuração...');
+  console.log(`USE_REAL_ALIEXPRESS_API: ${process.env.USE_REAL_ALIEXPRESS_API}`);
+  console.log(`RAPIDAPI_KEY presente: ${!!process.env.RAPIDAPI_KEY}`);
+  
+  // Verificar se deve usar API real
+  const useRealAPI = process.env.USE_REAL_ALIEXPRESS_API === 'true';
+  
+  if (useRealAPI && process.env.RAPIDAPI_KEY) {
+    console.log('✅ AliExpress: Usando API REAL (aliexpress-datahub.p.rapidapi.com)');
+  } else {
+    console.log('🔧 AliExpress: Usando dados mock (configuração ou chave API faltando)');
+  }
   console.log('Filtros recebidos:', filtros);
+
+  if (useRealAPI) {
+    try {
+      // Implementação real da API AliExpress via RapidAPI
+      const response = await axios.get('https://aliexpress-datahub.p.rapidapi.com/item_search', {
+        params: {
+          q: filtros.categoria || filtros.query || 'baby gift',
+          page: 1
+        },
+        headers: {
+          'X-RapidAPI-Key': process.env.RAPIDAPI_KEY,
+          'X-RapidAPI-Host': 'aliexpress-datahub.p.rapidapi.com'
+        },
+        httpsAgent,
+        timeout: 10000
+      });
+
+      console.log('✅ ALIEXPRESS: API real funcionando!', response.data?.result?.resultList?.length || 0, 'produtos encontrados');
+      
+      if (response.data && response.data.result && response.data.result.resultList) {
+        return response.data.result.resultList.map(item => ({
+          id: `aliexpress_${item.item.itemId || Math.random()}`,
+          nome: item.item.title || 'Produto AliExpress',
+          preco: parseFloat(item.item.price.minPrice) || 0,
+          imagem: item.item.image || PLACEHOLDER_IMG,
+          url: item.item.itemUrl || `https://pt.aliexpress.com/item/${item.item.itemId}.html`,
+          marketplace: 'AliExpress',
+          genero: 'unisex',
+          idadeMin: 0,
+          idadeMax: 12
+        }));
+      }
+    } catch (error) {
+      console.error('❌ ALIEXPRESS: Erro na API real:', error.message);
+      console.log('🔄 ALIEXPRESS: Retornando para dados mock...');
+    }
+  }
   const produtosMock = [
     {
       id: '1005004123456789',

@@ -209,11 +209,16 @@ exports.buscarProdutosAmazon = async (filtros) => {
 
 // Função principal que escolhe qual implementação usar
 exports.buscarProdutos = async (filtros) => {
+  console.log('🔍 Amazon Service - Verificando configuração...');
+  console.log(`USE_REAL_AMAZON_API: ${process.env.USE_REAL_AMAZON_API}`);
+  console.log(`RAPIDAPI_KEY presente: ${!!process.env.RAPIDAPI_KEY}`);
+  
   // Sempre tenta usar a API real se a chave estiver configurada
   if (process.env.USE_REAL_AMAZON_API === 'true' && process.env.RAPIDAPI_KEY) {
+    console.log('✅ Amazon: Usando API REAL (RapidAPI Real-Time Amazon Data)');
     return await exports.buscarProdutosAmazonReal(filtros);
   } else {
-    console.log('🔧 Usando dados mock da Amazon');
+    console.log('🔧 Amazon: Usando dados mock (configuração ou chave API faltando)');
     return await exports.buscarProdutosAmazon(filtros);
   }
 };

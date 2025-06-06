@@ -87,6 +87,13 @@ app.use((err, req, res, next) => {
   res.status(err.status || 500).json({ erro: err.message || 'Erro interno do servidor.' });
 });
 
+// Display API configuration status on startup
+const { displayAPIStatus, validateAPIConfiguration } = require('./config/apiStatus');
+
 app.listen(PORT, () => {
   console.log(`Servidor rodando na porta ${PORT}`);
+  
+  // Show API status
+  displayAPIStatus();
+  validateAPIConfiguration();
 });

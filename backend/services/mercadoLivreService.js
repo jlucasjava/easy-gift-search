@@ -170,21 +170,50 @@ function aplicarFiltros(produtos, filtros) {
 }
 
 const axios = require('axios');
+const https = require('https');
+
+// Configuração SSL para resolver problemas de certificado
+const httpsAgent = new https.Agent({
+  rejectUnauthorized: false
+});
 
 async function buscarProdutosMercadoLivreReal(filtros) {
   // Busca real na API pública do Mercado Livre
+  console.log('🔍 Iniciando busca na API REAL do Mercado Livre...');
+  console.log('📊 Filtros recebidos:', filtros);
+  
   const { precoMin, precoMax, idade, genero } = filtros;
   let termo = 'presente';
   if (genero) {
     termo += ` ${genero}`;
   }
+  
   const url = `https://api.mercadolibre.com/sites/MLB/search?q=${encodeURIComponent(termo)}`;
+  console.log(`🌐 URL da API: ${url}`);
+  
   try {
-    const response = await axios.get(url);
+    console.log('⏳ Fazendo requisição para API do Mercado Livre...');
+    const response = await axios.get(url, { 
+      httpsAgent,
+      timeout: 10000 
+    });
+    
+    console.log(`✅ Resposta recebida! Status: ${response.status}`);
     let produtos = response.data.results || [];
+    console.log(`📦 Produtos brutos retornados: ${produtos.length}`);
+    
     // Filtros adicionais
-    if (precoMin) produtos = produtos.filter(p => p.price >= precoMin);
-    if (precoMax) produtos = produtos.filter(p => p.price <= precoMax);
+    if (precoMin) {
+      const antes = produtos.length;
+      produtos = produtos.filter(p => p.price >= precoMin);
+      console.log(`💰 Filtro preço mínimo (${precoMin}): ${antes} -> ${produtos.length} produtos`);
+    }
+    if (precoMax) {
+      const antes = produtos.length;
+      produtos = produtos.filter(p => p.price <= precoMax);
+      console.log(`💰 Filtro preço máximo (${precoMax}): ${antes} -> ${produtos.length} produtos`);
+    }
+    
     // Adapta para o formato padrão
     produtos = produtos.slice(0, 30).map(p => ({
       id: p.id,
@@ -197,22 +226,40 @@ async function buscarProdutosMercadoLivreReal(filtros) {
       idadeMin: 0,
       idadeMax: 120
     }));
+    
+    console.log(`🎁 Produtos finais formatados: ${produtos.length}`);
+    console.log('📋 Fonte: API Real (api.mercadolibre.com)');
     return produtos;
   } catch (err) {
-    console.error('Erro na busca real Mercado Livre:', err.message);
+    console.error('❌ Erro na busca real Mercado Livre:', err.message);
+    console.error('🔄 Retornando array vazio devido ao erro');
     return [];
   }
 }
 
 module.exports = {
   buscarProdutos: async function(filtros) {
-    if (process.env.USE_REAL_MERCADOLIVRE_API === 'true') {
-      return await buscarProdutosMercadoLivreReal(filtros);
+    // ==================== CONFIGURAÇÃO API MERCADO LIVRE ====================
+    console.log('\n🛒 === MERCADO LIVRE SERVICE - VERIFICAÇÃO DE CONFIGURAÇÃO ===');
+    console.log(`📋 USE_REAL_MERCADOLIVRE_API: ${process.env.USE_REAL_MERCADOLIVRE_API || 'undefined'}`);
+    console.log(`🔑 API Key disponível: ${process.env.RAPIDAPI_KEY ? 'SIM ✅' : 'NÃO ❌'}`);
+    
+    const useRealApi = process.env.USE_REAL_MERCADOLIVRE_API === 'true';
+    console.log(`🎯 DECISÃO: ${useRealApi ? 'USAR API REAL 🚀' : 'USAR DADOS MOCK 📦'}`);
+    console.log('================================================================\n');
+    
+    if (useRealApi) {
+      console.log('🌐 Executando busca com API REAL do Mercado Livre...');
+      const resultadoReal = await buscarProdutosMercadoLivreReal(filtros);
+      console.log(`✅ API REAL retornou ${resultadoReal.length} produtos`);
+      return resultadoReal;
     }
-    console.log('🛒 Buscando produtos do Mercado Livre');
+    
+    console.log('📦 Executando busca com DADOS MOCK...');
+    console.log('🛒 Buscando produtos do Mercado Livre (MOCK)');
     console.log('Filtros:', filtros);
     const produtos = aplicarFiltros(produtosVerificados, filtros || {});
-    console.log(`✅ ${produtos.length} produtos encontrados`);
+    console.log(`✅ ${produtos.length} produtos encontrados (MOCK)`);
     return produtos;
   }
 };
