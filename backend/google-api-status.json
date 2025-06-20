@@ -1,0 +1,14 @@
+{
+  "status": "success",
+  "timestamp": "2025-06-20T19:14:34.523Z",
+  "configuration": {
+    "apiKeyConfigured": true,
+    "cxConfigured": true,
+    "apiEnabled": true
+  },
+  "testResults": {
+    "query": "presente tecnologia",
+    "resultsCount": 1,
+    "firstResultTitle": "AS273039 Tecnologia del Presente 18, C.A BGP Network ..."
+  }
+}
