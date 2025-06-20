@@ -58,16 +58,14 @@ app.use(limiter);
 const productRoutes = require('./routes/products');
 const recommendRoutes = require('./routes/recommend');
 const feedbackRoutes = require('./routes/feedback');
-const mercadoLivreAuthRoutes = require('./routes/mercadoLivreAuth');
 const testRoutes = require('./routes/test');
-const newApisRoutes = require('./routes/newApis');
+const monitorRoutes = require('./routes/monitor');
 
 app.use('/api/products', productRoutes);
 app.use('/api/recommend', recommendRoutes);
 app.use('/api/feedback', feedbackRoutes);
-app.use('/api/mercadolivre/auth', mercadoLivreAuthRoutes);
 app.use('/api/test', testRoutes);
-app.use('/api/new-apis', newApisRoutes);
+app.use('/api/monitor', monitorRoutes);
 
 // Servir arquivos estáticos do frontend
 app.use(express.static(path.join(__dirname, '../public')));

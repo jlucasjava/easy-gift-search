@@ -1,4 +1,4 @@
-// Script para verificar o status atual das APIs
+// Script para verificar o status atual das APIs - Versão Google Search Only
 require('dotenv').config();
 const { displayAPIStatus } = require('./config/apiStatus');
 
@@ -7,80 +7,52 @@ console.log('🔍 VERIFICANDO STATUS ATUAL DAS APIS...\n');
 // Mostrar status das configurações
 displayAPIStatus();
 
-console.log('\n📊 RESUMO DAS CONFIGURAÇÕES ATUAIS:\n');
+console.log('\n📊 RESUMO DA CONFIGURAÇÃO ATUAL:\n');
 
-// Verificar cada API individualmente
-console.log('🔧 APIS MARKETPLACE:');
-console.log(`   Amazon: ${process.env.USE_REAL_AMAZON_API === 'true' ? '✅ ATIVA' : '❌ INATIVA'}`);
-console.log(`   Shopee: ${process.env.USE_REAL_SHOPEE_API === 'true' ? '✅ ATIVA' : '❌ INATIVA'}`);
-console.log(`   AliExpress: ${process.env.USE_REAL_ALIEXPRESS_API === 'true' ? '✅ ATIVA' : '❌ INATIVA'}`);
-console.log(`   Mercado Livre: ${process.env.USE_REAL_MERCADOLIVRE_API === 'true' ? '✅ ATIVA' : '❌ INATIVA'}`);
-console.log(`   Real-Time Search: ${process.env.USE_REAL_REALTIME_API === 'true' ? '✅ ATIVA' : '❌ INATIVA'}`);
+// Verificar Google Search API
+console.log('🔧 API DE BUSCA:');
+console.log(`   Google Custom Search: ${process.env.USE_GOOGLE_SEARCH_API === 'true' ? '✅ ATIVA' : '❌ INATIVA'}`);
 
 console.log('\n🔑 CHAVES DE API:');
-console.log(`   RAPIDAPI_KEY: ${process.env.RAPIDAPI_KEY ? '✅ CONFIGURADA' : '❌ NÃO CONFIGURADA'}`);
-console.log(`   RAPIDAPI_KEY_NEW: ${process.env.RAPIDAPI_KEY_NEW ? '✅ CONFIGURADA' : '❌ NÃO CONFIGURADA'}`);
-console.log(`   SHOPEE_SCRAPER_API_KEY: ${process.env.SHOPEE_SCRAPER_API_KEY ? '✅ CONFIGURADA' : '❌ NÃO CONFIGURADA'}`);
-console.log(`   OPENAI_API_KEY: ${process.env.OPENAI_API_KEY ? '✅ CONFIGURADA' : '❌ NÃO CONFIGURADA'}`);
+console.log(`   GOOGLE_SEARCH_API_KEY: ${process.env.GOOGLE_SEARCH_API_KEY ? '✅ CONFIGURADA' : '❌ NÃO CONFIGURADA'}`);
+console.log(`   GOOGLE_SEARCH_CX: ${process.env.GOOGLE_SEARCH_CX ? '✅ CONFIGURADO' : '❌ NÃO CONFIGURADO'}`);
 
+// Verificar inconsistências na configuração
 console.log('\n⚠️ VERIFICAÇÃO DE INCONSISTÊNCIAS:');
-if (process.env.RAPIDAPI_KEY && process.env.RAPIDAPI_KEY_NEW) {
-  if (process.env.RAPIDAPI_KEY === process.env.RAPIDAPI_KEY_NEW) {
-    console.log('   ✅ RAPIDAPI_KEY e RAPIDAPI_KEY_NEW são idênticas');
+if (process.env.USE_GOOGLE_SEARCH_API === 'true') {
+  if (!process.env.GOOGLE_SEARCH_API_KEY || !process.env.GOOGLE_SEARCH_CX) {
+    console.log('   ⚠️ Google Search API está ATIVA mas faltam chaves de configuração');
   } else {
-    console.log('   ⚠️ RAPIDAPI_KEY e RAPIDAPI_KEY_NEW são DIFERENTES');
+    console.log('   ✅ Google Search API está corretamente configurada');
   }
-} else if (process.env.RAPIDAPI_KEY || process.env.RAPIDAPI_KEY_NEW) {
-  console.log('   ⚠️ Apenas uma das chaves RAPIDAPI está configurada');
 } else {
-  console.log('   ❌ Nenhuma chave RAPIDAPI configurada');
+  console.log('   ⚠️ Google Search API está INATIVA - sistema não funcionará corretamente');
 }
 
-console.log('\n🚀 APIS ATIVAS ATUALMENTE:');
-const apisAtivas = [];
-if (process.env.USE_REAL_AMAZON_API === 'true' && process.env.RAPIDAPI_KEY) {
-  apisAtivas.push('Amazon (RapidAPI)');
-}
-if (process.env.USE_REAL_SHOPEE_API === 'true' && process.env.SHOPEE_SCRAPER_API_KEY) {
-  apisAtivas.push('Shopee (Scraper API)');
-}
-if (process.env.USE_REAL_ALIEXPRESS_API === 'true' && (process.env.RAPIDAPI_KEY_NEW || process.env.RAPIDAPI_KEY)) {
-  apisAtivas.push('AliExpress (RapidAPI)');
-}
-if (process.env.USE_REAL_MERCADOLIVRE_API === 'true') {
-  apisAtivas.push('Mercado Livre (API Pública)');
-}
-if (process.env.USE_REAL_REALTIME_API === 'true' && (process.env.RAPIDAPI_KEY_NEW || process.env.RAPIDAPI_KEY)) {
-  apisAtivas.push('Real-Time Product Search (RapidAPI)');
-}
-if (process.env.OPENAI_API_KEY) {
-  apisAtivas.push('OpenAI (Recomendações)');
-}
-
-if (apisAtivas.length > 0) {
-  apisAtivas.forEach(api => console.log(`   ✅ ${api}`));
-  console.log(`\n📈 TOTAL: ${apisAtivas.length} APIs ativas`);
+console.log('\n🚀 STATUS DA API:');
+if (process.env.USE_GOOGLE_SEARCH_API === 'true' && process.env.GOOGLE_SEARCH_API_KEY && process.env.GOOGLE_SEARCH_CX) {
+  console.log('   ✅ Google Custom Search API está OPERACIONAL');
+  console.log('   📝 Chaves necessárias estão configuradas');
 } else {
-  console.log('   ❌ NENHUMA API REAL ESTÁ ATIVA');
-  console.log('   🔧 Todas as APIs estão usando dados mock');
+  console.log('   ❌ Google Custom Search API NÃO está operacional');
+  if (!process.env.GOOGLE_SEARCH_API_KEY) console.log('   ❌ Falta: GOOGLE_SEARCH_API_KEY');
+  if (!process.env.GOOGLE_SEARCH_CX) console.log('   ❌ Falta: GOOGLE_SEARCH_CX');
+  if (process.env.USE_GOOGLE_SEARCH_API !== 'true') console.log('   ❌ Falta: USE_GOOGLE_SEARCH_API=true');
 }
 
 console.log('\n' + '='.repeat(60));
 console.log('✅ VERIFICAÇÃO CONCLUÍDA!');
 
 console.log('\n🎯 RECOMENDAÇÕES PARA PRODUÇÃO:');
-if (apisAtivas.length === 0) {
-  console.log('   🚨 CRÍTICO: Configure as variáveis de ambiente na plataforma de deploy');
-  console.log('   📋 Necessário: Configurar todas as chaves de API no dashboard');
-} else if (apisAtivas.length < 5) {
-  console.log('   ⚠️ PARCIAL: Algumas APIs não estão ativas');
-  console.log('   📋 Recomendado: Ativar todas as 5 APIs de marketplace para produção');
+if (process.env.USE_GOOGLE_SEARCH_API !== 'true' || !process.env.GOOGLE_SEARCH_API_KEY || !process.env.GOOGLE_SEARCH_CX) {
+  console.log('   🚨 CRÍTICO: Configure as variáveis de ambiente da Google Search API');
+  console.log('   📋 Necessário: GOOGLE_SEARCH_API_KEY, GOOGLE_SEARCH_CX e USE_GOOGLE_SEARCH_API=true');
 } else {
-  console.log('   ✅ ÓTIMO: Configuração adequada para produção');
+  console.log('   ✅ ÓTIMO: Google Custom Search API configurada corretamente');
 }
 
 console.log('\n📋 PRÓXIMOS PASSOS:');
-console.log('   1. Configure as variáveis no dashboard da plataforma');
-console.log('   2. Use valores reais (não placeholders) para as chaves');
+console.log('   1. Configure as variáveis no dashboard da plataforma de deploy');
+console.log('   2. Use valores reais para as chaves da API Google');
 console.log('   3. Faça redeploy da aplicação');
-console.log('   4. Teste com /api/status para confirmar 5/5 APIs ativas');
+console.log('   4. Teste o endpoint /api/new-apis/teste-todas para confirmar a operação');

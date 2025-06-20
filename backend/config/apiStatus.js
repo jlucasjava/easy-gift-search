@@ -1,4 +1,4 @@
-// API Status Configuration - Real-time status checker
+// API Status Configuration - Google Search API only
 require('dotenv').config();
 
 /**
@@ -10,125 +10,124 @@ function displayAPIStatus() {
   console.log(`🌍 Ambiente: ${process.env.NODE_ENV || 'development'}`);
   console.log('');
 
-  // Amazon API Status
-  const amazonReal = process.env.USE_REAL_AMAZON_API === 'true';
-  const amazonKey = !!process.env.RAPIDAPI_KEY;
-  console.log('📦 AMAZON:');
-  if (amazonReal && amazonKey) {
-    console.log('   ✅ REAL API ATIVA - Usando RapidAPI Real-Time Amazon Data');
-    console.log('   🔑 RAPIDAPI_KEY configurada');
-  } else if (amazonReal && !amazonKey) {
-    console.log('   ⚠️ CONFIGURAÇÃO INCOMPLETA - USE_REAL_AMAZON_API=true mas RAPIDAPI_KEY não encontrada');
-    console.log('   🔄 Fallback para dados mock');
+  // Google Search API Status
+  const googleSearchEnabled = process.env.USE_GOOGLE_SEARCH_API === 'true';
+  const googleSearchKey = !!process.env.GOOGLE_SEARCH_API_KEY;
+  const googleSearchCX = !!process.env.GOOGLE_SEARCH_CX;
+
+  console.log('� GOOGLE CUSTOM SEARCH:');
+  if (googleSearchEnabled && googleSearchKey && googleSearchCX) {
+    console.log('   ✅ ATIVA - Usando Google Custom Search API');
+    console.log('   🔑 GOOGLE_SEARCH_API_KEY configurada');
+    console.log('   🔑 GOOGLE_SEARCH_CX configurado');
+  } else if (googleSearchEnabled && (!googleSearchKey || !googleSearchCX)) {
+    console.log('   ⚠️ CONFIGURAÇÃO INCOMPLETA - USE_GOOGLE_SEARCH_API=true mas chaves necessárias não encontradas');
+    if (!googleSearchKey) console.log('   ❌ GOOGLE_SEARCH_API_KEY não configurada');
+    if (!googleSearchCX) console.log('   ❌ GOOGLE_SEARCH_CX não configurado');
   } else {
-    console.log('   🔧 MODO DEMO - Usando dados mock da Amazon');
-  }
-  // Shopee API Status  
-  const shopeeReal = process.env.USE_REAL_SHOPEE_API === 'true';
-  const shopeeScraperKey = !!process.env.SHOPEE_SCRAPER_API_KEY;
-  console.log('');
-  console.log('🛍️ SHOPEE:');
-  if (shopeeReal && shopeeScraperKey) {
-    console.log('   ✅ REAL API ATIVA - Usando shopee-scraper1.p.rapidapi.com');
-    console.log('   🔑 SHOPEE_SCRAPER_API_KEY configurada');
-  } else if (shopeeReal && !shopeeScraperKey) {
-    console.log('   ⚠️ CONFIGURAÇÃO INCOMPLETA - USE_REAL_SHOPEE_API=true mas SHOPEE_SCRAPER_API_KEY não encontrada');
-    console.log('   🔄 Fallback para dados mock');
-  } else {
-    console.log('   🔧 MODO DEMO - Usando dados mock do Shopee');
+    console.log('   ❌ INATIVA - Google Custom Search API não habilitada');
   }
 
-  // AliExpress API Status
-  const aliExpressReal = process.env.USE_REAL_ALIEXPRESS_API === 'true';
   console.log('');
-  console.log('🛒 ALIEXPRESS:');
-  if (aliExpressReal && amazonKey) {
-    console.log('   ✅ REAL API ATIVA - Usando api.aliexpress.com');
-  } else {
-    console.log('   🔄 MODO DEMO - Usando dados mock do AliExpress');
-  }
-  // Mercado Livre API Status
-  const mercadoLivreReal = process.env.USE_REAL_MERCADOLIVRE_API === 'true';
+  console.log('🔑 CHAVES DE API:');
+  console.log(`   GOOGLE_SEARCH_API_KEY: ${process.env.GOOGLE_SEARCH_API_KEY ? '✅ Configurada' : '❌ Não configurada'}`);
+  console.log(`   GOOGLE_SEARCH_CX: ${process.env.GOOGLE_SEARCH_CX ? '✅ Configurado' : '❌ Não configurado'}`);
+
   console.log('');
-  console.log('🏪 MERCADO LIVRE:');
-  if (mercadoLivreReal) {
-    console.log('   ✅ REAL API ATIVA - Usando api.mercadolibre.com');
-  } else {
-    console.log('   🔄 MODO DEMO - Usando dados mock do Mercado Livre');
-  }
-
-  // Real-Time Product Search API Status
-  const realTimeReal = process.env.USE_REAL_REALTIME_API === 'true';
-  console.log('');
-  console.log('🕒 REAL-TIME PRODUCT SEARCH:');
-  if (realTimeReal && amazonKey) {
-    console.log('   ✅ REAL API ATIVA - Usando real-time-product-search.p.rapidapi.com');
-    console.log('   🔑 RAPIDAPI_KEY configurada');
-  } else if (realTimeReal && !amazonKey) {
-    console.log('   ⚠️ CONFIGURAÇÃO INCOMPLETA - USE_REAL_REALTIME_API=true mas RAPIDAPI_KEY não encontrada');
-    console.log('   🔄 Fallback para dados mock');
-  } else {
-    console.log('   🔧 MODO DEMO - Usando dados mock do Real-Time Product Search');
-  }
-
-  console.log('');console.log('🔑 CHAVES DE API:');
-  console.log(`   RAPIDAPI_KEY: ${process.env.RAPIDAPI_KEY ? '✅ Configurada' : '❌ Não configurada'}`);
-  console.log(`   RAPIDAPI_KEY_NEW: ${process.env.RAPIDAPI_KEY_NEW ? '✅ Configurada' : '❌ Não configurada'}`);
-  console.log(`   SHOPEE_SCRAPER_API_KEY: ${process.env.SHOPEE_SCRAPER_API_KEY ? '✅ Configurada' : '❌ Não configurada'}`);
-  console.log(`   OPENAI_API_KEY: ${process.env.OPENAI_API_KEY ? '✅ Configurada' : '❌ Não configurada'}`);
-
-  console.log('');  console.log('⚙️ CONFIGURAÇÕES AVANÇADAS:');
-  console.log(`   USE_LLAMA_API: ${process.env.USE_LLAMA_API || 'false'}`);
+  console.log('⚙️ CONFIGURAÇÕES:');
   console.log(`   USE_GOOGLE_SEARCH_API: ${process.env.USE_GOOGLE_SEARCH_API || 'false'}`);
-  console.log(`   USE_BING_WEB_SEARCH_API: ${process.env.USE_BING_WEB_SEARCH_API || 'false'}`);
-  console.log(`   USE_GOOGLE_MAPS_API: ${process.env.USE_GOOGLE_MAPS_API || 'false'}`);
 
   console.log('');
-  const totalReal = [amazonReal && amazonKey, shopeeReal && shopeeScraperKey, aliExpressReal && amazonKey, mercadoLivreReal, realTimeReal && amazonKey].filter(Boolean).length;
-  const totalMarketplaces = 5;
-  
-  if (totalReal === totalMarketplaces) {
-    console.log('🎉 STATUS GERAL: TODAS AS APIS REAIS ATIVAS (' + totalReal + '/' + totalMarketplaces + ')');
-  } else if (totalReal > 0) {
-    console.log(`⚠️ STATUS GERAL: CONFIGURAÇÃO MISTA (${totalReal}/${totalMarketplaces} APIs reais)`);
+  if (googleSearchEnabled && googleSearchKey && googleSearchCX) {
+    console.log('🎉 STATUS GERAL: GOOGLE CUSTOM SEARCH API ATIVA');
   } else {
-    console.log('🔧 STATUS GERAL: MODO DEMO COMPLETO (0/' + totalMarketplaces + ' APIs reais)');
+    console.log('⚠️ STATUS GERAL: GOOGLE CUSTOM SEARCH API NÃO CONFIGURADA CORRETAMENTE');
   }
   
   console.log('==========================================================\n');
 }
 
 /**
- * Check if all required API keys are configured
+ * Check if Google Search API key is configured
  */
 function validateAPIConfiguration() {
   const missingKeys = [];
   
-  if (process.env.USE_REAL_AMAZON_API === 'true' && !process.env.RAPIDAPI_KEY) {
-    missingKeys.push('RAPIDAPI_KEY (para Amazon)');
+  if (process.env.USE_GOOGLE_SEARCH_API === 'true') {
+    if (!process.env.GOOGLE_SEARCH_API_KEY) {
+      missingKeys.push('GOOGLE_SEARCH_API_KEY (para Google Custom Search)');
+    }
+    if (!process.env.GOOGLE_SEARCH_CX) {
+      missingKeys.push('GOOGLE_SEARCH_CX (para Google Custom Search)');
+    }
   }
-  if (process.env.USE_REAL_SHOPEE_API === 'true' && !process.env.SHOPEE_SCRAPER_API_KEY) {
-    missingKeys.push('SHOPEE_SCRAPER_API_KEY (para Shopee)');
-  }
-  
-  if (process.env.USE_REAL_ALIEXPRESS_API === 'true' && !process.env.RAPIDAPI_KEY) {
-    missingKeys.push('RAPIDAPI_KEY (para AliExpress)');
-  }
-
-  if (process.env.USE_REAL_REALTIME_API === 'true' && !process.env.RAPIDAPI_KEY) {
-    missingKeys.push('RAPIDAPI_KEY (para Real-Time Product Search)');
-  }
-
   if (missingKeys.length > 0) {
     console.log('⚠️ ATENÇÃO: Chaves de API faltando:');
     missingKeys.forEach(key => console.log(`   ❌ ${key}`));
-    console.log('🔧 APIs com chaves faltando usarão dados mock automaticamente.\n');
+    console.log('🔧 A API do Google Custom Search pode não funcionar corretamente.\n');
   }
+}
 
-  return missingKeys.length === 0;
+/**
+ * Verifica o status da API do Google Custom Search
+ * @returns {Promise<Object>} Status da API
+ */
+async function verificarStatusGoogleSearch() {
+  try {
+    const googleSearchEnabled = process.env.USE_GOOGLE_SEARCH_API === 'true';
+    const googleSearchKey = !!process.env.GOOGLE_SEARCH_API_KEY;
+    const googleSearchCX = !!process.env.GOOGLE_SEARCH_CX;
+
+    // Verificar se a API está ativada e configurada
+    if (!googleSearchEnabled) {
+      return {
+        ativo: false,
+        mensagem: 'API do Google Custom Search não está ativada (USE_GOOGLE_SEARCH_API=false)'
+      };
+    }
+
+    if (!googleSearchKey || !googleSearchCX) {
+      return {
+        ativo: false,
+        mensagem: 'Configuração incompleta - Chaves de API ausentes',
+        detalhes: {
+          GOOGLE_SEARCH_API_KEY: googleSearchKey ? 'Configurada' : 'Não configurada',
+          GOOGLE_SEARCH_CX: googleSearchCX ? 'Configurado' : 'Não configurado'
+        }
+      };
+    }
+
+    // Testar se a API está funcionando com uma consulta simples
+    const googleSearchService = require('../services/googleSearchService');
+    const resultado = await googleSearchService.testarAPIsGoogle();
+
+    if (resultado.sucesso) {
+      return {
+        ativo: true,
+        mensagem: 'Google Custom Search API está operacional',
+        detalhes: {
+          resultados: resultado.resultados,
+          timestamp: resultado.timestamp
+        }
+      };
+    } else {
+      return {
+        ativo: false,
+        mensagem: `Erro na API: ${resultado.erro || 'Falha no teste'}`,
+        detalhes: resultado
+      };
+    }
+  } catch (error) {
+    return {
+      ativo: false,
+      mensagem: `Erro ao verificar status: ${error.message}`,
+      erro: error.message
+    };
+  }
 }
 
 module.exports = {
   displayAPIStatus,
-  validateAPIConfiguration
+  validateAPIConfiguration,
+  verificarStatusGoogleSearch
 };

@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔧 Assistente de Configuração Vercel</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #00d4ff, #0099cc);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        .progress-container {
+            background: #f8f9fa;
+            padding: 20px;
+            border-bottom: 1px solid #dee2e6;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background: #e9ecef;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 10px;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(135deg, #28a745, #20c997);
+            transition: width 0.5s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 0.9em;
+        }
+        
+        .steps-container {
+            padding: 30px;
+        }
+        
+        .step {
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+        
+        .step.active {
+            display: block;
+        }
+        
+        .step-header {
+            background: linear-gradient(135deg, #007bff, #0056b3);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .step-content {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 10px;
+            border-left: 5px solid #007bff;
+        }
+        
+        .variable-card {
+            background: white;
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 15px 0;
+            transition: all 0.3s ease;
+        }
+        
+        .variable-card:hover {
+            border-color: #007bff;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,123,255,0.1);
+        }
+        
+        .variable-card.completed {
+            border-color: #28a745;
+            background: linear-gradient(135deg, #d4edda, #c3e6cb);
+        }
+        
+        .variable-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .variable-name {
+            font-weight: bold;
+            font-size: 1.1em;
+            color: #007bff;
+        }
+        
+        .variable-type {
+            background: #e9ecef;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 0.8em;
+            color: #6c757d;
+        }
+        
+        .variable-value {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            padding: 10px;
+            border-radius: 5px;
+            font-family: monospace;
+            margin: 10px 0;
+        }
+        
+        .controls {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 30px;
+            flex-wrap: wrap;
+        }
+        
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            font-size: 1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .btn-primary {
+            background: #007bff;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #0056b3;
+            transform: translateY(-2px);
+        }
+        
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background: #1e7e34;
+            transform: translateY(-2px);
+        }
+        
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background: #545b62;
+        }
+        
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+        
+        .checklist {
+            background: white;
+            border: 2px solid #28a745;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        
+        .checklist h3 {
+            color: #28a745;
+            margin-bottom: 15px;
+        }
+        
+        .checklist-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 10px 0;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 5px;
+        }
+        
+        .checklist-item input[type="checkbox"] {
+            transform: scale(1.2);
+        }
+        
+        .warning {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+            color: #856404;
+        }
+        
+        .success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+            color: #155724;
+        }
+        
+        .copy-btn {
+            background: #17a2b8;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 0.8em;
+            margin-left: 10px;
+        }
+        
+        .copy-btn:hover {
+            background: #138496;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .navigation {
+            background: #f8f9fa;
+            padding: 20px;
+            border-top: 1px solid #dee2e6;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .step-counter {
+            background: #007bff;
+            color: white;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔧 Assistente de Configuração Vercel</h1>
+            <p>Guia interativo para configurar variáveis de ambiente</p>
+        </div>
+        
+        <div class="progress-container">
+            <div class="progress-bar">
+                <div class="progress-fill" id="progress-fill" style="width: 0%;">0%</div>
+            </div>
+            <p id="progress-text">Preparando para começar...</p>
+        </div>
+        
+        <div class="steps-container">
+            <!-- Passo 1: Acessar Vercel -->
+            <div class="step active" id="step-1">
+                <div class="step-header">
+                    <h2>🌐 Passo 1: Acessar o Vercel Dashboard</h2>
+                </div>
+                <div class="step-content">
+                    <h3>🎯 O que você precisa fazer:</h3>
+                    <ol style="font-size: 1.1em; line-height: 1.8;">
+                        <li><strong>Abra uma nova aba</strong> no seu navegador</li>
+                        <li><strong>Vá para:</strong> <a href="https://vercel.com/dashboard" target="_blank">https://vercel.com/dashboard</a></li>
+                        <li><strong>Faça login</strong> na sua conta Vercel</li>
+                        <li><strong>Procure pelo projeto:</strong> <code>easy-gift-search</code></li>
+                        <li><strong>Clique no nome do projeto</strong> (não nos botões ao lado)</li>
+                    </ol>
+                    
+                    <div class="warning">
+                        <strong>⚠️ Importante:</strong> Certifique-se de estar logado na conta certa e que o projeto <code>easy-gift-search</code> está visível na lista.
+                    </div>
+                    
+                    <div class="checklist">
+                        <h3>✅ Checklist do Passo 1:</h3>
+                        <div class="checklist-item">
+                            <input type="checkbox" id="check-1-1">
+                            <label for="check-1-1">Acessei o Vercel Dashboard</label>
+                        </div>
+                        <div class="checklist-item">
+                            <input type="checkbox" id="check-1-2">
+                            <label for="check-1-2">Fiz login na minha conta</label>
+                        </div>
+                        <div class="checklist-item">
+                            <input type="checkbox" id="check-1-3">
+                            <label for="check-1-3">Encontrei o projeto easy-gift-search</label>
+                        </div>
+                        <div class="checklist-item">
+                            <input type="checkbox" id="check-1-4">
+                            <label for="check-1-4">Entrei na página do projeto</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Passo 2: Navegar para Settings -->
+            <div class="step" id="step-2">
+                <div class="step-header">
+                    <h2>⚙️ Passo 2: Acessar Environment Variables</h2>
+                </div>
+                <div class="step-content">
+                    <h3>🎯 Navegação no Dashboard:</h3>
+                    <ol style="font-size: 1.1em; line-height: 1.8;">
+                        <li><strong>No menu lateral esquerdo</strong>, procure por <code>Settings</code></li>
+                        <li><strong>Clique em "Settings"</strong></li>
+                        <li><strong>No submenu que aparece</strong>, procure por <code>Environment Variables</code></li>
+                        <li><strong>Clique em "Environment Variables"</strong></li>
+                        <li><strong>Você verá a página de configuração</strong> das variáveis</li>
+                    </ol>
+                    
+                    <div class="success">
+                        <strong>✅ Você deve ver:</strong> Uma página com título "Environment Variables" e um botão "Add New" ou "New Variable".
+                    </div>
+                    
+                    <div class="checklist">
+                        <h3>✅ Checklist do Passo 2:</h3>
+                        <div class="checklist-item">
+                            <input type="checkbox" id="check-2-1">
+                            <label for="check-2-1">Cliquei em Settings no menu lateral</label>
+                        </div>
+                        <div class="checklist-item">
+                            <input type="checkbox" id="check-2-2">
+                            <label for="check-2-2">Cliquei em Environment Variables</label>
+                        </div>
+                        <div class="checklist-item">
+                            <input type="checkbox" id="check-2-3">
+                            <label for="check-2-3">Estou na página de variáveis de ambiente</label>
+                        </div>
+                        <div class="checklist-item">
+                            <input type="checkbox" id="check-2-4">
+                            <label for="check-2-4">Vejo o botão "Add New" ou "New Variable"</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Passo 3: Configurar Variáveis de Controle -->
+            <div class="step" id="step-3">
+                <div class="step-header">
+                    <h2>🎛️ Passo 3: Configurar Variáveis de Controle (5 variáveis)</h2>
+                </div>
+                <div class="step-content">
+                    <h3>🔧 Para CADA variável abaixo:</h3>
+                    <p><strong>1.</strong> Clique em "Add New" ou "New Variable"<br>
+                    <strong>2.</strong> Preencha Name e Value<br>
+                    <strong>3.</strong> Selecione Environment: <strong>Production</strong><br>
+                    <strong>4.</strong> Clique em "Save"</p>
+                    
+                    <div class="variable-card" data-var="USE_REAL_AMAZON_API">
+                        <div class="variable-header">
+                            <span class="variable-name">USE_REAL_AMAZON_API</span>
+                            <span class="variable-type">Controle</span>
+                        </div>
+                        <div class="variable-value">
+                            Name: USE_REAL_AMAZON_API<button class="copy-btn" onclick="copyToClipboard('USE_REAL_AMAZON_API')">📋</button><br>
+                            Value: true<button class="copy-btn" onclick="copyToClipboard('true')">📋</button>
+                        </div>
+                        <input type="checkbox" onchange="markVariableComplete(this, 'USE_REAL_AMAZON_API')"> Configurada ✅
+                    </div>
+                    
+                    <div class="variable-card" data-var="USE_REAL_SHOPEE_API">
+                        <div class="variable-header">
+                            <span class="variable-name">USE_REAL_SHOPEE_API</span>
+                            <span class="variable-type">Controle</span>
+                        </div>
+                        <div class="variable-value">
+                            Name: USE_REAL_SHOPEE_API<button class="copy-btn" onclick="copyToClipboard('USE_REAL_SHOPEE_API')">📋</button><br>
+                            Value: true<button class="copy-btn" onclick="copyToClipboard('true')">📋</button>
+                        </div>
+                        <input type="checkbox" onchange="markVariableComplete(this, 'USE_REAL_SHOPEE_API')"> Configurada ✅
+                    </div>
+                    
+                    <div class="variable-card" data-var="USE_REAL_ALIEXPRESS_API">
+                        <div class="variable-header">
+                            <span class="variable-name">USE_REAL_ALIEXPRESS_API</span>
+                            <span class="variable-type">Controle</span>
+                        </div>
+                        <div class="variable-value">
+                            Name: USE_REAL_ALIEXPRESS_API<button class="copy-btn" onclick="copyToClipboard('USE_REAL_ALIEXPRESS_API')">📋</button><br>
+                            Value: true<button class="copy-btn" onclick="copyToClipboard('true')">📋</button>
+                        </div>
+                        <input type="checkbox" onchange="markVariableComplete(this, 'USE_REAL_ALIEXPRESS_API')"> Configurada ✅
+                    </div>
+                    
+                    <div class="variable-card" data-var="USE_REAL_MERCADOLIVRE_API">
+                        <div class="variable-header">
+                            <span class="variable-name">USE_REAL_MERCADOLIVRE_API</span>
+                            <span class="variable-type">Controle</span>
+                        </div>
+                        <div class="variable-value">
+                            Name: USE_REAL_MERCADOLIVRE_API<button class="copy-btn" onclick="copyToClipboard('USE_REAL_MERCADOLIVRE_API')">📋</button><br>
+                            Value: true<button class="copy-btn" onclick="copyToClipboard('true')">📋</button>
+                        </div>
+                        <input type="checkbox" onchange="markVariableComplete(this, 'USE_REAL_MERCADOLIVRE_API')"> Configurada ✅
+                    </div>
+                    
+                    <div class="variable-card" data-var="USE_REAL_REALTIME_API">
+                        <div class="variable-header">
+                            <span class="variable-name">USE_REAL_REALTIME_API</span>
+                            <span class="variable-type">Controle</span>
+                        </div>
+                        <div class="variable-value">
+                            Name: USE_REAL_REALTIME_API<button class="copy-btn" onclick="copyToClipboard('USE_REAL_REALTIME_API')">📋</button><br>
+                            Value: true<button class="copy-btn" onclick="copyToClipboard('true')">📋</button>
+                        </div>
+                        <input type="checkbox" onchange="markVariableComplete(this, 'USE_REAL_REALTIME_API')"> Configurada ✅
+                    </div>
+                    
+                    <div class="warning">
+                        <strong>⚠️ Importante:</strong> Certifique-se de selecionar <strong>"Production"</strong> em Environment para cada variável!
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Passo 4: Configurar Chaves de API -->
+            <div class="step" id="step-4">
+                <div class="step-header">
+                    <h2>🔑 Passo 4: Configurar Chaves de API (4 variáveis)</h2>
+                </div>
+                <div class="step-content">
+                    <h3>🔐 Variáveis que precisam das suas chaves reais:</h3>
+                    
+                    <div class="variable-card" data-var="RAPIDAPI_KEY">
+                        <div class="variable-header">
+                            <span class="variable-name">RAPIDAPI_KEY</span>
+                            <span class="variable-type">API Key</span>
+                        </div>
+                        <div class="variable-value">
+                            Name: RAPIDAPI_KEY<button class="copy-btn" onclick="copyToClipboard('RAPIDAPI_KEY')">📋</button><br>
+                            Value: [SUA_CHAVE_RAPIDAPI_AQUI]
+                        </div>
+                        <p><strong>🔍 Onde encontrar:</strong> <a href="https://rapidapi.com/" target="_blank">RapidAPI Dashboard</a> → My Apps → Security</p>
+                        <input type="checkbox" onchange="markVariableComplete(this, 'RAPIDAPI_KEY')"> Configurada ✅
+                    </div>
+                    
+                    <div class="variable-card" data-var="SHOPEE_SCRAPER_API_KEY">
+                        <div class="variable-header">
+                            <span class="variable-name">SHOPEE_SCRAPER_API_KEY</span>
+                            <span class="variable-type">API Key</span>
+                        </div>
+                        <div class="variable-value">
+                            Name: SHOPEE_SCRAPER_API_KEY<button class="copy-btn" onclick="copyToClipboard('SHOPEE_SCRAPER_API_KEY')">📋</button><br>
+                            Value: [SUA_CHAVE_SHOPEE_AQUI]
+                        </div>
+                        <p><strong>🔍 Onde encontrar:</strong> Painel do provedor da API Shopee ou use a mesma do RapidAPI</p>
+                        <input type="checkbox" onchange="markVariableComplete(this, 'SHOPEE_SCRAPER_API_KEY')"> Configurada ✅
+                    </div>
+                    
+                    <div class="variable-card" data-var="OPENAI_API_KEY">
+                        <div class="variable-header">
+                            <span class="variable-name">OPENAI_API_KEY</span>
+                            <span class="variable-type">API Key</span>
+                        </div>
+                        <div class="variable-value">
+                            Name: OPENAI_API_KEY<button class="copy-btn" onclick="copyToClipboard('OPENAI_API_KEY')">📋</button><br>
+                            Value: [SUA_CHAVE_OPENAI_AQUI]
+                        </div>
+                        <p><strong>🔍 Onde encontrar:</strong> <a href="https://platform.openai.com/" target="_blank">OpenAI Platform</a> → API Keys → Create new</p>
+                        <input type="checkbox" onchange="markVariableComplete(this, 'OPENAI_API_KEY')"> Configurada ✅
+                    </div>
+                    
+                    <div class="variable-card" data-var="NODE_ENV">
+                        <div class="variable-header">
+                            <span class="variable-name">NODE_ENV</span>
+                            <span class="variable-type">Environment</span>
+                        </div>
+                        <div class="variable-value">
+                            Name: NODE_ENV<button class="copy-btn" onclick="copyToClipboard('NODE_ENV')">📋</button><br>
+                            Value: production<button class="copy-btn" onclick="copyToClipboard('production')">📋</button>
+                        </div>
+                        <input type="checkbox" onchange="markVariableComplete(this, 'NODE_ENV')"> Configurada ✅
+                    </div>
+                    
+                    <div class="warning">
+                        <strong>🔐 Segurança:</strong> Nunca compartilhe suas chaves de API! Mantenha-as seguras e privadas.
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Passo 5: Verificação Final -->
+            <div class="step" id="step-5">
+                <div class="step-header">
+                    <h2>🎯 Passo 5: Verificação e Teste</h2>
+                </div>
+                <div class="step-content">
+                    <h3>✅ Checklist Final:</h3>
+                    <div class="checklist">
+                        <div class="checklist-item">
+                            <input type="checkbox" id="final-check-1">
+                            <label for="final-check-1">Todas as 9 variáveis foram configuradas</label>
+                        </div>
+                        <div class="checklist-item">
+                            <input type="checkbox" id="final-check-2">
+                            <label for="final-check-2">Environment "Production" foi selecionado para todas</label>
+                        </div>
+                        <div class="checklist-item">
+                            <input type="checkbox" id="final-check-3">
+                            <label for="final-check-3">Chaves de API são válidas e ativas</label>
+                        </div>
+                        <div class="checklist-item">
+                            <input type="checkbox" id="final-check-4">
+                            <label for="final-check-4">Aguardei o redeploy automático (2-3 min)</label>
+                        </div>
+                    </div>
+                    
+                    <h3>🧪 Teste de Validação:</h3>
+                    <div class="success">
+                        <p><strong>1. Teste o endpoint de status:</strong></p>
+                        <a href="https://easy-gift-search.vercel.app/api/status" target="_blank" class="btn btn-primary">🔗 Testar /api/status</a>
+                        
+                        <p style="margin-top: 15px;"><strong>2. Resultado esperado:</strong></p>
+                        <pre style="background: #f8f9fa; padding: 10px; border-radius: 5px; margin-top: 10px;">
+{
+  "status": "success",
+  "message": "APIs reais ativas: 5/5",
+  "environment": "production",
+  ...
+}</pre>
+                        
+                        <p style="margin-top: 15px;"><strong>3. Teste a aplicação:</strong></p>
+                        <a href="https://easy-gift-search.vercel.app" target="_blank" class="btn btn-success">🌐 Abrir Aplicação</a>
+                    </div>
+                    
+                    <div class="warning">
+                        <strong>❌ Se algo deu errado:</strong>
+                        <ul style="margin-top: 10px;">
+                            <li>Verifique se todas as variáveis estão corretas</li>
+                            <li>Confirme se Environment está como "Production"</li>
+                            <li>Aguarde alguns minutos pelo redeploy</li>
+                            <li>Verifique os logs na aba "Functions" do Vercel</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="navigation">
+            <button class="btn btn-secondary" id="prev-btn" onclick="previousStep()" disabled>⬅️ Anterior</button>
+            <div class="step-counter" id="step-counter">Passo 1 de 5</div>
+            <button class="btn btn-primary" id="next-btn" onclick="nextStep()">Próximo ➡️</button>
+        </div>
+    </div>
+
+    <script>
+        let currentStep = 1;
+        const totalSteps = 5;
+        let completedVariables = new Set();
+        
+        function updateProgress() {
+            const progressPercentage = ((currentStep - 1) / (totalSteps - 1)) * 100;
+            document.getElementById('progress-fill').style.width = progressPercentage + '%';
+            document.getElementById('progress-fill').textContent = Math.round(progressPercentage) + '%';
+            
+            const stepTexts = [
+                'Preparando para começar...',
+                'Acessando Vercel Dashboard...',
+                'Navegando para Environment Variables...',
+                'Configurando variáveis de controle...',
+                'Configurando chaves de API...',
+                'Verificação final e teste...'
+            ];
+            
+            document.getElementById('progress-text').textContent = stepTexts[currentStep - 1];
+        }
+        
+        function showStep(stepNumber) {
+            document.querySelectorAll('.step').forEach(step => {
+                step.classList.remove('active');
+            });
+            
+            document.getElementById(`step-${stepNumber}`).classList.add('active');
+            
+            document.getElementById('step-counter').textContent = `Passo ${stepNumber} de ${totalSteps}`;
+            
+            // Atualizar botões
+            document.getElementById('prev-btn').disabled = stepNumber === 1;
+            document.getElementById('next-btn').disabled = stepNumber === totalSteps;
+            
+            if (stepNumber === totalSteps) {
+                document.getElementById('next-btn').textContent = '🎉 Concluído!';
+            } else {
+                document.getElementById('next-btn').textContent = 'Próximo ➡️';
+            }
+            
+            updateProgress();
+        }
+        
+        function nextStep() {
+            if (currentStep < totalSteps) {
+                currentStep++;
+                showStep(currentStep);
+            }
+        }
+        
+        function previousStep() {
+            if (currentStep > 1) {
+                currentStep--;
+                showStep(currentStep);
+            }
+        }
+        
+        function markVariableComplete(checkbox, variableName) {
+            const card = document.querySelector(`[data-var="${variableName}"]`);
+            
+            if (checkbox.checked) {
+                card.classList.add('completed');
+                completedVariables.add(variableName);
+            } else {
+                card.classList.remove('completed');
+                completedVariables.delete(variableName);
+            }
+            
+            updateVariableProgress();
+        }
+        
+        function updateVariableProgress() {
+            const totalVariables = 9;
+            const completedCount = completedVariables.size;
+            const percentage = (completedCount / totalVariables) * 100;
+            
+            if (completedCount === totalVariables) {
+                document.getElementById('next-btn').style.background = '#28a745';
+                document.getElementById('next-btn').textContent = '✅ Todas configuradas! Próximo ➡️';
+            }
+        }
+        
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                // Feedback visual
+                event.target.textContent = '✅';
+                setTimeout(() => {
+                    event.target.textContent = '📋';
+                }, 1000);
+            });
+        }
+        
+        // Atalhos de teclado
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight' && currentStep < totalSteps) {
+                nextStep();
+            } else if (e.key === 'ArrowLeft' && currentStep > 1) {
+                previousStep();
+            }
+        });
+        
+        // Inicializar
+        showStep(1);
+    </script>
+</body>
+</html>

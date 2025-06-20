@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Validação Final - Easy Gift Search (Google Only)</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            color: #333;
+            background-color: #f9f9f9;
+        }
+        h1 {
+            color: #4285f4;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        .test-group {
+            margin-bottom: 30px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 20px;
+        }
+        h2 {
+            color: #4285f4;
+            margin-top: 0;
+        }
+        ul {
+            padding-left: 20px;
+        }
+        li {
+            margin-bottom: 10px;
+        }
+        .checkbox-item {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 12px;
+        }
+        .checkbox-item input {
+            margin-top: 5px;
+            margin-right: 10px;
+        }
+        .success {
+            color: #0f9d58;
+            font-weight: bold;
+        }
+        .warning {
+            color: #f4b400;
+            font-weight: bold;
+        }
+        .error {
+            color: #db4437;
+            font-weight: bold;
+        }
+        .button {
+            background-color: #4285f4;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-top: 10px;
+        }
+        .button:hover {
+            background-color: #3367d6;
+        }
+        .status {
+            text-align: center;
+            margin-top: 20px;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        .status.pass {
+            background-color: #e6f4ea;
+            color: #0f9d58;
+        }
+        .status.fail {
+            background-color: #fce8e6;
+            color: #db4437;
+        }
+        .test-notes {
+            background-color: #f1f3f4;
+            padding: 10px;
+            border-left: 4px solid #4285f4;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Validação Final - Easy Gift Search</h1>
+        <p>Este documento ajuda a validar se a migração para utilizar apenas a API do Google Custom Search foi concluída com sucesso. Siga os passos abaixo para validar cada aspecto do sistema.</p>
+        
+        <div class="test-group">
+            <h2>1. Configuração do Ambiente</h2>
+            <div class="checkbox-item">
+                <input type="checkbox" id="env-check">
+                <label for="env-check">As variáveis de ambiente estão configuradas corretamente (GOOGLE_API_KEY e GOOGLE_CSE_ID)</label>
+            </div>
+            <div class="checkbox-item">
+                <input type="checkbox" id="env-other">
+                <label for="env-other">Todas as variáveis de ambiente relacionadas a outras APIs foram removidas</label>
+            </div>
+            <div class="checkbox-item">
+                <input type="checkbox" id="package-check">
+                <label for="package-check">O arquivo package.json foi atualizado, removendo dependências desnecessárias</label>
+            </div>
+            <div class="test-notes">
+                <strong>Como testar:</strong> Verifique os arquivos .env, .env.example, .env.production e package.json
+            </div>
+        </div>
+        
+        <div class="test-group">
+            <h2>2. Backend</h2>
+            <div class="checkbox-item">
+                <input type="checkbox" id="backend-services">
+                <label for="backend-services">Apenas o serviço do Google Custom Search está presente (googleSearchService.js)</label>
+            </div>
+            <div class="checkbox-item">
+                <input type="checkbox" id="backend-controllers">
+                <label for="backend-controllers">Todos os controllers foram atualizados para usar apenas o Google Custom Search</label>
+            </div>
+            <div class="checkbox-item">
+                <input type="checkbox" id="backend-routes">
+                <label for="backend-routes">Todas as rotas foram atualizadas para usar apenas o Google Custom Search</label>
+            </div>
+            <div class="checkbox-item">
+                <input type="checkbox" id="backend-server">
+                <label for="backend-server">O arquivo server.js foi atualizado para não incluir referências a serviços removidos</label>
+            </div>
+            <div class="test-notes">
+                <strong>Como testar:</strong> Execute o script de teste consolidado:<br>
+                <code>node test-google-only-consolidated.js</code>
+            </div>
+        </div>
+        
+        <div class="test-group">
+            <h2>3. Frontend</h2>
+            <div class="checkbox-item">
+                <input type="checkbox" id="frontend-app">
+                <label for="frontend-app">O arquivo app.js foi atualizado para remover referências a outras APIs</label>
+            </div>
+            <div class="checkbox-item">
+                <input type="checkbox" id="frontend-links">
+                <label for="frontend-links">Links diretos para marketplaces específicos (Amazon, Shopee, etc.) foram atualizados ou removidos</label>
+            </div>
+            <div class="checkbox-item">
+                <input type="checkbox" id="frontend-maps">
+                <label for="frontend-maps">Funcionalidades de mapa foram atualizadas ou removidas</label>
+            </div>
+            <div class="test-notes">
+                <strong>Como testar:</strong> Abra o site no navegador e verifique:<br>
+                1. Pesquisa de produtos funciona corretamente<br>
+                2. Nenhuma referência a APIs removidas aparece na interface<br>
+                3. Nenhum erro relacionado a APIs removidas aparece no console
+            </div>
+        </div>
+        
+        <div class="test-group">
+            <h2>4. Documentação</h2>
+            <div class="checkbox-item">
+                <input type="checkbox" id="docs-readme">
+                <label for="docs-readme">O README.md foi atualizado para refletir as mudanças</label>
+            </div>
+            <div class="checkbox-item">
+                <input type="checkbox" id="docs-api">
+                <label for="docs-api">A documentação da API foi atualizada para mostrar apenas endpoints do Google Custom Search</label>
+            </div>
+            <div class="checkbox-item">
+                <input type="checkbox" id="docs-guide">
+                <label for="docs-guide">O guia de configuração da API do Google está atualizado</label>
+            </div>
+        </div>
+        
+        <div class="test-group">
+            <h2>5. Testes</h2>
+            <div class="checkbox-item">
+                <input type="checkbox" id="tests-removed">
+                <label for="tests-removed">Scripts de teste para APIs removidas foram arquivados ou excluídos</label>
+            </div>
+            <div class="checkbox-item">
+                <input type="checkbox" id="tests-google">
+                <label for="tests-google">Scripts de teste para o Google Custom Search estão funcionando</label>
+            </div>
+        </div>
+        
+        <button class="button" onclick="validateAll()">Validar Tudo</button>
+        
+        <div id="status" class="status" style="display: none;"></div>
+    </div>
+    
+    <script>
+        function validateAll() {
+            const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+            let checkedCount = 0;
+            
+            checkboxes.forEach(checkbox => {
+                if (checkbox.checked) {
+                    checkedCount++;
+                }
+            });
+            
+            const statusDiv = document.getElementById('status');
+            statusDiv.style.display = 'block';
+            
+            if (checkedCount === checkboxes.length) {
+                statusDiv.className = 'status pass';
+                statusDiv.innerHTML = '<h3>✅ Validação Concluída com Sucesso!</h3>' +
+                    '<p>Parabéns! O sistema foi completamente migrado para usar apenas a API do Google Custom Search.</p>';
+            } else {
+                const remaining = checkboxes.length - checkedCount;
+                statusDiv.className = 'status fail';
+                statusDiv.innerHTML = '<h3>⚠️ Validação Incompleta</h3>' +
+                    `<p>Existem ${remaining} item(s) que ainda precisam ser validados.</p>`;
+            }
+        }
+    </script>
+</body>
+</html>

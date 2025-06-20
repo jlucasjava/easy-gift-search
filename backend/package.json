@@ -1,18 +1,19 @@
 {
   "name": "easy-gift-search-backend",
   "version": "1.0.0",
-  "description": "Backend para Easy Gift Search - busca e recomendação inteligente de presentes.",
+  "description": "Backend para Easy Gift Search - integrado exclusivamente com Google Custom Search API.",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
   },
   "dependencies": {
     "axios": "^1.6.0",
+    "colors": "^1.4.0",
     "cors": "^2.8.5",
     "dotenv": "^16.0.3",
     "express": "^4.18.2",
     "express-rate-limit": "^6.7.0",
     "morgan": "^1.10.0",
-    "@elastic/elasticsearch": "^8.13.0"
+    "node-cache": "^5.1.2"
   }
 }

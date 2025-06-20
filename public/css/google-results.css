@@ -1,0 +1,133 @@
+/* Estilos específicos para resultados do Google Custom Search */
+.google-badge {
+  background-color: #4285F4 !important;
+  color: white !important;
+}
+
+/* Ajuste para imagens de tamanhos variados */
+.card-image-container {
+  position: relative;
+  height: 200px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #f8f8f8;
+  border-radius: 8px 8px 0 0;
+}
+
+.card-image-container img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  transition: transform 0.3s ease;
+}
+
+.card-image-container:hover img {
+  transform: scale(1.05);
+}
+
+/* Badge de origem */
+.origem-badge {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  padding: 4px 8px;
+  background-color: rgba(0, 0, 0, 0.6);
+  color: white;
+  font-size: 11px;
+  border-radius: 4px;
+  font-weight: bold;
+}
+
+/* Badge específico do Google */
+.google-badge {
+  background-color: #4285F4;
+}
+
+/* Badge de frete grátis */
+.free-shipping-badge {
+  position: absolute;
+  bottom: 8px;
+  left: 8px;
+  padding: 4px 8px;
+  background-color: #2ecc71;
+  color: white;
+  font-size: 11px;
+  border-radius: 4px;
+  font-weight: bold;
+}
+
+/* Descrição do produto */
+.card-description {
+  font-size: 13px;
+  color: #666;
+  margin: 8px 0;
+  line-height: 1.4;
+  height: 56px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Preço quando indisponível */
+.preco-indisponivel {
+  color: #888;
+  font-style: italic;
+}
+
+/* Botões de ação */
+.card-actions {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 12px;
+}
+
+.btn-view, .btn-favoritar, .btn-remover {
+  padding: 8px 12px;
+  border-radius: 4px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-view {
+  background-color: #4e54c8;
+  color: white;
+  text-decoration: none;
+  flex-grow: 1;
+  text-align: center;
+}
+
+.btn-view:hover {
+  background-color: #3a3fc1;
+}
+
+.btn-favoritar, .btn-remover {
+  background-color: transparent;
+  color: #4e54c8;
+  border: 1px solid #4e54c8;
+  margin-left: 8px;
+}
+
+.btn-favoritar:hover {
+  background-color: #f0f2ff;
+}
+
+.btn-remover {
+  color: #e74c3c;
+  border-color: #e74c3c;
+}
+
+.btn-remover:hover {
+  background-color: #fef5f5;
+}
+
+/* Card hover effect */
+.card {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+}

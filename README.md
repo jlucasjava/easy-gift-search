@@ -1,20 +1,18 @@
 # Easy Gift Search
 
-Plataforma web para busca e recomendação inteligente de presentes, integrando APIs de marketplaces e OpenAI.
+Plataforma web para busca e recomendação de presentes, integrada exclusivamente com Google Custom Search API.
 
 ## Funcionalidades
-- Busca de produtos com filtros: preço, idade, gênero e categoria
-- Recomendações inteligentes via OpenAI
-- Integração com Mercado Livre, Shopee, Amazon e AliExpress
-- Busca rápida com Elasticsearch
+- Busca de produtos com filtros: preço, idade e gênero
+- Recomendações baseadas em Google Custom Search
 - Grid responsivo 3x3 com paginação
-- Favoritos e histórico apenas no frontend/localStorage
+- Favoritos armazenados apenas no frontend/localStorage
 - **Sem persistência local ou banco de dados**
 
 ## Arquitetura
 - Backend: Node.js + Express
 - Frontend: HTML5, CSS3, JavaScript puro
-- Integrações: OpenAI, Marketplaces, Elasticsearch
+- Integrações: Google Custom Search API
 
 ## Estrutura de Pastas
 ```
@@ -23,19 +21,26 @@ Plataforma web para busca e recomendação inteligente de presentes, integrando 
 │   ├── controllers/
 │   ├── routes/
 │   ├── services/
-│   ├── models/
 │   ├── config/
 │   └── server.js
-├── frontend/
+├── public/
 │   ├── css/
 │   ├── js/
-│   ├── index.html
-│   └── assets/
+│   ├── images/
+│   └── index.html
 ├── docs/
 ├── README.md
 └── .gitignore
 ```
 
+## Configuração
+1. Configure as seguintes variáveis de ambiente:
+   ```
+   GOOGLE_SEARCH_API_KEY=sua-chave-google-api-aqui
+   GOOGLE_SEARCH_CX=seu-cx-id-aqui
+   USE_GOOGLE_SEARCH_API=true
+   ```
+   
 ## Como rodar
 1. Instale as dependências do backend:
    ```
@@ -46,15 +51,14 @@ Plataforma web para busca e recomendação inteligente de presentes, integrando 
    ```
    node server.js
    ```
-3. Abra o arquivo `frontend/index.html` no navegador.
+3. Acesse `http://localhost:3000` no navegador.
 
-## Roadmap
-1. Backend com integração OpenAI, Mercado Livre e Elasticsearch
-2. Frontend responsivo com grid, filtros e paginação
-3. (Removido) Sistema de feedback persistente do usuário
-4. Testes de performance
-5. Publicação beta
-6. Coleta de feedback (apenas mock, sem persistência)
+## Integração com Google Custom Search
+Esta aplicação foi refatorada para utilizar exclusivamente a API Google Custom Search para todas as buscas e recomendações de produtos. A integração permite:
+
+- Busca de produtos em toda a web
+- Resultados formatados e apresentados em um grid amigável
+- Filtragem por termos específicos
 
 ---
-Desenvolvido por [Seu Nome].
+Desenvolvido por Easy Gift Search Team.

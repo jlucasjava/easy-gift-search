@@ -79,17 +79,12 @@ log('\n🔧 2. VERIFICAÇÃO DO .ENV LOCAL', 'bold');
 const envPath = path.join(backendPath, '.env');
 if (fs.existsSync(envPath)) {
     const envContent = fs.readFileSync(envPath, 'utf8');
-    
-    // Verificar APIs principais (devem estar true)
+      // Verificar API do Google (deve estar true)
     const mainAPIs = [
-        'USE_REAL_AMAZON_API',
-        'USE_REAL_SHOPEE_API', 
-        'USE_REAL_ALIEXPRESS_API',
-        'USE_REAL_MERCADOLIVRE_API',
-        'USE_REAL_REALTIME_API'
+        'USE_GOOGLE_SEARCH_API'
     ];
     
-    log('APIs Principais (5 obrigatórias):');
+    log('API Principal (1 obrigatória):');
     let activeAPIs = 0;
     mainAPIs.forEach(api => {
         if (checkEnvVariable(envContent, api, true)) {
@@ -97,15 +92,12 @@ if (fs.existsSync(envPath)) {
         }
     });
     
-    log(`\n📊 Status: ${activeAPIs}/5 APIs principais ativas`, activeAPIs === 5 ? 'green' : 'red');
-    
-    // Verificar chaves de API
+    log(`\n📊 Status: ${activeAPIs}/1 API principal ativa`, activeAPIs === 1 ? 'green' : 'red');
+      // Verificar chaves de API
     log('\n🔑 Chaves de API:');
     const apiKeys = [
-        'OPENAI_API_KEY',
-        'RAPIDAPI_KEY',
-        'RAPIDAPI_KEY_NEW', 
-        'SHOPEE_SCRAPER_API_KEY'
+        'GOOGLE_SEARCH_API_KEY',
+        'GOOGLE_SEARCH_CX'
     ];
     
     let configuredKeys = 0;
@@ -114,7 +106,7 @@ if (fs.existsSync(envPath)) {
         if (result.configured) configuredKeys++;
     });
     
-    log(`\n📊 Status: ${configuredKeys}/4 chaves configuradas localmente`, configuredKeys > 0 ? 'yellow' : 'red');
+    log(`\n📊 Status: ${configuredKeys}/2 chaves configuradas localmente`, configuredKeys > 0 ? 'yellow' : 'red');
 }
 
 // 3. Verificar .env.production
@@ -122,13 +114,8 @@ log('\n🚀 3. VERIFICAÇÃO DO .ENV.PRODUCTION', 'bold');
 const prodEnvPath = path.join(rootPath, '.env.production');
 if (fs.existsSync(prodEnvPath)) {
     const prodEnvContent = fs.readFileSync(prodEnvPath, 'utf8');
-    
-    const mainAPIs = [
-        'USE_REAL_AMAZON_API',
-        'USE_REAL_SHOPEE_API',
-        'USE_REAL_ALIEXPRESS_API', 
-        'USE_REAL_MERCADOLIVRE_API',
-        'USE_REAL_REALTIME_API'
+      const mainAPIs = [
+        'USE_GOOGLE_SEARCH_API'
     ];
     
     let activeProdAPIs = 0;
@@ -138,7 +125,7 @@ if (fs.existsSync(prodEnvPath)) {
         }
     });
     
-    log(`\n📊 Status: ${activeProdAPIs}/5 APIs configuradas para produção`, activeProdAPIs === 5 ? 'green' : 'red');
+    log(`\n📊 Status: ${activeProdAPIs}/1 API configurada para produção`, activeProdAPIs === 1 ? 'green' : 'red');
 }
 
 // 4. Verificar package.json
@@ -213,18 +200,12 @@ log('\n🚀 PRÓXIMOS PASSOS PARA PRODUÇÃO:', 'bold');
 log('1. Acessar Vercel Dashboard (https://vercel.com/dashboard)', 'blue');
 log('2. Ir para o projeto easy-gift-search', 'blue');
 log('3. Configurar Environment Variables:', 'blue');
-log('   - OPENAI_API_KEY=sua_chave_real', 'blue');
-log('   - RAPIDAPI_KEY=sua_chave_real', 'blue');
-log('   - RAPIDAPI_KEY_NEW=sua_chave_real', 'blue');
-log('   - SHOPEE_SCRAPER_API_KEY=sua_chave_real', 'blue');
-log('   - USE_REAL_AMAZON_API=true', 'blue');
-log('   - USE_REAL_SHOPEE_API=true', 'blue');
-log('   - USE_REAL_ALIEXPRESS_API=true', 'blue');
-log('   - USE_REAL_MERCADOLIVRE_API=true', 'blue');
-log('   - USE_REAL_REALTIME_API=true', 'blue');
+log('   - GOOGLE_SEARCH_API_KEY=sua_chave_google_api', 'blue');
+log('   - GOOGLE_SEARCH_CX=seu_cx_id', 'blue');
+log('   - USE_GOOGLE_SEARCH_API=true', 'blue');
 log('   - NODE_ENV=production', 'blue');
 log('4. Fazer redeploy automático', 'blue');
 log('5. Testar endpoint: https://easy-gift-search.vercel.app/api/status', 'blue');
 
-log('\n✨ Status esperado após configuração: 5/5 APIs ativas em produção', 'green');
+log('\n✨ Status esperado após configuração: 1/1 API ativa em produção', 'green');
 log('=' .repeat(60), 'bold');

@@ -5,8 +5,69 @@ const API_URL =
     ? 'http://localhost:3000/api'
     : 'https://easy-gift-search.onrender.com/api';
 
+// Configurações globais para exibição de resultados
+const CONFIG = {
+  placeholderImage: '/images/placeholder.jpg',
+  defaultPrice: 'Consultar',
+  maxTitleLength: 60, // Limitar títulos muito longos
+  defaultSearchParams: {
+    num: 10, // Número de resultados por página
+    page: 1  // Página inicial
+  },
+  paginationLimit: 5, // Número de botões de página a exibir
+  skeletonCount: 6 // Número de cards skeleton a exibir durante carregamento
+};
+
+// Estado global da aplicação
+const APP_STATE = {
+  currentPage: 1,
+  totalPages: 1,
+  lastSearchParams: {},
+  isLoading: false,
+  favorites: loadFavorites()
+};
+
 function showLoader(show) {
   document.getElementById('loader').style.display = show ? 'block' : 'none';
+  APP_STATE.isLoading = show;
+  
+  // Também mostrar/esconder skeleton loaders
+  toggleSkeletonLoaders(show);
+}
+
+function toggleSkeletonLoaders(show) {
+  const grid = document.getElementById('grid');
+  const skeletonContainer = document.getElementById('skeleton-container');
+  
+  if (!skeletonContainer) return;
+  
+  if (show) {
+    // Limpar grid atual
+    grid.style.display = 'none';
+    
+    // Mostrar skeletons
+    skeletonContainer.style.display = 'grid';
+    skeletonContainer.innerHTML = '';
+    
+    // Criar skeleton cards
+    for (let i = 0; i < CONFIG.skeletonCount; i++) {
+      const skeletonCard = document.createElement('div');
+      skeletonCard.className = 'skeleton-card';
+      skeletonCard.innerHTML = `
+        <div class="skeleton-img"></div>
+        <div class="skeleton-title"></div>
+        <div class="skeleton-price"></div>
+        <div class="skeleton-text"></div>
+        <div class="skeleton-text"></div>
+        <div class="skeleton-button"></div>
+      `;
+      skeletonContainer.appendChild(skeletonCard);
+    }
+  } else {
+    // Esconder skeletons e mostrar grid
+    if (skeletonContainer) skeletonContainer.style.display = 'none';
+    grid.style.display = 'grid';
+  }
 }
 
 function showMensagem(msg, isErro = false) {
@@ -58,6 +119,10 @@ async function buscarProdutos(params = {}) {
   showLoader(true);
   clearMensagem();
   
+  // Atualizar estado da aplicação
+  APP_STATE.lastSearchParams = {...params};
+  APP_STATE.currentPage = params.page || CONFIG.defaultSearchParams.page;
+  
   // Analytics: Track search with filters
   if (window.analyticsService) {
     const query = params.query || 'busca_geral';
@@ -82,16 +147,61 @@ async function buscarProdutos(params = {}) {
   }
   
   try {
-    const query = new URLSearchParams(params).toString();
-    const res = await fetch(`${API_URL}/products?${query}`);
-    if (!res.ok) throw new Error('Erro ao buscar produtos.');
-    return await res.json();
+    // Garantir query não vazia para a API do Google
+    if (!params.query && params.genero) {
+      params.query = `presente para ${params.genero}`;
+    } else if (!params.query && params.idade) {
+      params.query = `presente para ${params.idade} anos`;
+    } else if (!params.query) {
+      params.query = 'presentes';
+    }
+    
+    // Adicionar parâmetros padrão
+    const searchParams = {
+      ...CONFIG.defaultSearchParams,
+      ...params
+    };
+    
+    // Registrar consulta no console para debug
+    console.log('🔍 Buscando produtos com parâmetros:', searchParams);
+    
+    // Usar endpoint correto para a versão Google-only
+    const query = new URLSearchParams(searchParams).toString();
+    const res = await fetch(`${API_URL}/products/search?${query}`);
+    
+    if (!res.ok) {
+      const errorData = await res.json();
+      throw new Error(errorData.erro || 'Erro ao buscar produtos.');
+    }
+    
+    const data = await res.json();
+    
+    // Validar dados recebidos
+    if (!data.produtos || !Array.isArray(data.produtos)) {
+      console.warn('⚠️ API retornou formato inesperado:', data);
+      throw new Error('Formato de resposta inválido');
+    }
+    
+    // Atualizar estado da paginação
+    APP_STATE.totalPages = data.totalPaginas || 1;
+    APP_STATE.currentPage = data.pagina || 1;
+    
+    // Log para debug
+    console.log(`✅ Recebidos ${data.produtos?.length || 0} produtos da API (página ${APP_STATE.currentPage}/${APP_STATE.totalPages})`);
+    
+    // Renderizar controles de paginação
+    renderPagination(APP_STATE.currentPage, APP_STATE.totalPages);
+    
+    return data;
   } catch (e) {
+    console.error('❌ Erro na API:', e);
+    
     // Analytics: Track error
     if (window.analyticsService) {
       window.analyticsService.trackError('API_Error', e.message, 'buscarProdutos');
     }
-    showMensagem('Erro ao buscar produtos. Tente novamente.', true);
+    
+    showMensagem(`Erro ao buscar produtos: ${e.message}. Tente novamente.`, true);
     return { produtos: [], pagina: 1, totalPaginas: 1 };
   } finally {
     showLoader(false);
@@ -102,34 +212,65 @@ async function buscarProdutos(params = {}) {
 function renderGrid(produtos) {
   const grid = document.getElementById('grid');
   grid.innerHTML = '';
+  
   // Filtrar produtos com url válida (começa com http)
   const produtosValidos = (produtos || []).filter(prod => prod.url && /^https?:\/\//.test(prod.url));
+  
   if (!produtosValidos.length) {
     showMensagem(t('nenhum_produto'));
     return;
   }
+  
   clearMensagem();
+  
   produtosValidos.forEach((prod, index) => {
     const card = document.createElement('div');
     card.className = 'card';
     
     // Garantir que os valores existem e são válidos
-    const nomeProduto = prod.nome || prod.titulo || 'Produto sem nome';
-    const precoProduto = prod.preco || 'Consulte';
-    const imagemProduto = prod.imagem || '/images/placeholder.jpg';
+    const nomeProduto = formatarTitulo(prod.nome || prod.titulo || 'Produto sem nome');
+    const precoProduto = formatarPreco(prod.preco);
+    const imagemProduto = validarImagem(prod.imagem);
     const urlProduto = prod.url || '#';
     const idProduto = prod.id || Math.random().toString(36).substr(2, 9);
-    const marketplaceProduto = prod.marketplace || 'marketplace';
+    const marketplaceProduto = prod.marketplace || 'Google';
+    const descricaoProduto = prod.descricao || '';
     
     // Escapar aspas simples nos nomes para evitar erros JavaScript
     const nomeEscapado = nomeProduto.replace(/'/g, "\\'");
-
+    
+    // Adicionar badge de origem com classe específica para o Google
+    const badgeClass = marketplaceProduto.toLowerCase().replace(/[^a-z0-9]/g, '-');
+    const badgeHTML = `<span class="origem-badge ${badgeClass}-badge">${marketplaceProduto}</span>`;
+    
+    // Adicionar detalhes de preço com tratamento para preço não disponível
+    const precoHTML = precoProduto ? 
+      `<p class="preco-produto">${precoProduto}</p>` : 
+      `<p class="preco-indisponivel">${CONFIG.defaultPrice}</p>`;
+    
+    // Indicador de envio grátis (aleatório para demonstração)
+    const showFreeShipping = Math.random() > 0.7; // 30% de chance de mostrar frete grátis
+    const freeShippingHTML = showFreeShipping ? 
+      '<span class="free-shipping-badge">Frete Grátis</span>' : '';
+    
     card.innerHTML = `
-      <img src="${imagemProduto}" alt="${nomeProduto}" loading="lazy" onerror="this.onerror=null;this.src='/images/placeholder.jpg';">
-      <h3>${nomeProduto}</h3>
-      <p>R$ ${precoProduto}</p>
-      <a href="${urlProduto}" target="_blank" onclick="trackProductClick('${idProduto}', '${nomeEscapado}', '${precoProduto}', '${marketplaceProduto}', ${index}, '${urlProduto}')">${t('ver_marketplace')}</a>
-      <button onclick="favoritarProduto('${idProduto}', '${nomeEscapado}')" class="btn-favoritar" style="display:inline-block;">${t('favoritar')}</button>
+      <div class="card-image-container">
+        <img src="${imagemProduto}" alt="${nomeProduto}" loading="lazy" onerror="this.onerror=null;this.src='${CONFIG.placeholderImage}';">
+        ${badgeHTML}
+        ${freeShippingHTML}
+      </div>
+      <h3 title="${nomeProduto}">${nomeProduto}</h3>
+      ${precoHTML}
+      <p class="card-description">${truncateText(descricaoProduto, 100)}</p>
+      <div class="card-actions">
+        <a href="${urlProduto}" target="_blank" class="btn-view" 
+           onclick="trackProductClick('${idProduto}', '${nomeEscapado}', '${precoProduto || 'N/A'}', '${marketplaceProduto}', ${index}, '${urlProduto}')">
+           Ver Produto
+        </a>
+        <button onclick="favoritarProduto('${idProduto}', '${nomeEscapado}')" class="btn-favoritar">
+          ${t('favoritar')}
+        </button>
+      </div>
     `;
     
     // Analytics: Track product view
@@ -139,9 +280,97 @@ function renderGrid(produtos) {
     
     grid.appendChild(card);
   });
+  
   // Exibir botões de favoritar
   const favBtns = document.querySelectorAll('.btn-favoritar');
   favBtns.forEach(btn => btn.style.display = 'inline-block');
+}
+
+// Funções auxiliares para formatação dos dados
+
+// Formata o título do produto
+function formatarTitulo(titulo) {
+  if (!titulo) return 'Produto';
+  
+  // Remover excesso de "- " que é comum nos títulos do Google
+  const tituloLimpo = titulo.replace(/\s-\s/g, ' ').replace(/\s{2,}/g, ' ').trim();
+  
+  // Limitar tamanho
+  if (tituloLimpo.length > CONFIG.maxTitleLength) {
+    return tituloLimpo.substring(0, CONFIG.maxTitleLength) + '...';
+  }
+  
+  return tituloLimpo;
+}
+
+// Valida e formata o preço
+function formatarPreco(preco) {
+  if (!preco) return CONFIG.defaultPrice;
+  
+  // Se já estiver no formato R$ XX,XX, usar como está
+  if (typeof preco === 'string' && preco.includes('R$')) {
+    // Padronizar formato para R$ XX,XX
+    return preco.replace(/R\$\s*(\d+)[,\.](\d+)/, 'R$ $1,$2');
+  }
+  
+  // Se for número, formatar corretamente
+  if (typeof preco === 'number') {
+    return `R$ ${preco.toFixed(2).replace('.', ',')}`;
+  }
+  
+  // Caso seja string sem R$, adicionar
+  return `R$ ${preco}`;
+}
+
+// Valida URL da imagem
+function validarImagem(url) {
+  if (!url) return CONFIG.placeholderImage;
+  
+  // Verificar se a URL é válida
+  if (!url.match(/^https?:\/\//i)) {
+    return CONFIG.placeholderImage;
+  }
+  
+  // Verificar URLs de imagens quebradas conhecidas
+  const urlsBloqueadas = [
+    'data:image',
+    'placeholder.com',
+    'blank.gif'
+  ];
+  
+  for (const urlBloqueada of urlsBloqueadas) {
+    if (url.includes(urlBloqueada)) {
+      return CONFIG.placeholderImage;
+    }
+  }
+  
+  // Verificar se é uma URL de imagem conhecida
+  if (url.match(/\.(jpg|jpeg|png|gif|webp)(\?.*)?$/i)) {
+    return url;
+  }
+  
+  // URL que não termina com extensão de imagem mas pode ser válida
+  return url;
+}
+
+// Trunca texto para exibição
+function truncateText(text, maxLength) {
+  if (!text) return '';
+  
+  // Remover caracteres HTML e excesso de espaços
+  const textoLimpo = text.replace(/<[^>]*>/g, ' ').replace(/\s{2,}/g, ' ').trim();
+  
+  if (textoLimpo.length <= maxLength) return textoLimpo;
+  
+  // Truncar no último espaço completo para não cortar palavras
+  const truncado = textoLimpo.substring(0, maxLength);
+  const ultimoEspaco = truncado.lastIndexOf(' ');
+  
+  if (ultimoEspaco > maxLength * 0.8) { // Se o último espaço estiver a pelo menos 80% do tamanho máximo
+    return truncado.substring(0, ultimoEspaco) + '...';
+  }
+  
+  return truncado + '...';
 }
 
 // Global function for tracking product clicks
@@ -165,52 +394,108 @@ window.favoritarProduto = function(id, nome) {
   const grid = document.getElementById('grid');
   const card = Array.from(grid.children).find(c => c.querySelector('h3')?.textContent === nome);
   if (!card) return;
-  const img = card.querySelector('img')?.src;
-  const preco = card.querySelector('p')?.textContent.replace('R$ ','')
-  const url = card.querySelector('a')?.href;
+  
+  // Extrair dados do card
+  const img = card.querySelector('img')?.src || CONFIG.placeholderImage;
+  const precoElement = card.querySelector('.preco-produto, .preco-indisponivel');
+  const preco = precoElement ? precoElement.textContent : CONFIG.defaultPrice;
+  const url = card.querySelector('a')?.href || '#';
+  const descricao = card.querySelector('.card-description')?.textContent || '';
+  const marketplace = card.querySelector('.origem-badge')?.textContent || 'Google';
+  
+  // Verificar se já existe nos favoritos
   const favs = getFavoritos();
   if (favs.some(f => f.id === id)) {
     showMensagem(`Produto "${nome}" já está nos favoritos!`);
     setTimeout(clearMensagem, 2000);
     return;
   }
-  favs.push({ id, nome, preco, imagem: img, url });
+  
+  // Adicionar aos favoritos com dados completos
+  favs.push({ 
+    id, 
+    nome, 
+    preco, 
+    imagem: img, 
+    url,
+    descricao,
+    marketplace
+  });
+  
   setFavoritos(favs);
   showMensagem(`Produto "${nome}" adicionado aos favoritos!`);
+  
+  // Analytics: Track add to favorites
+  if (window.analyticsService) {
+    window.analyticsService.trackAddToFavorites(id, nome, preco, marketplace);
+  }
+  
+  // Atualizar contador de favoritos, se existir
+  const countBadge = document.getElementById('favoritosCount');
+  if (countBadge) {
+    countBadge.textContent = favs.length;
+    countBadge.style.display = favs.length > 0 ? 'inline-block' : 'none';
+  }
+  
   setTimeout(clearMensagem, 2000);
-  renderFavoritos();
 };
 
 function renderFavoritos() {
   const favs = getFavoritos();
   const grid = document.getElementById('gridFavoritos');
   grid.innerHTML = '';
+  
   if (!favs.length) {
     grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;color:#888;">${t('nenhum_favorito')}</div>`;
     return;
   }
-  favs.forEach(prod => {
+  
+  favs.forEach((prod, index) => {
     const card = document.createElement('div');
     card.className = 'card';
+    
+    // Garantir que os valores existem e são válidos
+    const nomeProduto = formatarTitulo(prod.nome || 'Produto sem nome');
+    const precoProduto = prod.preco || CONFIG.defaultPrice;
+    const imagemProduto = validarImagem(prod.imagem);
+    const urlProduto = prod.url || '#';
+    const idProduto = prod.id || Math.random().toString(36).substr(2, 9);
+    const marketplaceProduto = prod.marketplace || 'Google';
+    const descricaoProduto = prod.descricao || '';
+    
+    // Adicionar badge de origem
+    const badgeClass = marketplaceProduto.toLowerCase().replace(/[^a-z0-9]/g, '-');
+    const badgeHTML = `<span class="origem-badge ${badgeClass}-badge">${marketplaceProduto}</span>`;
+    
     card.innerHTML = `
-      <img src="${prod.imagem}" alt="${prod.nome}" loading="lazy">
-      <h3>${prod.nome}</h3>
-      <p>R$ ${prod.preco}</p>
-      <a href="${prod.url}" target="_blank">${t('ver_marketplace')}</a>
-      <button onclick="removerFavorito('${prod.id}')">${t('remover')}</button>
+      <div class="card-image-container">
+        <img src="${imagemProduto}" alt="${nomeProduto}" loading="lazy" onerror="this.onerror=null;this.src='${CONFIG.placeholderImage}';">
+        ${badgeHTML}
+      </div>
+      <h3 title="${nomeProduto}">${nomeProduto}</h3>
+      <p class="preco-produto">${precoProduto}</p>
+      <p class="card-description">${truncateText(descricaoProduto, 80)}</p>
+      <div class="card-actions">
+        <a href="${urlProduto}" target="_blank" class="btn-view" 
+           onclick="trackProductClick('${idProduto}', '${nomeProduto.replace(/'/g, "\\'")}', '${precoProduto}', '${marketplaceProduto}', ${index}, '${urlProduto}')">
+           Ver Produto
+        </a>
+        <button onclick="removerFavorito('${idProduto}')" class="btn-remover">
+          ${t('remover')}
+        </button>
+      </div>
     `;
+    
     grid.appendChild(card);
   });
+  
+  // Atualizar contador de favoritos, se existir
+  const countBadge = document.getElementById('favoritosCount');
+  if (countBadge) {
+    countBadge.textContent = favs.length;
+    countBadge.style.display = favs.length > 0 ? 'inline-block' : 'none';
+  }
 }
-
-window.removerFavorito = function(id) {
-  let favs = getFavoritos();
-  favs = favs.filter(f => f.id !== id);
-  setFavoritos(favs);
-  showMensagem('Produto removido dos favoritos!');
-  setTimeout(clearMensagem, 2000);
-  renderFavoritos();
-};
 
 // Renderiza paginação
 function renderPaginacao(pagina, totalPaginas, params) {
@@ -225,98 +510,267 @@ function renderPaginacao(pagina, totalPaginas, params) {
   }
 }
 
-// Carrega produtos
-async function carregarProdutos(params = {}) {
-  showLoader(true);
-  try {
-    const { produtos, pagina, totalPaginas } = await buscarProdutos(params);
-    renderGrid(produtos);
-    renderPaginacao(pagina, totalPaginas, params);
-  } finally {
-    showLoader(false);
+// Funções para paginação e navegação
+
+// Renderiza controles de paginação
+function renderPagination(currentPage, totalPages) {
+  const paginationContainer = document.getElementById('pagination-container');
+  if (!paginationContainer) return;
+  
+  // Limpar container de paginação
+  paginationContainer.innerHTML = '';
+  
+  // Se só há uma página, não mostrar controles
+  if (totalPages <= 1) {
+    paginationContainer.style.display = 'none';
+    return;
   }
+  
+  paginationContainer.style.display = 'flex';
+  
+  // Botão anterior
+  const prevButton = document.createElement('button');
+  prevButton.classList.add('pagination-button');
+  prevButton.innerHTML = '&laquo;';
+  prevButton.disabled = currentPage <= 1;
+  prevButton.addEventListener('click', () => changePage(currentPage - 1));
+  paginationContainer.appendChild(prevButton);
+  
+  // Determinar quais botões de página mostrar
+  let startPage = Math.max(1, currentPage - Math.floor(CONFIG.paginationLimit / 2));
+  let endPage = Math.min(totalPages, startPage + CONFIG.paginationLimit - 1);
+  
+  // Ajustar startPage se não tivermos botões suficientes à direita
+  if (endPage - startPage + 1 < CONFIG.paginationLimit) {
+    startPage = Math.max(1, endPage - CONFIG.paginationLimit + 1);
+  }
+  
+  // Botão para primeira página se não estiver no início
+  if (startPage > 1) {
+    const firstPageButton = document.createElement('button');
+    firstPageButton.classList.add('pagination-button');
+    firstPageButton.textContent = '1';
+    firstPageButton.addEventListener('click', () => changePage(1));
+    paginationContainer.appendChild(firstPageButton);
+    
+    // Adicionar ellipsis se houver gap
+    if (startPage > 2) {
+      const ellipsis = document.createElement('span');
+      ellipsis.classList.add('pagination-ellipsis');
+      ellipsis.textContent = '...';
+      paginationContainer.appendChild(ellipsis);
+    }
+  }
+  
+  // Botões de página numerados
+  for (let i = startPage; i <= endPage; i++) {
+    const pageButton = document.createElement('button');
+    pageButton.classList.add('pagination-button');
+    if (i === currentPage) pageButton.classList.add('active');
+    pageButton.textContent = i;
+    pageButton.addEventListener('click', () => changePage(i));
+    paginationContainer.appendChild(pageButton);
+  }
+  
+  // Botão para última página se não estiver no final
+  if (endPage < totalPages) {
+    // Adicionar ellipsis se houver gap
+    if (endPage < totalPages - 1) {
+      const ellipsis = document.createElement('span');
+      ellipsis.classList.add('pagination-ellipsis');
+      ellipsis.textContent = '...';
+      paginationContainer.appendChild(ellipsis);
+    }
+    
+    const lastPageButton = document.createElement('button');
+    lastPageButton.classList.add('pagination-button');
+    lastPageButton.textContent = totalPages;
+    lastPageButton.addEventListener('click', () => changePage(totalPages));
+    paginationContainer.appendChild(lastPageButton);
+  }
+  
+  // Botão próximo
+  const nextButton = document.createElement('button');
+  nextButton.classList.add('pagination-button');
+  nextButton.innerHTML = '&raquo;';
+  nextButton.disabled = currentPage >= totalPages;
+  nextButton.addEventListener('click', () => changePage(currentPage + 1));
+  paginationContainer.appendChild(nextButton);
+  
+  // Informação de página atual
+  const pageInfo = document.createElement('div');
+  pageInfo.classList.add('pagination-info');
+  pageInfo.textContent = `Página ${currentPage} de ${totalPages}`;
+  paginationContainer.appendChild(pageInfo);
+}
+
+// Muda para a página especificada
+async function changePage(page) {
+  if (page === APP_STATE.currentPage || APP_STATE.isLoading) return;
+  
+  // Scroll para o topo
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  
+  // Buscar produtos da nova página
+  const params = {
+    ...APP_STATE.lastSearchParams,
+    page: page
+  };
+  
+  const data = await buscarProdutos(params);
+  renderGrid(data.produtos);
+}
+
+// Implementação do botão Voltar ao Topo
+function setupBackToTopButton() {
+  const backToTopBtn = document.createElement('div');
+  backToTopBtn.className = 'back-to-top';
+  backToTopBtn.innerHTML = '<i class="fa fa-arrow-up"></i>';
+  document.body.appendChild(backToTopBtn);
+  
+  // Mostrar/esconder o botão baseado na posição do scroll
+  window.addEventListener('scroll', () => {
+    if (window.pageYOffset > 300) {
+      backToTopBtn.classList.add('visible');
+    } else {
+      backToTopBtn.classList.remove('visible');
+    }
+  });
+  
+  // Scrollar para o topo ao clicar
+  backToTopBtn.addEventListener('click', () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+}
+
+// Sistema de notificações
+function showNotification(message, type = 'info', duration = 3000) {
+  // Remover notificações existentes
+  const existingNotifications = document.querySelectorAll('.notification');
+  existingNotifications.forEach(notification => {
+    notification.remove();
+  });
+  
+  // Criar nova notificação
+  const notification = document.createElement('div');
+  notification.className = `notification notification-${type}`;
+  
+  const title = type.charAt(0).toUpperCase() + type.slice(1);
+  notification.innerHTML = `
+    <div class="notification-title">${title}</div>
+    <div class="notification-message">${message}</div>
+  `;
+  
+  document.body.appendChild(notification);
+  
+  // Mostrar com animação
+  setTimeout(() => {
+    notification.classList.add('show');
+  }, 10);
+  
+  // Remover após duração
+  setTimeout(() => {
+    notification.classList.remove('show');
+    setTimeout(() => {
+      notification.remove();
+    }, 300);
+  }, duration);
 }
 
 // =============================================================================
-// NEW API INTEGRATIONS - ENHANCED FUNCTIONALITY
+// SIMPLIFIED FUNCTIONALITY - GOOGLE SEARCH ONLY
 // =============================================================================
 
 // Current active locations and data
 let currentLocais = [];
-let currentMapaInfo = null;
 
 // ===== LOCATION-BASED SERVICES =====
 
 /**
- * Busca lojas próximas usando Google Maps API
+ * Busca informações para a seção "Onde Comprar"
+ * Versão simplificada que não utiliza API externa
  */
 async function buscarLojasProximas(cidade, categoria = 'loja de presentes') {
   try {
-    const params = new URLSearchParams({
-      cidade,
-      categoria,
-      radius: '10000' // 10km de raio
-    });
-    
-    const response = await fetch(`${API_URL}/new-apis/maps/lojas?${params}`);
-    if (!response.ok) throw new Error('Erro ao buscar lojas');
-    
-    const resultado = await response.json();
-    
-    if (resultado.sucesso && resultado.dados) {
-      currentLocais = resultado.dados.lojas || [];
-      currentMapaInfo = resultado.dados.info;
-      
-      renderLocais();
-      
-      // Analytics: Track location search
-      if (window.analyticsService) {
-        window.analyticsService.trackEvent('location_search', 'api_call', cidade, {
-          categoria,
-          resultados: currentLocais.length
-        });
+    // Versão simplificada - não usa mais API externa
+    // Lista estática de sugestões de onde comprar
+    const lojasRecomendadas = [
+      {
+        nome: "Lojas Online",
+        endereco: "Várias opções de e-commerce",
+        tipo: "online",
+        website: "https://shopping.google.com/",
+        rating: "4.5"
+      },
+      {
+        nome: "Lojas de Departamento",
+        endereco: `Verifique lojas próximas em ${cidade || 'sua cidade'}`,
+        tipo: "fisico",
+        rating: "4.0"
+      },
+      {
+        nome: "Shopping Centers",
+        endereco: `Consulte shopping centers em ${cidade || 'sua região'}`,
+        tipo: "fisico"
       }
+    ];
+    
+    currentLocais = lojasRecomendadas;
+    renderLocais();
+    
+    // Analytics: Track location search
+    if (window.analyticsService) {
+      window.analyticsService.trackEvent('location_search', 'local_data', cidade, {
+        categoria,
+        resultados: currentLocais.length
+      });
     }
     
+    return { sucesso: true, mensagem: "Dados carregados com sucesso" };
   } catch (error) {
-    console.error('Erro ao buscar lojas próximas:', error);
-    showMensagem('Erro ao buscar lojas próximas.', true);
+    console.error("Erro ao carregar dados de lojas:", error);
+    showMensagem("Erro ao carregar informações de lojas. Tente novamente.");
+    return { sucesso: false, erro: error.message };
   }
 }
 
 /**
- * Busca shopping centers próximos
+ * Busca shopping centers
+ * Versão simplificada que não utiliza API externa
  */
-async function buscarShoppings(cidade, estado) {
+async function buscarShoppings(cidade) {
   try {
-    const params = new URLSearchParams({
-      cidade,
-      ...(estado && { estado })
-    });
-    
-    const response = await fetch(`${API_URL}/new-apis/maps/shoppings?${params}`);
-    if (!response.ok) throw new Error('Erro ao buscar shoppings');
-    
-    const resultado = await response.json();
-    
-    if (resultado.sucesso && resultado.dados) {
-      currentLocais = resultado.dados.shoppings || [];
-      currentMapaInfo = resultado.dados.info;
-      
-      renderLocais();
-      
-      // Analytics: Track shopping search
-      if (window.analyticsService) {
-        window.analyticsService.trackEvent('shopping_search', 'api_call', cidade, {
-          estado,
-          resultados: currentLocais.length
-        });
+    // Versão simplificada com dados estáticos
+    const shoppingsRecomendados = [
+      {
+        nome: "Shopping Online",
+        endereco: "Compre online pela internet",
+        tipo: "online",
+        website: "https://shopping.google.com/",
+        rating: "4.8"
+      },
+      {
+        nome: `Shopping Center em ${cidade || 'sua cidade'}`,
+        endereco: `Centro comercial em ${cidade || 'sua região'}`,
+        tipo: "fisico",
+        rating: "4.2"
       }
-    }
+    ];
     
+    currentLocais = shoppingsRecomendados;
+    renderLocais();
+    
+    // Analytics: Track shopping center search
+    if (window.analyticsService) {
+      window.analyticsService.trackEvent('shopping_search', 'local_data', cidade, {
+        resultados: currentLocais.length
+      });
+    }
+      return { sucesso: true, mensagem: "Dados carregados com sucesso" };
   } catch (error) {
-    console.error('Erro ao buscar shoppings:', error);
-    showMensagem('Erro ao buscar shopping centers.', true);
+    console.error("Erro ao carregar dados de shoppings:", error);
+    showMensagem("Erro ao carregar informações de shopping centers. Tente novamente.");
+    return { sucesso: false, erro: error.message };
   }
 }
 
@@ -342,16 +796,12 @@ function renderLocais() {
   if (!currentLocais.length) {
     gridLocais.innerHTML = `
       <div style="grid-column:1/-1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;color:#888;padding:2rem;min-height:200px;width:100%;">
-        <div style='display:flex;flex-direction:column;align-items:center;justify-content:center;width:100%;max-width:700px;margin:0 auto;'>
-          <p style="font-size:1.3rem;font-weight:600;margin-bottom:0.5rem;display:flex;align-items:center;gap:0.5rem;">
+        <div style='display:flex;flex-direction:column;align-items:center;justify-content:center;width:100%;max-width:700px;margin:0 auto;'>          <p style="font-size:1.3rem;font-weight:600;margin-bottom:0.5rem;display:flex;align-items:center;gap:0.5rem;">
             <img src='/images/placeholder.jpg' alt='' style='width:32px;height:32px;vertical-align:middle;margin-right:0.3rem;'> Nenhuma loja encontrada na região
           </p>
-          <small style="font-size:1.08rem;margin-bottom:1.2rem;color:#666;">Como não encontramos uma loja próxima à sua casa, não se preocupe! Você pode comprar online em grandes marketplaces:</small>
+          <small style="font-size:1.08rem;margin-bottom:1.2rem;color:#666;">Você pode comprar online no Google Shopping:</small>
           <div style="display:flex;flex-wrap:wrap;gap:1rem;justify-content:center;">
-            <a href='https://www.amazon.com.br/' target='_blank' rel='noopener' style='background:#232f3e;color:#fff;padding:0.7rem 1.2rem;border-radius:8px;font-weight:600;text-decoration:none;min-width:140px;text-align:center;'>Amazon Brasil</a>
-            <a href='https://shopee.com.br/' target='_blank' rel='noopener' style='background:#ee4d2d;color:#fff;padding:0.7rem 1.2rem;border-radius:8px;font-weight:600;text-decoration:none;min-width:140px;text-align:center;'>Shopee</a>
-            <a href='https://pt.aliexpress.com/' target='_blank' rel='noopener' style='background:#ff6a00;color:#fff;padding:0.7rem 1.2rem;border-radius:8px;font-weight:600;text-decoration:none;min-width:140px;text-align:center;'>AliExpress</a>
-            <a href='https://www.mercadolivre.com.br/' target='_blank' rel='noopener' style='background:#ffe600;color:#222;padding:0.7rem 1.2rem;border-radius:8px;font-weight:600;text-decoration:none;min-width:140px;text-align:center;'>Mercado Livre</a>
+            <a href='https://shopping.google.com/' target='_blank' rel='noopener' style='background:#4285f4;color:#fff;padding:0.7rem 1.2rem;border-radius:8px;font-weight:600;text-decoration:none;min-width:140px;text-align:center;'>Google Shopping</a>
           </div>
         </div>
       </div>
@@ -381,9 +831,8 @@ function renderLocais() {
         ${rating ? `<p style="margin: 0.25rem 0; color: #f59e0b; font-size: 0.9rem;">${rating}</p>` : ''}
         ${local.telefone ? `<p style="margin: 0.25rem 0; color: #666; font-size: 0.9rem;">📞 ${local.telefone}</p>` : ''}
         ${local.horarios ? `<p style="margin: 0.25rem 0; color: #666; font-size: 0.85rem;">🕒 ${local.horarios}</p>` : ''}
-        <div style="margin-top: 1rem; display: flex; gap: 0.5rem; flex-wrap: wrap;">
-          ${local.website ? `<a href="${local.website}" target="_blank" rel="noopener noreferrer" style="flex: 1; min-width: 100px; text-align: center; padding: 0.5rem; background: var(--primary-color); color: white; text-decoration: none; border-radius: 4px; font-size: 0.9rem;">🌐 Site</a>` : ''}
-          ${local.maps_url ? `<a href="${local.maps_url}" target="_blank" rel="noopener noreferrer" style="flex: 1; min-width: 100px; text-align: center; padding: 0.5rem; background: #10b981; color: white; text-decoration: none; border-radius: 4px; font-size: 0.9rem;">🗺️ Mapa</a>` : ''}
+
+        <div style="margin-top: 1rem; display: flex; gap: 0.5rem; flex-wrap: wrap;">          ${local.website ? `<a href="${local.website}" target="_blank" rel="noopener noreferrer" style="flex: 1; min-width: 100px; text-align: center; padding: 0.5rem; background: var(--primary-color); color: white; text-decoration: none; border-radius: 4px; font-size: 0.9rem;">🌐 Site</a>` : ''}
         </div>
       </div>
     `;
@@ -730,38 +1179,142 @@ document.addEventListener('DOMContentLoaded', () => {
 // =============================================================================
 
 // Configurar eventos quando a página carregar
-document.addEventListener('DOMContentLoaded', () => {
-  // Configurar navegação entre abas
-  configurarNavegacaoAbas();
+document.addEventListener('DOMContentLoaded', async () => {
+  console.log('🚀 Easy Gift Search inicializado - Google Search Only Version');
   
-  // Detectar localização automaticamente (opcional)
-  // detectarLocalizacao(); // Descomentari se quiser detecção automática
+  // Carregar traduções
+  await loadTranslations();
   
-  // Melhorar busca tradicional para usar APIs aprimoradas
+  // Configurar o botão de voltar ao topo
+  setupBackToTopButton();
+  
+  // Inicializar Analytics
+  if (window.analyticsService) {
+    window.analyticsService.initialize();
+    console.log('Analytics inicializado');
+  }
+  
+  // Inicializar favoritos
+  updateFavoritesCount();
+  
+  // Configurar listeners para formulário de busca
   const searchForm = document.getElementById('searchForm');
-  const originalSubmit = searchForm.onsubmit;
+  if (searchForm) {
+    searchForm.addEventListener('submit', handleSearchSubmit);
+  }
   
-  searchForm.onsubmit = async (e) => {
-    e.preventDefault();
-      // Obter parâmetros do formulário
+  // Verificar se há parâmetros de busca na URL
+  const urlParams = new URLSearchParams(window.location.search);
+  const queryFromUrl = urlParams.get('q');
+  
+  // Se houver query na URL, realizar a busca
+  if (queryFromUrl) {
+    document.getElementById('query').value = queryFromUrl;
+    
+    // Extrair outros parâmetros
     const params = {
-      precoMax: document.getElementById('precoMax').value,
-      idade: document.getElementById('idadeInput').value,
-      genero: document.getElementById('generoSelect').value,
-      page: 1
+      query: queryFromUrl,
+      precoMax: urlParams.get('precoMax') || '',
+      idade: urlParams.get('idade') || '',
+      genero: urlParams.get('genero') || '',
+      page: urlParams.get('page') || 1
     };
     
-    // Mostrar seção de produtos
-    document.getElementById('produtos').style.display = '';
+    // Preencher os campos do formulário
+    if (params.precoMax) document.getElementById('precoMax').value = params.precoMax;
+    if (params.idade) document.getElementById('idade').value = params.idade;
+    if (params.genero) document.getElementById('genero').value = params.genero;
     
-    // Executar busca tradicional primeiro
-    await carregarProdutos(params);
-  };
+    // Executar busca
+    const data = await buscarProdutos(params);
+    renderGrid(data.produtos);
+  } else {
+    // Carregar recomendações aleatórias
+    loadRandomRecommendations();
+  }
+  
+  // Configurar eventos para botões de navegação
+  setupNavigationButtons();
+  
+  // Configurar monitor de API
+  setupApiMonitor();
 });
 
-// Expor funções globalmente para uso em outros contextos
-window.buscarLojasProximas = buscarLojasProximas;
-window.buscarShoppings = buscarShoppings;
+// Configurar monitoramento da API
+function setupApiMonitor() {
+  // Verificar uso da API a cada hora
+  setInterval(checkApiQuota, 3600000);
+  
+  // Verificar imediatamente
+  checkApiQuota();
+}
+
+// Verificar quota da API
+async function checkApiQuota() {
+  try {
+    const response = await fetch(`${API_URL}/monitor/quota`);
+    
+    if (!response.ok) {
+      console.warn('Não foi possível verificar quota da API');
+      return;
+    }
+    
+    const data = await response.json();
+    
+    // Se estiver próximo do limite, mostrar aviso
+    if (data.remaining && data.remaining < 20) {
+      showNotification(`Atenção: Restam apenas ${data.remaining} consultas na API do Google hoje.`, 'warning', 10000);
+      console.warn(`⚠️ Alerta de quota: ${data.remaining} consultas restantes`);
+    }
+    
+    // Log para debug
+    console.log(`📊 Status da API: ${data.remaining}/${data.limit} consultas restantes`);
+  } catch (error) {
+    console.error('Erro ao verificar quota da API:', error);
+  }
+}
+
+// Handler para o formulário de busca
+async function handleSearchSubmit(event) {
+  event.preventDefault();
+  
+  const query = document.getElementById('query').value.trim();
+  const precoMax = document.getElementById('precoMax').value.trim();
+  const idade = document.getElementById('idade').value.trim();
+  const genero = document.getElementById('genero').value.trim();
+  
+  // Validar entrada
+  if (!query && !idade && !genero) {
+    showNotification('Por favor, digite uma busca ou selecione filtros', 'error');
+    return;
+  }
+  
+  // Atualizar URL com parâmetros para permitir compartilhamento
+  const params = new URLSearchParams();
+  if (query) params.set('q', query);
+  if (precoMax) params.set('precoMax', precoMax);
+  if (idade) params.set('idade', idade);
+  if (genero) params.set('genero', genero);
+  params.set('page', 1); // Iniciar na primeira página
+  
+  const newUrl = `${window.location.pathname}?${params.toString()}`;
+  window.history.pushState({}, '', newUrl);
+  
+  // Executar busca
+  const searchParams = {
+    query,
+    precoMax,
+    idade,
+    genero,
+    page: 1
+  };
+  
+  const data = await buscarProdutos(searchParams);
+  renderGrid(data.produtos);
+  
+  // Mostrar seção de produtos
+  mostrarSecao('produtos');
+}
 
 // Funções para footer - Política de Privacidade e Termos de Uso
 window.mostrarPoliticaPrivacidade = function() {
