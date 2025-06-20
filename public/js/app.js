@@ -252,10 +252,11 @@ function renderGrid(produtos) {
     const showFreeShipping = Math.random() > 0.7; // 30% de chance de mostrar frete grátis
     const freeShippingHTML = showFreeShipping ? 
       '<span class="free-shipping-badge">Frete Grátis</span>' : '';
-    
-    card.innerHTML = `
+      card.innerHTML = `
       <div class="card-image-container">
-        <img src="${imagemProduto}" alt="${nomeProduto}" loading="lazy" onerror="this.onerror=null;this.src='${CONFIG.placeholderImage}';">
+        <img src="${imagemProduto}" alt="${nomeProduto}" loading="lazy" 
+          onerror="this.onerror=null;this.src='${CONFIG.placeholderImage}'; console.log('Imagem falhou:', this.getAttribute('data-original-src'));"
+          data-original-src="${imagemProduto}">
         ${badgeHTML}
         ${freeShippingHTML}
       </div>
@@ -328,6 +329,7 @@ function validarImagem(url) {
   
   // Verificar se a URL é válida
   if (!url.match(/^https?:\/\//i)) {
+    console.log('URL de imagem inválida (sem protocolo):', url);
     return CONFIG.placeholderImage;
   }
   
@@ -335,11 +337,17 @@ function validarImagem(url) {
   const urlsBloqueadas = [
     'data:image',
     'placeholder.com',
-    'blank.gif'
+    'blank.gif',
+    'noimage',
+    'no-image',
+    'default.jpg',
+    'default.png',
+    'transparent.png'
   ];
   
   for (const urlBloqueada of urlsBloqueadas) {
     if (url.includes(urlBloqueada)) {
+      console.log('URL de imagem bloqueada:', url);
       return CONFIG.placeholderImage;
     }
   }

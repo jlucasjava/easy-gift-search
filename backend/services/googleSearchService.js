@@ -113,52 +113,180 @@ async function searchGoogle(query, num = 10, start = 1, useCache = true) {
  * @returns {string|null} URL da melhor imagem ou null
  */
 function getBestImage(item) {
-  if (!item || !item.pagemap) return null;
+  if (!item) return null;
   
-  // Array com possíveis fontes de imagens em ordem de preferência
-  const imageSources = [
-    // Imagens de produto específicas
-    item.pagemap.product?.[0]?.image,
-    
-    // Imagens principais do CSE
-    item.pagemap.cse_image?.[0]?.src,
-    
-    // Thumbnails do CSE
-    item.pagemap.cse_thumbnail?.[0]?.src,
-    
-    // Imagens de metatags OpenGraph
-    item.pagemap.metatags?.[0]?.['og:image'],
-    
-    // Imagens de metatags Twitter
-    item.pagemap.metatags?.[0]?.['twitter:image'],
-    
-    // Imagens de artigos
-    item.pagemap.article?.[0]?.image,
-    
-    // Imagens gerais
-    item.pagemap.imageobject?.[0]?.url,
-    item.pagemap.image?.[0]?.src,
-    
-    // Outras imagens de metatags
-    item.pagemap.metatags?.[0]?.['image'],
-    item.pagemap.metatags?.[0]?.['thumbnail']
-  ];
-  
-  // Encontrar a primeira imagem válida
-  for (const imageUrl of imageSources) {
-    if (imageUrl && typeof imageUrl === 'string' && imageUrl.startsWith('http')) {
-      return imageUrl;
+  try {
+    // 1. Verificar a propriedade link.thumbnail diretamente no resultado
+    if (item.image?.thumbnailLink && item.image.thumbnailLink.startsWith('http')) {
+      return item.image.thumbnailLink;
     }
+    
+    // 2. Verificar se há imagem direta no resultado
+    if (item.thumbnailLink && item.thumbnailLink.startsWith('http')) {
+      return item.thumbnailLink;
+    }
+    
+    // 3. Verificar se há a propriedade pagemap
+    if (!item.pagemap) {
+      // Se não tiver pagemap, tentar extrair imagem da descrição ou link
+      const linkImage = extractImageFromLink(item.link);
+      if (linkImage) return linkImage;
+      
+      // Tentar extrair da descrição
+      const snippetImage = extractImageFromSnippet(item.snippet);
+      if (snippetImage) return snippetImage;
+      
+      return null;
+    }
+    
+    // 4. Array com possíveis fontes de imagens em ordem de preferência
+    const imageSources = [
+      // Imagens de produto específicas
+      item.pagemap.product?.[0]?.image,
+      
+      // Imagens principais do CSE
+      item.pagemap.cse_image?.[0]?.src,
+      
+      // Thumbnails do CSE
+      item.pagemap.cse_thumbnail?.[0]?.src,
+      
+      // Imagens de metatags OpenGraph
+      item.pagemap.metatags?.[0]?.['og:image'],
+      
+      // Imagens de metatags Twitter
+      item.pagemap.metatags?.[0]?.['twitter:image'],
+      item.pagemap.metatags?.[0]?.['twitter:image:src'],
+      
+      // Imagens de artigos
+      item.pagemap.article?.[0]?.image,
+      
+      // Imagens gerais
+      item.pagemap.imageobject?.[0]?.url,
+      item.pagemap.imageobject?.[0]?.contenturl,
+      item.pagemap.image?.[0]?.src,
+      
+      // Outras imagens de metatags
+      item.pagemap.metatags?.[0]?.['image'],
+      item.pagemap.metatags?.[0]?.['thumbnail'],
+      item.pagemap.metatags?.[0]?.['msapplication-tileimage'],
+      
+      // Mais opções de imagens de produto
+      item.pagemap.offer?.[0]?.image,
+      item.pagemap.product?.[0]?.photo
+    ];
+    
+    // 5. Encontrar a primeira imagem válida
+    for (const imageUrl of imageSources) {
+      if (imageUrl && typeof imageUrl === 'string') {
+        // Garantir que a URL começa com http ou https
+        if (imageUrl.startsWith('http')) {
+          return imageUrl;
+        }
+        // Tentar corrigir URLs relativas
+        else if (imageUrl.startsWith('/')) {
+          try {
+            const baseUrl = new URL(item.link).origin;
+            return `${baseUrl}${imageUrl}`;
+          } catch (e) {
+            // Continuar com o próximo
+          }
+        }
+      }
+    }
+    
+    // 6. Verificar arrays de imagens em pagemap
+    const imageArrays = [
+      item.pagemap.cse_image,
+      item.pagemap.cse_thumbnail,
+      item.pagemap.imageobject,
+      item.pagemap.image
+    ];
+    
+    for (const imgArray of imageArrays) {
+      if (Array.isArray(imgArray)) {
+        for (const img of imgArray) {
+          // Verificar campos comuns em cada tipo de objeto de imagem
+          const possibleUrls = [img.src, img.url, img.contenturl, img.contentUrl, img.image];
+          
+          for (const url of possibleUrls) {
+            if (url && typeof url === 'string' && url.startsWith('http')) {
+              return url;
+            }
+          }
+        }
+      }
+    }
+    
+    // 7. Como último recurso, tentar extrair uma imagem do link
+    const linkImage = extractImageFromLink(item.link);
+    if (linkImage) return linkImage;
+    
+    // 8. Tentar extrair da descrição
+    const snippetImage = extractImageFromSnippet(item.snippet);
+    if (snippetImage) return snippetImage;
+    
+  } catch (error) {
+    console.error('Erro ao extrair imagem:', error);
   }
   
-  // Verificar se há imagens no thumbnail do pagemap
-  if (item.pagemap.cse_thumbnail) {
-    const thumbnails = item.pagemap.cse_thumbnail.filter(thumb => 
-      thumb && thumb.src && thumb.src.startsWith('http')
-    );
-    if (thumbnails.length > 0) {
-      return thumbnails[0].src;
+  // Se nenhuma imagem for encontrada, retornar null
+  return null;
+}
+
+/**
+ * Tenta extrair uma URL de imagem de um link
+ * @param {string} url - URL do produto
+ * @returns {string|null} URL da imagem ou null
+ */
+function extractImageFromLink(url) {
+  if (!url || typeof url !== 'string') return null;
+  
+  try {
+    // Verificar se a URL termina com extensão de imagem
+    if (url.match(/\.(jpg|jpeg|png|gif|webp)(\?.*)?$/i)) {
+      return url;
     }
+    
+    // Extrair domínio para gerar thumbnails de sites conhecidos
+    const urlObj = new URL(url);
+    const domain = urlObj.hostname;
+    
+    // Gerar thumbnails para sites conhecidos
+    if (domain.includes('mercadolivre.com.br') || domain.includes('mercadolibre.com')) {
+      // Extrair ID do produto para o ML
+      const mlId = url.match(/MLB-(\d+)/);
+      if (mlId) {
+        return `https://http2.mlstatic.com/D_NQ_NP_${mlId[1]}-O.jpg`;
+      }
+    }
+    
+    if (domain.includes('americanas.com.br')) {
+      // Tentar extrair código do produto
+      const prodCode = url.match(/prod\/(\d+)/);
+      if (prodCode) {
+        return `https://images-americanas.b2w.io/produtos/${prodCode[1]}/imagens/original.jpg`;
+      }
+    }
+    
+    // Para outros domínios, poderíamos usar um serviço de thumbnail como o Microlink ou similar
+    return null;
+  } catch (e) {
+    return null;
+  }
+}
+
+/**
+ * Tenta extrair uma URL de imagem de um snippet
+ * @param {string} snippet - Texto do snippet
+ * @returns {string|null} URL da imagem ou null
+ */
+function extractImageFromSnippet(snippet) {
+  if (!snippet || typeof snippet !== 'string') return null;
+  
+  // Procurar por URLs de imagem no texto do snippet
+  const imageUrlMatch = snippet.match(/https?:\/\/[^\s"'<>]+\.(jpg|jpeg|png|gif|webp)(\?[^\s"'<>]+)?/i);
+  if (imageUrlMatch) {
+    return imageUrlMatch[0];
   }
   
   return null;
@@ -232,35 +360,7 @@ function getCache() {
   return cache;
 }
 
-/**
- * Simula resultados de pesquisa quando a API real não está disponível
- * @param {string} query - Termo de busca
- * @param {number} num - Número de resultados a gerar
- * @returns {Array} Resultados simulados
- */
-function simulateGoogleResults(query, num = 10, start = 1) {
-  console.log(`ℹ️ Gerando resultados simulados para: "${query}"`);
-  
-  // Categorias comuns para classificar os resultados
-  const categorias = ['Eletrônicos', 'Moda', 'Casa e Decoração', 'Beleza', 'Esportes', 'Livros', 'Jogos', 'Acessórios'];
-  
-  // Gerar resultados simulados baseados na query
-  const resultados = [];
-  for (let i = 0; i < num; i++) {
-    const categoria = categorias[Math.floor(Math.random() * categorias.length)];
-    resultados.push({
-      title: `${categoria} para presente - ${query} - Item ${i + 1}`,
-      link: `https://exemplo.com/produto/${i + 1}?q=${encodeURIComponent(query)}`,
-      snippet: `Ótima opção de presente na categoria ${categoria.toLowerCase()}. Produto de qualidade com entrega rápida e garantia.`,
-      image: `https://placeholder.com/300x300?text=Presente+${i + 1}`,
-      price: `R$ ${Math.floor(Math.random() * 300) + 50},${Math.floor(Math.random() * 100)}`,
-      source: 'Google Custom Search (Simulado)'
-    });
-  }
-  
-  console.log(`✅ Gerados ${resultados.length} resultados simulados`);
-  return resultados;
-}
+
 
 /**
  * Busca presentes usando Google Custom Search API
@@ -641,5 +741,11 @@ module.exports = {
   searchProducts,
   getRecommendations,
   formatarResultadosGoogle,
-  constroiQueryGoogle
+  constroiQueryGoogle,
+  simulateGoogleResults,
+  getBestImage,
+  extractPrice,
+  extractImageFromLink,
+  extractImageFromSnippet,
+  extrairCategoriaGoogle
 };

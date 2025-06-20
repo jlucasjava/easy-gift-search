@@ -60,12 +60,14 @@ const recommendRoutes = require('./routes/recommend');
 const feedbackRoutes = require('./routes/feedback');
 const testRoutes = require('./routes/test');
 const monitorRoutes = require('./routes/monitor');
+const imageMonitorRoutes = require('./routes/monitor-image-quality');
 
 app.use('/api/products', productRoutes);
 app.use('/api/recommend', recommendRoutes);
 app.use('/api/feedback', feedbackRoutes);
 app.use('/api/test', testRoutes);
 app.use('/api/monitor', monitorRoutes);
+app.use('/api/monitor', imageMonitorRoutes); // Reutiliza o prefixo /api/monitor
 
 // Servir arquivos estáticos do frontend
 app.use(express.static(path.join(__dirname, '../public')));
