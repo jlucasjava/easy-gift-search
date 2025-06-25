@@ -80,14 +80,33 @@ async function searchGoogle(query, num = 10, start = 1, useCache = true) {
       console.log(`✅ Google Custom Search API: ${response.data.items?.length || 0} resultados encontrados`);
       
       // Processar e normalizar resultados
-      const resultados = response.data.items?.map(item => ({
+      let resultados = response.data.items?.map(item => ({
         title: item.title,
         link: item.link,
         snippet: item.snippet,
         image: getBestImage(item),
         price: extractPrice(item.title, item.snippet),
-        source: 'Google Custom Search'
+        source: 'Google Custom Search',
+        marketplace: detectMarketplace(item.link)
       })) || [];
+      
+      // Filtrar resultados para priorizar marketplaces válidos
+      const validResults = resultados.filter(item => isValidMarketplace(item.link));
+      
+      // Se tivermos resultados válidos suficientes, usá-los exclusivamente
+      if (validResults.length >= Math.min(5, resultados.length / 2)) {
+        console.log(`✅ Encontrados ${validResults.length} resultados de marketplaces válidos`);
+        resultados = validResults;
+      } else {
+        console.log(`⚠️ Poucos resultados de marketplaces válidos (${validResults.length}). Complementando com outros resultados.`);
+        // Combinar resultados válidos com alguns outros resultados até atingir num
+        // Priorizamos os resultados válidos no início
+        const outrosResultados = resultados
+          .filter(item => !isValidMarketplace(item.link))
+          .slice(0, Math.max(num - validResults.length, 0));
+        
+        resultados = [...validResults, ...outrosResultados];
+      }
 
       // Armazenar resultados no cache
       if (useCache && resultados.length > 0) {
@@ -116,6 +135,15 @@ function getBestImage(item) {
   if (!item) return null;
   
   try {
+    // Verificar se estamos lidando com um marketplace conhecido e tentar estratégia específica
+    if (item.link) {
+      const domain = extractDomainFromUrl(item.link);
+      const marketplaceImage = getMarketplaceImage(item.link, domain);
+      if (marketplaceImage) {
+        return marketplaceImage;
+      }
+    }
+    
     // 1. Verificar a propriedade link.thumbnail diretamente no resultado
     if (item.image?.thumbnailLink && item.image.thumbnailLink.startsWith('http')) {
       return item.image.thumbnailLink;
@@ -139,7 +167,7 @@ function getBestImage(item) {
       return null;
     }
     
-    // 4. Array com possíveis fontes de imagens em ordem de preferência
+    // 4. Array com possíveis fontes de imagens em ordem de preferência, priorizando imagens de produtos
     const imageSources = [
       // Imagens de produto específicas
       item.pagemap.product?.[0]?.image,
@@ -247,30 +275,43 @@ function extractImageFromLink(url) {
       return url;
     }
     
-    // Extrair domínio para gerar thumbnails de sites conhecidos
-    const urlObj = new URL(url);
-    const domain = urlObj.hostname;
+    // Usar a função específica para marketplaces
+    const domain = extractDomainFromUrl(url);
+    const marketplaceImage = getMarketplaceImage(url, domain);
+    if (marketplaceImage) {
+      return marketplaceImage;
+    }
     
-    // Gerar thumbnails para sites conhecidos
-    if (domain.includes('mercadolivre.com.br') || domain.includes('mercadolibre.com')) {
-      // Extrair ID do produto para o ML
-      const mlId = url.match(/MLB-(\d+)/);
-      if (mlId) {
-        return `https://http2.mlstatic.com/D_NQ_NP_${mlId[1]}-O.jpg`;
+    // Para URLs de produtos que contenham termos comuns de produtos
+    const isProductUrl = /\/(produto|product|item|p\/|dp\/)/i.test(url);
+    if (isProductUrl) {
+      // Extrair possíveis IDs de produtos
+      const productId = url.match(/\/p\/(\d+)/) || 
+                         url.match(/\/(\d{7,})(?:\/|$)/) || 
+                         url.match(/produto\/(\d+)/) || 
+                         url.match(/\/dp\/([A-Z0-9]{10})/);
+      
+      if (productId && productId[1]) {
+        // Tentar criar uma URL para imagem com base no marketplace
+        const marketplace = detectMarketplace(url);
+        
+        if (marketplace === 'Mercado Livre') {
+          return `https://http2.mlstatic.com/D_NQ_NP_${productId[1]}-O.jpg`;
+        } else if (marketplace === 'Amazon') {
+          return `https://m.media-amazon.com/images/I/71${productId[1].substring(0, 4)}${productId[1].substring(0, 2)}.jpg`;
+        } else if (marketplace === 'Magazine Luiza') {
+          return `https://a-static.mlcdn.com.br/800x560/produto/${productId[1]}.jpg`;
+        } else if (['Americanas', 'Submarino', 'Shoptime'].includes(marketplace)) {
+          return `https://images-americanas.b2w.io/produtos/${productId[1]}/imagens/original.jpg`;
+        } else if (['Casas Bahia', 'Ponto Frio', 'Extra'].includes(marketplace)) {
+          return `https://imgs.casasbahia.com.br/${productId[1]}/1g.jpg`;
+        }
       }
     }
     
-    if (domain.includes('americanas.com.br')) {
-      // Tentar extrair código do produto
-      const prodCode = url.match(/prod\/(\d+)/);
-      if (prodCode) {
-        return `https://images-americanas.b2w.io/produtos/${prodCode[1]}/imagens/original.jpg`;
-      }
-    }
-    
-    // Para outros domínios, poderíamos usar um serviço de thumbnail como o Microlink ou similar
     return null;
   } catch (e) {
+    console.error('Erro ao extrair imagem do link:', e.message);
     return null;
   }
 }
@@ -665,7 +706,7 @@ function formatarResultadosGoogle(resultados, query, pagina = 1, numPorPagina = 
       preco: item.price || '',
       imagem: item.image || '',
       url: item.link || '#',
-      marketplace: 'Google',
+      marketplace: item.marketplace || detectMarketplace(item.link) || 'Google',
       categoria: extrairCategoriaGoogle(item.title, query)
     }));
     
@@ -725,10 +766,270 @@ function constroiQueryGoogle(filtros) {
     query += ` acima de R$${filtros.precoMin}`;
   }
   
-  // Adicionar termos para melhorar resultados de e-commerce
-  query += ' comprar online';
+  // Adicionar termos específicos para priorizar e-commerce reais
+  query += ' comprar online produto';
+  
+  // Adicionar sites específicos de e-commerce para priorizar resultados reais
+  // Usar OR para combinar múltiplos sites e dar prioridade para marketplaces conhecidos
+  query += ' (site:mercadolivre.com.br OR site:amazon.com.br OR site:magazineluiza.com.br OR ' +
+           'site:americanas.com.br OR site:shopee.com.br OR site:casasbahia.com.br OR ' +
+           'site:submarino.com.br OR site:kabum.com.br OR site:netshoes.com.br OR ' +
+           'site:centauro.com.br OR site:extra.com.br OR site:pontofrio.com.br OR ' +
+           'site:shoptime.com.br OR site:fastshop.com.br)';
   
   return query.trim();
+}
+
+/**
+ * Extrai o domínio de uma URL
+ * @param {string} url - URL completa
+ * @returns {string} Domínio extraído
+ */
+function extractDomainFromUrl(url) {
+  if (!url || typeof url !== 'string') return '';
+  
+  try {
+    const urlObj = new URL(url);
+    return urlObj.hostname;
+  } catch (e) {
+    // Se não for uma URL válida, retornar string vazia
+    return '';
+  }
+}
+
+/**
+ * Obtém imagem específica de um marketplace com base na URL
+ * @param {string} url - URL do produto
+ * @param {string} domain - Domínio do marketplace
+ * @returns {string|null} URL da imagem ou null
+ */
+function getMarketplaceImage(url, domain) {
+  if (!url || !domain) return null;
+  
+  try {
+    // Mercado Livre
+    if (domain.includes('mercadolivre.com.br') || domain.includes('mercadolibre.com')) {
+      // Extrair ID do produto para o ML
+      const mlId = url.match(/MLB-(\d+)/) || url.match(/MLB(\d+)/) || url.match(/(\d{5,})(?:\/|$)/);
+      if (mlId && mlId[1]) {
+        return `https://http2.mlstatic.com/D_NQ_NP_${mlId[1]}-O.jpg`;
+      }
+    }
+    
+    // Amazon
+    if (domain.includes('amazon.com.br') || domain.includes('amazon.com')) {
+      // Extrair ASIN do produto
+      const asin = url.match(/\/dp\/([A-Z0-9]{10})/) || url.match(/\/product\/([A-Z0-9]{10})/);
+      if (asin && asin[1]) {
+        return `https://m.media-amazon.com/images/I/71${asin[1].substring(0, 4)}${asin[1].substring(6, 8)}.jpg`;
+      }
+    }
+    
+    // Magazine Luiza
+    if (domain.includes('magazineluiza.com.br')) {
+      // Extrair código do produto
+      const prodCode = url.match(/p\/(\d+)/) || url.match(/\/(\w{8})\//);
+      if (prodCode && prodCode[1]) {
+        return `https://a-static.mlcdn.com.br/800x560/produto/${prodCode[1]}.jpg`;
+      }
+    }
+    
+    // Americanas, Submarino e Shoptime (B2W)
+    if (domain.includes('americanas.com.br') || domain.includes('submarino.com.br') || domain.includes('shoptime.com.br')) {
+      // Tentar extrair código do produto
+      const prodCode = url.match(/produto\/(\d+)/) || url.match(/\/(\d{7,})(?:\/|$)/);
+      if (prodCode && prodCode[1]) {
+        return `https://images-americanas.b2w.io/produtos/${prodCode[1]}/imagens/original.jpg`;
+      }
+    }
+    
+    // Casas Bahia, Extra e Ponto Frio (Via Varejo)
+    if (domain.includes('casasbahia.com.br') || domain.includes('pontofrio.com.br') || domain.includes('extra.com.br')) {
+      const prodCode = url.match(/\/(\d+)\/p/) || url.match(/\/(\d{7,})(?:\/|$)/);
+      if (prodCode && prodCode[1]) {
+        return `https://imgs.casasbahia.com.br/${prodCode[1]}/1g.jpg`;
+      }
+    }
+    
+    // Shopee
+    if (domain.includes('shopee.com.br')) {
+      const shopeeMatch = url.match(/i\.(\d+)\.(\d+)/) || url.match(/\/(\d+\.\d+)/);
+      if (shopeeMatch) {
+        const shopId = shopeeMatch[1] || shopeeMatch[0].split('.')[0];
+        return `https://cf.shopee.com.br/file/${shopId}_tn`;
+      }
+    }
+    
+    // KaBuM
+    if (domain.includes('kabum.com.br')) {
+      const kabumMatch = url.match(/produto\/(\d+)/) || url.match(/\/(\d{6,})(?:\/|$)/);
+      if (kabumMatch && kabumMatch[1]) {
+        return `https://images.kabum.com.br/produtos/fotos/sync_${kabumMatch[1]}/grande/1_${kabumMatch[1]}_1664384789_gg.jpg`;
+      }
+    }
+    
+    // Netshoes
+    if (domain.includes('netshoes.com.br')) {
+      const netshoesMatch = url.match(/produto\/([A-Za-z0-9-]+)/) || url.match(/\/([A-Za-z0-9-]{10,})(?:\/|$)/);
+      if (netshoesMatch && netshoesMatch[1]) {
+        return `https://static.netshoes.com.br/produtos/${netshoesMatch[1]}/06/001-1623-006/001-1623-006_zoom1.jpg`;
+      }
+    }
+    
+    // Centauro
+    if (domain.includes('centauro.com.br')) {
+      const centauroMatch = url.match(/(\d{6,})\.html/) || url.match(/\/(\d{6,})(?:\/|$)/);
+      if (centauroMatch && centauroMatch[1]) {
+        return `https://imgcentauro-a.akamaihd.net/900x900/${centauroMatch[1]}/01/img.jpg`;
+      }
+    }
+    
+    // Fast Shop
+    if (domain.includes('fastshop.com.br')) {
+      const fastshopMatch = url.match(/p\/d\/([A-Za-z0-9_]+)/) || url.match(/\/([A-Za-z0-9_]{10,})(?:\/|$)/);
+      if (fastshopMatch && fastshopMatch[1]) {
+        return `https://images.fastshop.com.br/imagestream/produto/${fastshopMatch[1]}_500x500.jpg`;
+      }
+    }
+
+    return null;
+  } catch (e) {
+    console.error('Erro ao extrair imagem de marketplace:', e.message);
+    return null;
+  }
+}
+  if (domain.includes('americanas.com.br') || domain.includes('submarino.com.br') || domain.includes('shoptime.com.br')) {
+    // Tentar extrair código do produto
+    const prodCode = url.match(/produto\/(\d+)/) || url.match(/\/(\d{7,})(?:\/|$)/);
+    if (prodCode && prodCode[1]) {
+      return `https://images-americanas.b2w.io/produtos/${prodCode[1]}/imagens/original.jpg`;
+    }
+  }
+  
+  // Casas Bahia, Extra e Ponto Frio
+  if (domain.includes('casasbahia.com.br') || domain.includes('pontofrio.com.br') || domain.includes('extra.com.br')) {
+    const prodCode = url.match(/\/(\d+)\/p/) || url.match(/\/(\d{7,})(?:\/|$)/);
+    if (prodCode && prodCode[1]) {
+      return `https://imgs.casasbahia.com.br/${prodCode[1]}/1g.jpg`;
+    }
+  }
+  
+  // Shopee
+  if (domain.includes('shopee.com.br')) {
+    const shopeeMatch = url.match(/i\.(\d+)\.(\d+)/) || url.match(/\/(\d+\.\d+)/);
+    if (shopeeMatch) {
+      return `https://cf.shopee.com.br/file/${shopeeMatch[1]}_tn`;
+    }
+  }
+  
+  return null;
+}
+
+/**
+ * Verifica se a URL é de um marketplace válido
+ * @param {string} url - URL a ser verificada
+ * @returns {boolean} Verdadeiro se for um marketplace válido
+ */
+function isValidMarketplace(url) {
+  if (!url || typeof url !== 'string') return false;
+  
+  const validDomains = [
+    'mercadolivre.com.br', 'mercadolibre.com',
+    'amazon.com.br', 'amazon.com',
+    'magazineluiza.com.br', 'magalu.com',
+    'americanas.com.br', 'americanas.com',
+    'submarino.com.br', 'shoptime.com.br',
+    'casasbahia.com.br', 'pontofrio.com.br', 'extra.com.br',
+    'shopee.com.br', 'aliexpress.com',
+    'kabum.com.br', 'fastshop.com.br',
+    'netshoes.com.br', 'centauro.com.br',
+    'riachuelo.com.br', 'leroy.com.br', 'madeiramadeira.com.br',
+    'havan.com.br', 'bagaggio.com.br', 'dji.com',
+    'sephora.com.br', 'dell.com', 'flexform.com.br'
+  ];
+  
+  try {
+    const domain = extractDomainFromUrl(url);
+    return validDomains.some(validDomain => domain.includes(validDomain));
+  } catch (e) {
+    console.error('Erro ao validar marketplace:', e.message);
+    return false;
+  }
+}
+
+/**
+ * Detecta o marketplace com base na URL do produto
+ * @param {string} url - URL do produto
+ * @returns {string} Nome do marketplace ou "Desconhecido"
+ */
+function detectMarketplace(url) {
+  if (!url || typeof url !== 'string') return 'Desconhecido';
+  
+  try {
+    const domain = extractDomainFromUrl(url);
+    
+    // Principais marketplaces brasileiros
+    if (domain.includes('mercadolivre.com.br') || domain.includes('mercadolibre.com')) {
+      return 'Mercado Livre';
+    } else if (domain.includes('amazon.com.br') || domain.includes('amazon.com')) {
+      return 'Amazon';
+    } else if (domain.includes('magazineluiza.com.br') || domain.includes('magalu.com')) {
+      return 'Magazine Luiza';
+    } else if (domain.includes('americanas.com.br') || domain.includes('americanas.com')) {
+      return 'Americanas';
+    } else if (domain.includes('submarino.com.br')) {
+      return 'Submarino';
+    } else if (domain.includes('shoptime.com.br')) {
+      return 'Shoptime';
+    } else if (domain.includes('casasbahia.com.br')) {
+      return 'Casas Bahia';
+    } else if (domain.includes('pontofrio.com.br')) {
+      return 'Ponto Frio';
+    } else if (domain.includes('extra.com.br')) {
+      return 'Extra';
+    } else if (domain.includes('shopee.com.br')) {
+      return 'Shopee';
+    } else if (domain.includes('aliexpress.com')) {
+      return 'AliExpress';
+    } else if (domain.includes('kabum.com.br')) {
+      return 'KaBuM!';
+    } else if (domain.includes('fastshop.com.br')) {
+      return 'Fast Shop';
+    } else if (domain.includes('netshoes.com.br')) {
+      return 'Netshoes';
+    } else if (domain.includes('centauro.com.br')) {
+      return 'Centauro';
+    } 
+    // Marketplaces adicionais
+    else if (domain.includes('riachuelo.com.br')) {
+      return 'Riachuelo';
+    } else if (domain.includes('leroy.com.br')) {
+      return 'Leroy Merlin';
+    } else if (domain.includes('madeiramadeira.com.br')) {
+      return 'Madeira Madeira';
+    } else if (domain.includes('havan.com.br')) {
+      return 'Havan';
+    } else if (domain.includes('bagaggio.com.br')) {
+      return 'Bagaggio';
+    } else if (domain.includes('dji.com')) {
+      return 'DJI Store';
+    } else if (domain.includes('sephora.com.br')) {
+      return 'Sephora';
+    } else if (domain.includes('dell.com')) {
+      return 'Dell';
+    } else if (domain.includes('flexform.com.br')) {
+      return 'Flexform';
+    } else if (isValidMarketplace(url)) {
+      // Se está na lista de marketplaces válidos mas não tem detecção específica
+      return 'Loja Online';
+    } else {
+      // Domínios desconhecidos
+      return 'Outro';
+    }
+  } catch (e) {
+    console.error('Erro ao detectar marketplace:', e.message);
+    return 'Desconhecido';
+  }
 }
 
 module.exports = {
@@ -742,10 +1043,13 @@ module.exports = {
   getRecommendations,
   formatarResultadosGoogle,
   constroiQueryGoogle,
-  simulateGoogleResults,
   getBestImage,
   extractPrice,
   extractImageFromLink,
   extractImageFromSnippet,
-  extrairCategoriaGoogle
+  extrairCategoriaGoogle,
+  extractDomainFromUrl,
+  getMarketplaceImage,
+  isValidMarketplace,
+  detectMarketplace
 };
