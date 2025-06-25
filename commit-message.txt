@@ -1,4 +1,4 @@
-Implementação completa da busca com Google Search API para produtos reais
+Implementação completa da busca com Google Search API para produtos reais e correção de erros críticos
 
 - Melhoria na função constroiQueryGoogle para priorizar marketplaces
 - Expansão da função isValidMarketplace para mais domínios de e-commerce
@@ -6,4 +6,7 @@ Implementação completa da busca com Google Search API para produtos reais
 - Otimização da extração de imagens reais de produtos com getMarketplaceImage
 - Priorização de resultados de marketplaces conhecidos
 - Adição de script de teste para validar qualidade dos resultados
+- Correção de erro de sintaxe no arquivo googleSearchService.js
+- Adição da configuração trust proxy no Express para resolver erro com X-Forwarded-For
+- Configuração das variáveis de ambiente para Google Search API
 - Documentação completa das melhorias implementadas
