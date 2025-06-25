@@ -37,6 +37,25 @@ if /i "%choice%"=="S" (
 )
 
 echo.
+echo *******************************************
+echo *     CONFIGURACAO NO RENDER             *
+echo *******************************************
+echo.
+echo IMPORTANTE: Configure as variaveis de ambiente no Render:
+echo.
+echo 1. Acesse o Dashboard do Render (https://dashboard.render.com/)
+echo 2. Selecione seu servico "easy-gift-search"
+echo 3. Clique na aba "Environment"
+echo 4. Adicione as seguintes variaveis de ambiente:
+echo.
+echo    USE_GOOGLE_SEARCH_API=true
+echo    GOOGLE_SEARCH_API_KEY=AIzaSyBs07nRYL0fYREou8gwDkS7fruBydwXfvI
+echo    GOOGLE_SEARCH_CX=e17d0e713876e4dca
+echo.
+echo 5. Salve as alteracoes e faca um novo deploy
+echo.
+echo Para mais detalhes, consulte o arquivo RENDER_ENV_CONFIG.md
+echo.
 echo Processo finalizado!
 echo Pressione qualquer tecla para sair...
 pause > nul

@@ -9,7 +9,8 @@ const path = require('path');
 const app = express();
 
 // Configurar trust proxy para funcionar com X-Forwarded-For em ambientes de proxy
-app.set('trust proxy', true);
+// Configuração mais segura de trust proxy
+app.set('trust proxy', '127.0.0.1, ::1');
 const PORT = process.env.PORT || 3000;
 
 // CORS seguro: só permite frontend local e domínio de produção
