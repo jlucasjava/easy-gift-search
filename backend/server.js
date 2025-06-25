@@ -9,7 +9,8 @@ const path = require('path');
 const app = express();
 
 // Configurar trust proxy para funcionar com X-Forwarded-For em ambientes de proxy
-app.set('trust proxy', true);
+// Configuração mais segura de trust proxy para evitar avisos do express-rate-limit
+app.set('trust proxy', '127.0.0.1, ::1');
 
 // Configurar trust proxy para funcionar com X-Forwarded-For em ambientes de proxy
 // Configuração mais segura de trust proxy
