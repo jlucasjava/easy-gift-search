@@ -898,31 +898,6 @@ function getMarketplaceImage(url, domain) {
     return null;
   }
 }
-  if (domain.includes('americanas.com.br') || domain.includes('submarino.com.br') || domain.includes('shoptime.com.br')) {
-    // Tentar extrair código do produto
-    const prodCode = url.match(/produto\/(\d+)/) || url.match(/\/(\d{7,})(?:\/|$)/);
-    if (prodCode && prodCode[1]) {
-      return `https://images-americanas.b2w.io/produtos/${prodCode[1]}/imagens/original.jpg`;
-    }
-  }
-  
-  // Casas Bahia, Extra e Ponto Frio
-  if (domain.includes('casasbahia.com.br') || domain.includes('pontofrio.com.br') || domain.includes('extra.com.br')) {
-    const prodCode = url.match(/\/(\d+)\/p/) || url.match(/\/(\d{7,})(?:\/|$)/);
-    if (prodCode && prodCode[1]) {
-      return `https://imgs.casasbahia.com.br/${prodCode[1]}/1g.jpg`;
-    }
-  }
-  
-  // Shopee
-  if (domain.includes('shopee.com.br')) {
-    const shopeeMatch = url.match(/i\.(\d+)\.(\d+)/) || url.match(/\/(\d+\.\d+)/);
-    if (shopeeMatch) {
-      return `https://cf.shopee.com.br/file/${shopeeMatch[1]}_tn`;
-    }
-  }
-  
-  return null;
 
 /**
  * Verifica se a URL é de um marketplace válido
