@@ -1,0 +1,9 @@
+Implementação completa da busca com Google Search API para produtos reais
+
+- Melhoria na função constroiQueryGoogle para priorizar marketplaces
+- Expansão da função isValidMarketplace para mais domínios de e-commerce
+- Implementação da função detectMarketplace para identificação correta
+- Otimização da extração de imagens reais de produtos com getMarketplaceImage
+- Priorização de resultados de marketplaces conhecidos
+- Adição de script de teste para validar qualidade dos resultados
+- Documentação completa das melhorias implementadas

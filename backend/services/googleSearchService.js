@@ -923,7 +923,6 @@ function getMarketplaceImage(url, domain) {
   }
   
   return null;
-}
 
 /**
  * Verifica se a URL é de um marketplace válido
