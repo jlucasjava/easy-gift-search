@@ -16,7 +16,17 @@ try {
   
   // Verificar se já tem a configuração de trust proxy
   if (serverContent.includes('app.set(\'trust proxy\', true)')) {
-    console.log('✅ Configuração de trust proxy já existe.');
+    console.log('⚠️ Configuração de trust proxy encontrada, mas precisa ser melhorada para evitar avisos de segurança.');
+    
+    // Substituir a configuração existente por uma versão mais segura
+    const updatedContent = serverContent.replace(
+      'app.set(\'trust proxy\', true)',
+      '// Configuração mais segura de trust proxy para evitar avisos do express-rate-limit\napp.set(\'trust proxy\', \'127.0.0.1, ::1\')'
+    );
+    
+    // Salvar o arquivo com as alterações
+    fs.writeFileSync(serverPath, updatedContent, 'utf8');
+    console.log('✅ Configuração de trust proxy atualizada para uma versão mais segura.');
   } else {
     // Procurar onde adicionar a configuração (após criar a aplicação Express)
     const appCreationPattern = /const app = express\(\);/;

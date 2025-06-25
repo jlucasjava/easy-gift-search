@@ -31,6 +31,26 @@ Após a aplicação da configuração, verifique os logs do servidor para confir
 🎉 STATUS GERAL: GOOGLE CUSTOM SEARCH API ATIVA
 ```
 
+## Correção do Erro de Rate Limiting
+
+Os logs mostram um erro relacionado à configuração `trust proxy` do Express:
+
+```
+ValidationError: The Express 'trust proxy' setting is true, which allows anyone to trivially bypass IP-based rate limiting.
+```
+
+Este erro foi corrigido na versão mais recente, substituindo:
+
+```javascript
+app.set('trust proxy', true)
+```
+
+Por uma configuração mais segura:
+
+```javascript
+app.set('trust proxy', '127.0.0.1, ::1')
+```
+
 ## Solução de Problemas
 
 Se após configurar as variáveis, a API ainda não estiver funcionando:
