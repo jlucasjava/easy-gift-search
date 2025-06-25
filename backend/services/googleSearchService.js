@@ -56,7 +56,7 @@ async function searchGoogle(query, num = 10, start = 1, useCache = true) {
       params: {
         key: process.env.GOOGLE_SEARCH_API_KEY,
         cx: process.env.GOOGLE_SEARCH_CX,
-        q: query,
+        q: `${query} comprar produto site:mercadolivre.com.br OR site:amazon.com.br OR site:magazineluiza.com.br OR site:americanas.com.br OR site:shopee.com.br`,
         start: start,
         num: Math.min(num, 10), // Máximo 10 resultados por página
         gl: 'br',           // Geolocalização Brasil
@@ -81,7 +81,7 @@ async function searchGoogle(query, num = 10, start = 1, useCache = true) {
       // Processar e normalizar resultados
       let resultados = response.data.items?.map(item => ({
         title: item.title,
-        link: item.link,
+        link: normalizeProductUrl(item.link),
         snippet: item.snippet,
         image: getBestImage(item),
         price: extractPrice(item.title, item.snippet),
@@ -89,33 +89,45 @@ async function searchGoogle(query, num = 10, start = 1, useCache = true) {
         marketplace: detectMarketplace(item.link)
       })) || [];
       
-      // Filtrar resultados para priorizar marketplaces válidos
-      const validResults = resultados.filter(item => isValidMarketplace(item.link));
+      // Primeiro, filtrar links que parecem ser de produtos específicos
+      const productLinks = resultados.filter(item => isValidProductLink(item.link));
+      console.log(`📦 Links de produtos: ${productLinks.length}/${resultados.length}`);
       
-      // MODIFICADO: Aceitar todos os resultados se não houver resultados válidos suficientes
+      // Depois, filtrar para marketplaces válidos entre os links de produto
+      const validResults = productLinks.filter(item => isValidMarketplace(item.link));
+      console.log(`🛒 Links de produtos em marketplaces válidos: ${validResults.length}/${productLinks.length}`);
+      
+      // MODIFICADO: Aceitar todos os links de produtos se não houver resultados válidos suficientes
       if (validResults.length === 0) {
-        console.log(`⚠️ Nenhum resultado de marketplace válido encontrado, usando todos os resultados`);
+        if (productLinks.length > 0) {
+          console.log(`⚠️ Nenhum resultado de marketplace válido encontrado, usando todos os links de produtos`);
+          resultados = productLinks;
+        } else {
+          console.log(`⚠️ Nenhum link de produto encontrado, usando todos os resultados`);
+        }
+        
         // Armazenar resultados no cache
         if (useCache && resultados.length > 0) {
           cache.set(cacheKey, resultados);
           console.log(`💾 Resultados armazenados em cache para: "${query}"`);
         }
+        
         return resultados;
       }
       
       // Se tivermos resultados válidos suficientes, usá-los exclusivamente
       if (validResults.length >= 3) {
-        console.log(`✅ Encontrados ${validResults.length} resultados de marketplaces válidos`);
+        console.log(`✅ Encontrados ${validResults.length} resultados de produtos em marketplaces válidos`);
         resultados = validResults;
       } else {
-        console.log(`⚠️ Poucos resultados de marketplaces válidos (${validResults.length}). Complementando com outros resultados.`);
-        // Combinar resultados válidos com alguns outros resultados até atingir num
+        console.log(`⚠️ Poucos resultados de produtos em marketplaces válidos (${validResults.length}). Complementando com outros links de produtos.`);
+        // Combinar resultados válidos com links de produtos até atingir num
         // Priorizamos os resultados válidos no início
-        const outrosResultados = resultados
+        const outrosProdutos = productLinks
           .filter(item => !isValidMarketplace(item.link))
           .slice(0, Math.max(num - validResults.length, 0));
         
-        resultados = [...validResults, ...outrosResultados];
+        resultados = [...validResults, ...outrosProdutos];
       }
 
       // Armazenar resultados no cache
@@ -354,25 +366,63 @@ function extractPrice(title, snippet) {
   
   const fullText = `${title || ''} ${snippet || ''}`;
   
-  // Padrão para preços brasileiros (R$ XX,XX ou R$ XX.XX)
-  const pricePattern = /R\$\s?(\d{1,3}(?:\.\d{3})*|\d+)(?:[,\.]\d{2})?/gi;
-  const matches = fullText.match(pricePattern);
+  // Padrão para preços brasileiros com variações mais comuns
+  // Exemplos: R$ 129,90 | R$129.90 | R$ 1.299,00 | R$ 12,50
+  const pricePatterns = [
+    // Padrão com R$ e vírgula como separador decimal
+    /R\$\s?(\d{1,3}(?:\.\d{3})*|\d+),(\d{2})/i,
+    
+    // Padrão com R$ e ponto como separador decimal
+    /R\$\s?(\d{1,3}(?:,\d{3})*|\d+)\.(\d{2})/i,
+    
+    // Padrão de preço sem R$ mas com formatação de moeda (para produtos internacionais)
+    /(?:^|\s)(\d{1,3}(?:\.\d{3})*|\d+),(\d{2})(?:\s|$)/
+  ];
   
-  if (matches && matches.length > 0) {
-    return matches[0].trim();
+  // Testar cada padrão
+  for (const pattern of pricePatterns) {
+    const match = fullText.match(pattern);
+    if (match) {
+      // Se for o primeiro padrão (com R$) ou o segundo (com R$)
+      if (pattern.toString().includes('R')) {
+        // Remover pontos de milhar se houver
+        const valorInteiro = match[1].replace(/\./g, '');
+        // Verificar se o valor está em uma faixa razoável (entre 10 e 10000)
+        const valor = parseInt(valorInteiro, 10);
+        if (valor >= 10 && valor <= 10000) {
+          return `R$ ${valorInteiro},${match[2]}`;
+        }
+      } 
+      // Se for o terceiro padrão (sem R$)
+      else {
+        // Verificar se o valor está em uma faixa razoável (entre 10 e 10000)
+        const valor = parseInt(match[1], 10);
+        if (valor >= 10 && valor <= 10000) {
+          return `R$ ${match[1]},${match[2]}`;
+        }
+      }
+    }
   }
   
-  // Tentar identificar números que podem ser preços (sem o R$)
-  // Apenas para valores que parecem razoáveis para presentes (entre R$20 e R$2000)
-  const numberPattern = /(?:^|\s)(\d{2,4})[,\.](\d{2})(?:\s|$)/g;
-  const numMatches = [...fullText.matchAll(numberPattern)];
+  // Procurar por formatos abreviados comuns em títulos de produtos
+  // Exemplos: "Produto 129,90" ou "Produto por apenas 1.299"
+  const priceInTitlePatterns = [
+    // Formato com vírgula e centavos
+    /(\d{2,4}),(\d{2})(?:\s|$)/,
+    
+    // Formato só com valor inteiro
+    /(?:apenas|por|preço|custa|value)\s+(?:R\$\s*)?(\d{2,4})(?:[^\d,]|$)/i
+  ];
   
-  if (numMatches && numMatches.length > 0) {
-    // Verificar se o valor está em uma faixa razoável (entre 20 e 2000)
-    for (const match of numMatches) {
-      const valorInteiro = parseInt(match[1], 10);
-      if (valorInteiro >= 20 && valorInteiro <= 2000) {
-        return `R$ ${match[1]},${match[2]}`;
+  for (const pattern of priceInTitlePatterns) {
+    const match = fullText.match(pattern);
+    if (match) {
+      if (pattern.toString().includes('apenas')) {
+        // Padrão "apenas X" - não tem centavos
+        return `R$ ${match[1]},00`;
+      } else {
+        // Padrão com centavos
+        return `R$ ${match[1]},${match[2] || '00'}`;
       }
     }
   }
@@ -956,38 +1006,56 @@ function detectMarketplace(url) {
   try {
     const domain = extractDomainFromUrl(url);
     
-    // Principais marketplaces brasileiros
-    if (domain.includes('mercadolivre.com.br') || domain.includes('mercadolibre.com')) {
-      return 'Mercado Livre';
-    } else if (domain.includes('amazon.com.br') || domain.includes('amazon.com')) {
-      return 'Amazon';
-    } else if (domain.includes('magazineluiza.com.br') || domain.includes('magalu.com')) {
-      return 'Magazine Luiza';
-    } else if (domain.includes('americanas.com.br') || domain.includes('americanas.com')) {
-      return 'Americanas';
-    } else if (domain.includes('submarino.com.br')) {
-      return 'Submarino';
-    } else if (domain.includes('shoptime.com.br')) {
-      return 'Shoptime';
-    } else if (domain.includes('casasbahia.com.br')) {
-      return 'Casas Bahia';
-    } else if (domain.includes('pontofrio.com.br')) {
-      return 'Ponto Frio';
-    } else if (domain.includes('extra.com.br')) {
-      return 'Extra';
-    } else if (domain.includes('shopee.com.br')) {
-      return 'Shopee';
-    } else if (domain.includes('aliexpress.com')) {
-      return 'AliExpress';
-    } else if (domain.includes('kabum.com.br')) {
-      return 'KaBuM!';
-    } else if (domain.includes('fastshop.com.br')) {
-      return 'Fast Shop';
-    } else if (domain.includes('netshoes.com.br')) {
-      return 'Netshoes';
-    } else if (domain.includes('centauro.com.br')) {
-      return 'Centauro';
-    } 
+    // Mapeamento de domínios para nomes de marketplaces
+    const marketplaceMap = {
+      'mercadolivre.com.br': 'Mercado Livre',
+      'produto.mercadolivre.com.br': 'Mercado Livre',
+      'mercadolibre.com': 'Mercado Libre',
+      'amazon.com.br': 'Amazon Brasil',
+      'amazon.com': 'Amazon',
+      'magazineluiza.com.br': 'Magazine Luiza',
+      'magalu.com.br': 'Magazine Luiza',
+      'magalu.com': 'Magazine Luiza',
+      'americanas.com.br': 'Americanas',
+      'americanas.com': 'Americanas',
+      'submarino.com.br': 'Submarino',
+      'shoptime.com.br': 'Shoptime',
+      'casasbahia.com.br': 'Casas Bahia',
+      'pontofrio.com.br': 'Ponto',
+      'extra.com.br': 'Extra',
+      'shopee.com.br': 'Shopee',
+      'br.shopee.com': 'Shopee',
+      'aliexpress.com': 'AliExpress',
+      'pt.aliexpress.com': 'AliExpress',
+      'kabum.com.br': 'KaBuM!',
+      'fastshop.com.br': 'Fast Shop',
+      'netshoes.com.br': 'Netshoes',
+      'centauro.com.br': 'Centauro'
+    };
+    
+    // Verificar correspondências exatas ou parciais
+    for (const [marketplaceDomain, marketplaceName] of Object.entries(marketplaceMap)) {
+      if (domain === marketplaceDomain || domain.includes(marketplaceDomain) || marketplaceDomain.includes(domain)) {
+        return marketplaceName;
+      }
+    }
+    
+    // Se não encontrar nos marketplaces conhecidos, tentar extrair o nome do domínio
+    const domainParts = domain.split('.');
+    if (domainParts.length >= 2) {
+      // Usar a parte principal do domínio com primeira letra maiúscula
+      const mainDomain = domainParts[domainParts.length - 2];
+      if (mainDomain && mainDomain.length > 3) {
+        return mainDomain.charAt(0).toUpperCase() + mainDomain.slice(1);
+      }
+    }
+    
+    return 'Desconhecido';
+  } catch (e) {
+    console.error('Erro ao detectar marketplace:', e.message);
+    return 'Desconhecido';
+  }
+}
     // Marketplaces adicionais
     else if (domain.includes('riachuelo.com.br')) {
       return 'Riachuelo';
@@ -1020,6 +1088,145 @@ function detectMarketplace(url) {
   }
 }
 
+/**
+ * Verifica se um link parece ser um link válido para um produto específico
+ * @param {string} url - URL a ser verificada
+ * @returns {boolean} True se o link parece ser de um produto
+ */
+function isValidProductLink(url) {
+  if (!url || typeof url !== 'string') return false;
+  
+  const domain = extractDomainFromUrl(url);
+  
+  // Links inválidos comuns (páginas de busca, home, categorias)
+  const invalidPatterns = [
+    /\/busca\//, /\/search\//, /\/s\?k=/, /\/categoria\//, 
+    /\/departamento\//, /\/loja\//, /\/dept\//,
+    /\/resultado-busca\//
+  ];
+  
+  // Verificar padrões inválidos
+  for (const pattern of invalidPatterns) {
+    if (pattern.test(url)) return false;
+  }
+  
+  // Padrões válidos específicos por marketplace
+  if (domain.includes('mercadolivre.com.br') || domain.includes('mercadolibre.com')) {
+    // Mercado Livre - /p/, /MLB-\d+, produto.mercadolivre
+    return /\/MLB-\d+/.test(url) || /\/p\//.test(url) || url.includes('produto.mercadolivre');
+  }
+  
+  if (domain.includes('amazon.com.br') || domain.includes('amazon.com')) {
+    // Amazon - /dp/, /gp/product/
+    return /\/dp\/[A-Z0-9]{10}/.test(url) || /\/gp\/product\/[A-Z0-9]{10}/.test(url);
+  }
+  
+  if (domain.includes('magazineluiza.com.br') || domain.includes('magalu.com')) {
+    // Magazine Luiza - /p/
+    return /\/p\//.test(url);
+  }
+  
+  if (domain.includes('americanas.com.br') || domain.includes('americanas.com')) {
+    // Americanas - /produto/, /p/
+    return /\/produto\//.test(url) || /\/p\/\d+/.test(url);
+  }
+  
+  if (domain.includes('shopee.com.br')) {
+    // Shopee - /product/
+    return /\/product\/\d+\/\d+/.test(url) || /item\/\d+\/\d+/.test(url);
+  }
+  
+  if (domain.includes('submarino.com.br') || domain.includes('shoptime.com.br')) {
+    // Submarino/Shoptime - /produto/, /p/
+    return /\/produto\//.test(url) || /\/p\/\d+/.test(url);
+  }
+  
+  if (domain.includes('casasbahia.com.br') || domain.includes('pontofrio.com.br') || domain.includes('extra.com.br')) {
+    // Casas Bahia/Ponto Frio/Extra - /p/
+    return /\/p\/\d+/.test(url) || /\/produto\/\d+/.test(url);
+  }
+  
+  if (domain.includes('kabum.com.br')) {
+    // KaBuM - /produto/
+    return /\/produto\/\d+/.test(url);
+  }
+  
+  if (domain.includes('aliexpress.com')) {
+    // AliExpress - /item/
+    return /\/item\/\d+\.html/.test(url);
+  }
+  
+  // Para outros marketplaces, verificar padrões comuns de produto
+  const commonProductPatterns = [
+    /\/p\/\d+/, /\/produto\/\d+/, /\/product\/\d+/, /\/item\/\d+/,
+    /\/pd\/\d+/, /-p\d+$/, /\/prod\d+/, /\/prod\/\d+/
+  ];
+  
+  for (const pattern of commonProductPatterns) {
+    if (pattern.test(url)) return true;
+  }
+  
+  // Verificar se há algum ID de produto na URL (números longos após barra)
+  const productIdPattern = /\/(\d{5,})(?:\/|$|\?)/;
+  if (productIdPattern.test(url)) return true;
+  
+  return false;
+}
+
+/**
+ * Normaliza e limpa uma URL de produto para melhorar a precisão
+ * @param {string} url - URL original
+ * @returns {string} URL normalizada
+ */
+function normalizeProductUrl(url) {
+  if (!url || typeof url !== 'string') return url;
+  
+  try {
+    // Remover parâmetros de rastreamento e UTM
+    url = url.replace(/(\?|&)(utm_[^=]+=[^&]*)/g, '$1');
+    url = url.replace(/(\?|&)(ref=[^&]*)/g, '$1');
+    url = url.replace(/(\?|&)(tag=[^&]*)/g, '$1');
+    url = url.replace(/(\?|&)(linkCode=[^&]*)/g, '$1');
+    url = url.replace(/(\?|&)(camp=[^&]*)/g, '$1');
+    url = url.replace(/(\?|&)(creative=[^&]*)/g, '$1');
+    url = url.replace(/(\?|&)(creativeASIN=[^&]*)/g, '$1');
+    url = url.replace(/(\?|&)(crid=[^&]*)/g, '$1');
+    
+    // Remover âncoras
+    url = url.replace(/#[^#]*$/, '');
+    
+    // Se após remover parâmetros, a URL terminar com ? ou &, removê-los
+    url = url.replace(/[?&]$/, '');
+    
+    // Verificar domínio específico para normalização especial
+    const domain = extractDomainFromUrl(url);
+    
+    if (domain.includes('amazon')) {
+      // Para Amazon, extrair apenas o ASIN (ID do produto)
+      const asinMatch = url.match(/\/dp\/([A-Z0-9]{10})/);
+      if (asinMatch && asinMatch[1]) {
+        // Reconstruir URL limpa com apenas o ASIN
+        const baseDomain = domain.includes('amazon.com.br') ? 'amazon.com.br' : 'amazon.com';
+        return `https://www.${baseDomain}/dp/${asinMatch[1]}`;
+      }
+    }
+    
+    if (domain.includes('mercadolivre')) {
+      // Para Mercado Livre, extrair apenas o MLB (ID do produto)
+      const mlbMatch = url.match(/\/(MLB-\d+)/);
+      if (mlbMatch && mlbMatch[1]) {
+        return `https://www.mercadolivre.com.br/${mlbMatch[1]}`;
+      }
+    }
+    
+    // Para outros domínios, retornar a URL limpa
+    return url;
+  } catch (e) {
+    console.error('Erro ao normalizar URL:', e.message);
+    return url;
+  }
+}
+
 module.exports = {
   searchGoogle,
   buscarPresentesGoogle,
@@ -1039,5 +1246,7 @@ module.exports = {
   extractDomainFromUrl,
   getMarketplaceImage,
   isValidMarketplace,
-  detectMarketplace
+  detectMarketplace,
+  isValidProductLink,
+  normalizeProductUrl
 };
