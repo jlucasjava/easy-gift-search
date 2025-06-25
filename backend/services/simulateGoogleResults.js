@@ -247,6 +247,32 @@ function simulateGoogleResults(query, num = 10, start = 1) {
 
 // Importar funções necessárias do arquivo googleSearchService.js
 // Estas funções são necessárias para a simulação mais realista
-const { extractDomainFromUrl, getMarketplaceImage, detectMarketplace } = require('./googleSearchService');
+// Evitando dependência circular com googleSearchService.js
+// Implementações simplificadas das funções necessárias
+function extractDomainFromUrl(url) {
+  if (!url || typeof url !== 'string') return '';
+  try {
+    const urlObj = new URL(url);
+    return urlObj.hostname;
+  } catch (e) {
+    return '';
+  }
+}
+
+function detectMarketplace(url) {
+  if (!url || typeof url !== 'string') return 'Desconhecido';
+  const domain = extractDomainFromUrl(url);
+  
+  if (domain.includes('mercadolivre.com.br')) return 'Mercado Livre';
+  if (domain.includes('amazon.com.br')) return 'Amazon';
+  if (domain.includes('magazineluiza.com.br')) return 'Magazine Luiza';
+  if (domain.includes('americanas.com.br')) return 'Americanas';
+  if (domain.includes('shopee.com.br')) return 'Shopee';
+  return 'Loja Online';
+}
+
+function getMarketplaceImage(url) {
+  return null; // Simplificado para evitar dependência circular
+}
 
 module.exports = simulateGoogleResults;

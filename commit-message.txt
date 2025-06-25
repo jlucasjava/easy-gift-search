@@ -9,4 +9,5 @@ Implementação completa da busca com Google Search API para produtos reais e co
 - Correção de erro de sintaxe no arquivo googleSearchService.js
 - Adição da configuração trust proxy no Express para resolver erro com X-Forwarded-For
 - Configuração das variáveis de ambiente para Google Search API
+- Correção de ReferenceError: domain is not defined no getMarketplaceImage
 - Documentação completa das melhorias implementadas

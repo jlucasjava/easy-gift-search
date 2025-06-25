@@ -4,6 +4,10 @@ echo *     CORRECAO DE ERRO CRITICAL          *
 echo *******************************************
 echo.
 
+echo 0. Executando script de correção...
+node fix-domain-reference.js
+echo.
+
 echo 1. Adicionando arquivos ao git...
 git add backend/services/googleSearchService.js
 echo.

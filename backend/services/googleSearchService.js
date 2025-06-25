@@ -459,7 +459,7 @@ async function testarAPIsGoogle() {
       configuracao: {
         google_search_api_key_configurada: !!process.env.GOOGLE_SEARCH_API_KEY,
         google_search_cx_configurado: !!process.env.GOOGLE_SEARCH_CX,
-        use_google_search_api: process.env.USE_GOOGLE_SEARCH_API === 'true'
+        use_google_search_api: process.env.USE_GOOGLE_SEARCH_API === 'true' || process.env.USE_GOOGLE_SEARCH_API === true || process.env.USE_GOOGLE_SEARCH_API === '1' || process.env.USE_GOOGLE_SEARCH_API === true || process.env.USE_GOOGLE_SEARCH_API === '1'
       },
       cache: {
         status: 'ativo',
@@ -476,7 +476,7 @@ async function testarAPIsGoogle() {
       configuracao: {
         google_search_api_key_configurada: !!process.env.GOOGLE_SEARCH_API_KEY,
         google_search_cx_configurado: !!process.env.GOOGLE_SEARCH_CX,
-        use_google_search_api: process.env.USE_GOOGLE_SEARCH_API === 'true'
+        use_google_search_api: process.env.USE_GOOGLE_SEARCH_API === 'true' || process.env.USE_GOOGLE_SEARCH_API === true || process.env.USE_GOOGLE_SEARCH_API === '1' || process.env.USE_GOOGLE_SEARCH_API === true || process.env.USE_GOOGLE_SEARCH_API === '1'
       },
       cache: {
         status: 'ativo',
@@ -804,9 +804,14 @@ function extractDomainFromUrl(url) {
  * @returns {string|null} URL da imagem ou null
  */
 function getMarketplaceImage(url, domain) {
-  if (!url || !domain) return null;
+  if (!url) return null;
   
   try {
+    // Se o domínio não foi fornecido, extraí-lo da URL
+    if (!domain) {
+      domain = extractDomainFromUrl(url);
+    }
+    
     // Mercado Livre
     if (domain.includes('mercadolivre.com.br') || domain.includes('mercadolibre.com')) {
       // Extrair ID do produto para o ML
