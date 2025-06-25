@@ -61,11 +61,12 @@ async function searchGoogle(query, num = 10, start = 1, useCache = true) {
         num: Math.min(num, 10), // Máximo 10 resultados por página
         gl: 'br',           // Geolocalização Brasil
         cr: 'countryBR',    // Restringir a resultados do Brasil
-        lr: 'lang_pt|lang_en',      // Páginas em Português ou Inglês
-        safe: 'moderate',     // Filtro SafeSearch moderado
+        lr: 'lang_pt',      // Páginas em Português
+        safe: 'active',     // Filtro SafeSearch ativo
         sort: 'relevance',  // Ordenar por relevância (padrão)
-        filter: '0',        // Sem filtro de duplicados para maximizar resultados
+        filter: '1',        // Filtro de duplicados
         imgSize: 'medium',  // Preferência por imagens médias para thumbnails
+        rights: 'cc_publicdomain cc_attribute cc_sharealike cc_noncommercial', // Preferência por imagens com licenças livres
         fields: 'items(title,link,snippet,pagemap)'  // Limitar campos retornados para economia
       },
       timeout: 10000,
@@ -92,19 +93,8 @@ async function searchGoogle(query, num = 10, start = 1, useCache = true) {
       // Filtrar resultados para priorizar marketplaces válidos
       const validResults = resultados.filter(item => isValidMarketplace(item.link));
       
-      // MODIFICADO: Aceitar todos os resultados se não houver resultados válidos suficientes
-      if (validResults.length === 0) {
-        console.log(`⚠️ Nenhum resultado de marketplace válido encontrado, usando todos os resultados`);
-        // Armazenar resultados no cache
-        if (useCache && resultados.length > 0) {
-          cache.set(cacheKey, resultados);
-          console.log(`💾 Resultados armazenados em cache para: "${query}"`);
-        }
-        return resultados;
-      }
-      
       // Se tivermos resultados válidos suficientes, usá-los exclusivamente
-      if (validResults.length >= 3) {
+      if (validResults.length >= Math.min(5, resultados.length / 2)) {
         console.log(`✅ Encontrados ${validResults.length} resultados de marketplaces válidos`);
         resultados = validResults;
       } else {
@@ -799,12 +789,11 @@ function extractDomainFromUrl(url) {
   if (!url || typeof url !== 'string') return '';
   
   try {
-    // Remover protocolo e parâmetros
-    let domain = url.replace(/^(?:https?:\/\/)?(?:www\.)?/i, '').split('/')[0];
-    return domain.toLowerCase();
-  } catch (error) {
-    console.error('Erro ao extrair domínio da URL:', error);
-    return url;
+    const urlObj = new URL(url);
+    return urlObj.hostname;
+  } catch (e) {
+    // Se não for uma URL válida, retornar string vazia
+    return '';
   }
 }
 
@@ -923,10 +912,7 @@ function getMarketplaceImage(url, domain) {
 function isValidMarketplace(url) {
   if (!url || typeof url !== 'string') return false;
   
-  url = url.toLowerCase();
-  
-  // Lista simplificada de domínios de marketplaces
-  const marketplaces = [
+  const validDomains = [
     'mercadolivre.com.br', 'mercadolibre.com',
     'amazon.com.br', 'amazon.com',
     'magazineluiza.com.br', 'magalu.com',
@@ -941,8 +927,13 @@ function isValidMarketplace(url) {
     'sephora.com.br', 'dell.com', 'flexform.com.br'
   ];
   
-  // Verificar se a URL contém qualquer um dos marketplaces
-  return marketplaces.some(marketplace => url.includes(marketplace));
+  try {
+    const domain = extractDomainFromUrl(url);
+    return validDomains.some(validDomain => domain.includes(validDomain));
+  } catch (e) {
+    console.error('Erro ao validar marketplace:', e.message);
+    return false;
+  }
 }
 
 /**
