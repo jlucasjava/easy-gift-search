@@ -110,6 +110,27 @@ async function searchGoogle(query, num = 10, start = 1, useCache = true, filtros
       // Calcular a relevância de cada resultado com base em vários fatores
       resultados = calcularRelevancia(resultados, query, filtros);
       
+      // MELHORIA: Verificar se os resultados têm menções a preços que não correspondem ao filtro
+      // Isso ajuda a filtrar produtos muito caros quando buscamos produtos baratos
+      if (filtros.precoMax) {
+        const precoMaxFloat = parseFloat(filtros.precoMax);
+        resultados = resultados.filter(item => {
+          // Se o título contém preço mencionado que excede em mais de 50% o preço máximo, filtrar
+          if (item.title) {
+            const precoPattern = /R\$\s?(\d{1,3}(?:\.\d{3})*|\d+),(\d{2})/i;
+            const match = item.title.match(precoPattern);
+            if (match) {
+              const valorMencionado = parseFloat(match[1].replace(/\./g, ''));
+              if (valorMencionado > precoMaxFloat * 1.5) {
+                console.log(`❌ Removendo produto com preço explícito no título acima do filtro: ${item.title}`);
+                return false;
+              }
+            }
+          }
+          return true;
+        });
+      }
+      
       // Primeiro, filtrar links que parecem ser de produtos específicos
       const productLinks = resultados.filter(item => isValidProductLink(item.link));
       console.log(`📦 Links de produtos: ${productLinks.length}/${resultados.length}`);
@@ -574,6 +595,9 @@ function filterByPriceRange(resultados, filtros) {
   const precoMin = filtros.precoMin ? parseFloat(filtros.precoMin) : 0;
   const precoMax = filtros.precoMax ? parseFloat(filtros.precoMax) : Infinity;
   
+  // ALTERAÇÃO CRUCIAL: Agora vamos filtrar com mais rigor
+  // Se temos um precoMax definido, não permitiremos produtos sem preço ou com preços muito maiores
+  
   // Primeiro, garantir que todos os resultados tenham chance de ter preço extraído
   const resultadosComPreco = resultados.map(item => {
     if (!item.price && (item.title || item.snippet)) {
@@ -627,6 +651,13 @@ function filterByPriceRange(resultados, filtros) {
       return;
     }
     
+    // CORREÇÃO CRUCIAL: Verificação ESTRITA da faixa de preço
+    // Se o preço for mais de 20% acima do máximo, rejeitamos completamente
+    if (precoMax && precoNum > precoMax * 1.2) {
+      console.log(`❌ Rejeitando produto muito acima do preço máximo: "${item.title?.substring(0, 50)}..." - ${item.price} (${precoNum})`);
+      return; // Não incluir em nenhuma lista
+    }
+    
     // Verificar se o preço está dentro da faixa
     const dentroDoRange = precoNum >= precoMin && precoNum <= precoMax;
     
@@ -663,40 +694,46 @@ function filterByPriceRange(resultados, filtros) {
   
   console.log(`✅ ${dentroDaFaixa.length} de ${resultados.length} produtos dentro da faixa de preço`);
   
+  // MUDANÇA IMPORTANTE: Se temos produtos na faixa de preço, não vamos adicionar produtos sem preço
+  // a menos que sejam poucos resultados
+  if (dentroDaFaixa.length >= 3) {
+    console.log(`✅ Encontrados ${dentroDaFaixa.length} produtos dentro da faixa de preço. Não incluindo produtos sem preço.`);
+    return dentroDaFaixa;
+  }
+  
   // Se temos poucos resultados na faixa, podemos complementar com produtos de marketplaces prioritários sem preço
-  if (dentroDaFaixa.length < 3) {
-    console.log(`⚠️ Poucos produtos na faixa (${dentroDaFaixa.length}). Buscando complementos...`);
+  console.log(`⚠️ Poucos produtos na faixa (${dentroDaFaixa.length}). Buscando complementos...`);
+  
+  // Primeiro, tentar os que estão ligeiramente fora da faixa (até 10% de diferença)
+  if (foraDaFaixa.length > 0 && (precoMax > 0 || precoMin > 0)) {
+    // Reduzimos a tolerância para ser mais rigoroso
+    const tolerancia = Math.max(precoMin * 0.1, precoMax * 0.1, 20); // 10% ou no mínimo 20 reais
     
-    // Primeiro, tentar os que estão ligeiramente fora da faixa (até 20% de diferença)
-    if (foraDaFaixa.length > 0 && (precoMax > 0 || precoMin > 0)) {
-      const tolerancia = Math.max(precoMin * 0.2, precoMax * 0.2, 50); // 20% ou no mínimo 50 reais
-      
-      const proximosDaFaixa = foraDaFaixa
-        .filter(item => item.priceDistance && item.priceDistance <= tolerancia)
-        .sort((a, b) => (a.priceDistance || 0) - (b.priceDistance || 0))
-        .slice(0, 5 - dentroDaFaixa.length);
-      
-      if (proximosDaFaixa.length > 0) {
-        console.log(`✅ Adicionando ${proximosDaFaixa.length} produtos próximos da faixa de preço (tolerância: R$ ${tolerancia.toFixed(2)})`);
-        dentroDaFaixa.push(...proximosDaFaixa);
-      }
+    const proximosDaFaixa = foraDaFaixa
+      .filter(item => item.priceDistance && item.priceDistance <= tolerancia)
+      .sort((a, b) => (a.priceDistance || 0) - (b.priceDistance || 0))
+      .slice(0, 5 - dentroDaFaixa.length);
+    
+    if (proximosDaFaixa.length > 0) {
+      console.log(`✅ Adicionando ${proximosDaFaixa.length} produtos próximos da faixa de preço (tolerância: R$ ${tolerancia.toFixed(2)})`);
+      dentroDaFaixa.push(...proximosDaFaixa);
     }
+  }
+  
+  // Se ainda precisamos de mais, incluir produtos de marketplaces confiáveis sem preço
+  if (dentroDaFaixa.length < 3) {
+    const marketplacesPrioritarios = ['Amazon Brasil', 'Mercado Livre', 'Magazine Luiza', 'Americanas'];
     
-    // Se ainda precisamos de mais, incluir produtos de marketplaces confiáveis sem preço
-    if (dentroDaFaixa.length < 3) {
-      const marketplacesPrioritarios = ['Amazon Brasil', 'Mercado Livre', 'Magazine Luiza', 'Americanas'];
-      
-      const produtosConfiaveis = semPreco
-        .filter(item => {
-          const marketplace = item.marketplace || detectMarketplace(item.link);
-          return marketplacesPrioritarios.includes(marketplace) && isValidProductLink(item.link);
-        })
-        .slice(0, 5 - dentroDaFaixa.length);
-      
-      if (produtosConfiaveis.length > 0) {
-        console.log(`✅ Adicionando ${produtosConfiaveis.length} produtos de marketplaces confiáveis sem preço detectado`);
-        dentroDaFaixa.push(...produtosConfiaveis);
-      }
+    const produtosConfiaveis = semPreco
+      .filter(item => {
+        const marketplace = item.marketplace || detectMarketplace(item.link);
+        return marketplacesPrioritarios.includes(marketplace) && isValidProductLink(item.link);
+      })
+      .slice(0, 5 - dentroDaFaixa.length);
+    
+    if (produtosConfiaveis.length > 0) {
+      console.log(`✅ Adicionando ${produtosConfiaveis.length} produtos de marketplaces confiáveis sem preço detectado`);
+      dentroDaFaixa.push(...produtosConfiaveis);
     }
   }
   
@@ -1076,8 +1113,10 @@ function formatarResultadosGoogle(resultados, query, pagina = 1, numPorPagina = 
 function constroiQueryGoogle(filtros) {
   let query = '';
 
-  // Usar categoria ou termo de busca diretamente
-  if (filtros.query) {
+  // MUDANÇA IMPORTANTE: Incluir preço diretamente na query para resultados mais precisos
+  if (filtros.precoMax && filtros.precoMax <= 200) {
+    query = `presentes baratos até ${filtros.precoMax} reais`; // Query específica para preços baixos
+  } else if (filtros.query) {
     query = filtros.query;
   } else if (filtros.categoria) {
     query = filtros.categoria;
@@ -1094,13 +1133,18 @@ function constroiQueryGoogle(filtros) {
     query += ` ${filtros.idade} anos`;
   }
   
-  // Adicionar filtro de preço se disponível
+  // REFORÇAR o filtro de preço na query
   if (filtros.precoMax) {
-    query += ` até R$${filtros.precoMax}`;
+    query += ` até R$${filtros.precoMax} exato`;
   }
   
   if (filtros.precoMin) {
     query += ` acima de R$${filtros.precoMin}`;
+  }
+  
+  // Adicionar termos para produtos mais acessíveis quando preço máximo for baixo
+  if (filtros.precoMax && filtros.precoMax <= 150) {
+    query += ' barato econômico promoção';
   }
   
   // Adicionar termos específicos para priorizar e-commerce reais
@@ -1361,6 +1405,30 @@ function isValidProductLink(url) {
   // Normalizar a URL para evitar problemas com variações
   const urlLower = url.toLowerCase();
   const domain = extractDomainFromUrl(url);
+  
+  // NOVA VERIFICAÇÃO: Rejeitar URLs que contenham menções a produtos caros
+  // quando provavelmente a faixa de preço seria incompatível
+  if (urlLower.includes('galaxy s22') || urlLower.includes('galaxy s23') || 
+      urlLower.includes('iphone 14') || urlLower.includes('iphone 15') ||
+      urlLower.includes('macbook') || urlLower.includes('dell xps') ||
+      urlLower.includes('ultra') && urlLower.includes('smartphone')) {
+    console.log(`❌ Rejeitando link que provavelmente contém produto caro: ${url}`);
+    return false;
+  }
+  
+  // REFORÇO: Verificar com mais rigor se é uma página que existe
+  try {
+    // Verificar domínios conhecidos que frequentemente geram links quebrados
+    if ((domain.includes('americanas') || domain.includes('shoptime') || 
+         domain.includes('submarino')) && urlLower.includes('/produto/') && 
+        !urlLower.match(/\/produto\/\d{7,}/)) {
+      console.log(`❌ Rejeitando URL potencialmente inválida: ${url}`);
+      return false;
+    }
+  } catch (error) {
+    console.error(`Erro ao validar URL: ${error.message}`);
+    return false;
+  }
   
   // Verificar se a URL tem tamanho razoável
   if (url.length > 500) return false; // URLs muito longas geralmente não são de produtos
