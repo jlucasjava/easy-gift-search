@@ -818,6 +818,17 @@ function getCacheStats() {
 }
 
 /**
+ * Limpa o cache de buscas do Google
+ * @returns {number} Número de itens removidos
+ */
+function clearCache() {
+  const keysCount = cache.keys().length;
+  cache.flushAll();
+  console.log(`🧹 Cache do Google Search limpo: ${keysCount} itens removidos`);
+  return keysCount;
+}
+
+/**
  * Função auxiliar para expor o cache para o controller de monitoramento
  * @returns {Object} Cache do serviço Google
  */
