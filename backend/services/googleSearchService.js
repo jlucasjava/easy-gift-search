@@ -78,15 +78,25 @@ async function searchGoogle(query, num = 10, start = 1, useCache = true, filtros
       let precoQuery = '';
       
       if (filtros.precoMin && filtros.precoMax) {
-        precoQuery = ` preço entre R$${filtros.precoMin} e R$${filtros.precoMax}`;
+        precoQuery = ` preço entre R$${filtros.precoMin} e R$${filtros.precoMax} EXATO`;
       } else if (filtros.precoMax) {
-        precoQuery = ` preço até R$${filtros.precoMax}`;
+        // Para preços máximos baixos, forçar a mensagem "barato"
+        if (filtros.precoMax <= 150) {
+          precoQuery = ` preço baixo barato até R$${filtros.precoMax} EXATO`;
+        } else {
+          precoQuery = ` preço até R$${filtros.precoMax} EXATO`;
+        }
       } else if (filtros.precoMin) {
         precoQuery = ` preço acima de R$${filtros.precoMin}`;
       }
       
+      // Adicionar exclusão explícita de produtos caros para filtros de preço baixo
+      if (filtros.precoMax && filtros.precoMax < 200) {
+        precoQuery += " -iphone -galaxy -smartphone -ultra -macbook -laptop -notebook";
+      }
+      
       requestConfig.params.q += precoQuery;
-      console.log(`� Adicionando filtro de preço à query: "${precoQuery}"`);
+      console.log(`🔍 Adicionando filtro de preço à query: "${precoQuery}"`);
     }
 
     console.log(`�🔍 Buscando no Google Custom Search API: "${query}"`);
@@ -142,7 +152,50 @@ async function searchGoogle(query, num = 10, start = 1, useCache = true, filtros
       // Filtrar por faixa de preço (se aplicável)
       let filteredResults = validResults;
       if (filtros.precoMin || filtros.precoMax) {
-        filteredResults = filterByPriceRange(validResults, filtros);
+        // CRÍTICO: Verificação rigorosa antes de filtrar
+        // Primeiro remover DIRETAMENTE qualquer produto com preço acima do limite
+        if (filtros.precoMax) {
+          const precoMaxNum = parseFloat(filtros.precoMax);
+          // Filtrar resultados que já têm preço detectado
+          filteredResults = validResults.filter(item => {
+            if (item.price) {
+              const precoNum = extrairValorNumerico(item.price);
+              if (precoNum && precoNum > precoMaxNum) {
+                console.log(`❌ [PRÉ-FILTRO] Rejeitando produto acima do preço máximo: "${item.title?.substring(0, 50)}..." - ${item.price}`);
+                return false;
+              }
+            }
+            
+            // CRÍTICO: Verificar títulos de produtos específicos que sabemos que são caros
+            if (item.title) {
+              const titulo = item.title.toLowerCase();
+              // Lista de produtos notoriamente caros
+              const produtosCaros = [
+                {termo: 'galaxy s22', minPreco: 3500},
+                {termo: 'galaxy s23', minPreco: 4000},
+                {termo: 'galaxy s21', minPreco: 2500},
+                {termo: 'iphone 1', minPreco: 3000},
+                {termo: 'macbook', minPreco: 5000},
+                {termo: 'notebook', minPreco: 2000},
+                {termo: 'ultra', minPreco: 1000},
+                {termo: 'smartwatch', minPreco: 200}
+              ];
+              
+              // Se encontrar algum produto caro no título e o preço máximo for baixo, rejeitar
+              for (const prod of produtosCaros) {
+                if (titulo.includes(prod.termo) && precoMaxNum < prod.minPreco) {
+                  console.log(`❌ [PRÉ-FILTRO] Rejeitando produto notoriamente caro: "${item.title}" (${prod.termo} geralmente custa mais de R$${prod.minPreco})`);
+                  return false;
+                }
+              }
+            }
+            
+            return true;
+          });
+        }
+        
+        // Agora aplicar o filtro de preço normal nos resultados pré-filtrados
+        filteredResults = filterByPriceRange(filteredResults, filtros);
         console.log(`💰 Produtos filtrados por preço: ${filteredResults.length}/${validResults.length}`);
       }
       
@@ -652,14 +705,23 @@ function filterByPriceRange(resultados, filtros) {
     }
     
     // CORREÇÃO CRUCIAL: Verificação ESTRITA da faixa de preço
-    // Se o preço for mais de 20% acima do máximo, rejeitamos completamente
-    if (precoMax && precoNum > precoMax * 1.2) {
-      console.log(`❌ Rejeitando produto muito acima do preço máximo: "${item.title?.substring(0, 50)}..." - ${item.price} (${precoNum})`);
+    // Para preços máximos baixos, somos MUITO mais rigorosos
+    const toleranciaPercentual = precoMax <= 150 ? 0.05 : 0.2; // 5% para preços baixos, 20% para altos
+    
+    // Se o preço for acima do máximo + tolerância, rejeitar completamente
+    if (precoMax && precoNum > precoMax * (1 + toleranciaPercentual)) {
+      console.log(`❌ [FILTRO-PRECO] Rejeitando produto acima do preço máximo: "${item.title?.substring(0, 50)}..." - ${item.price} (${precoNum}), limite R$${precoMax}`);
       return; // Não incluir em nenhuma lista
     }
     
     // Verificar se o preço está dentro da faixa
     const dentroDoRange = precoNum >= precoMin && precoNum <= precoMax;
+    
+    // NOVA VERIFICAÇÃO: verificar se o preço parece coerente com o produto
+    if (!validarPrecoCoerente(item.title, precoNum, precoMax)) {
+      console.log(`❌ [FILTRO-PRECO] Rejeitando produto com preço incoerente: "${item.title?.substring(0, 50)}..." - ${item.price}`);
+      return; // Não incluir em nenhuma lista
+    }
     
     if (dentroDoRange) {
       console.log(`✅ Produto dentro da faixa de preço: "${item.title?.substring(0, 50)}..." - ${item.price} (${precoNum})`);
@@ -1114,9 +1176,34 @@ function constroiQueryGoogle(filtros) {
   let query = '';
 
   // MUDANÇA IMPORTANTE: Incluir preço diretamente na query para resultados mais precisos
-  if (filtros.precoMax && filtros.precoMax <= 200) {
-    query = `presentes baratos até ${filtros.precoMax} reais`; // Query específica para preços baixos
-  } else if (filtros.query) {
+  if (filtros.precoMax && filtros.precoMax <= 150) {
+    // Para preços baixos, modificamos COMPLETAMENTE a query para priorizar itens baratos
+    query = `presentes baratos econômicos até ${filtros.precoMax} reais`; 
+    
+    // Se tiver gênero ou idade, incluir
+    if (filtros.genero) {
+      query += ` para ${filtros.genero}`;
+    }
+    
+    if (filtros.idade) {
+      query += ` ${filtros.idade} anos`;
+    }
+    
+    // Adicionar termos de exclusão para produtos caros
+    query += " -iphone -galaxy -smartphone -ultra -macbook -laptop -notebook";
+    
+    // Adicionar termos específicos para priorizar e-commerce reais com produtos baratos
+    query += ' comprar online produto barato promoção (';
+    
+    // Lojas que geralmente têm produtos mais baratos
+    query += 'site:shopee.com.br OR site:mercadolivre.com.br OR ';
+    query += 'site:magazineluiza.com.br OR site:americanas.com.br)';
+    
+    return query.trim();
+  } 
+  
+  // Para queries normais (preços não tão baixos)
+  if (filtros.query) {
     query = filtros.query;
   } else if (filtros.categoria) {
     query = filtros.categoria;
@@ -1140,11 +1227,6 @@ function constroiQueryGoogle(filtros) {
   
   if (filtros.precoMin) {
     query += ` acima de R$${filtros.precoMin}`;
-  }
-  
-  // Adicionar termos para produtos mais acessíveis quando preço máximo for baixo
-  if (filtros.precoMax && filtros.precoMax <= 150) {
-    query += ' barato econômico promoção';
   }
   
   // Adicionar termos específicos para priorizar e-commerce reais
@@ -1787,6 +1869,69 @@ function extrairValorNumerico(textoPreco) {
   return isNaN(valorNumerico) ? null : valorNumerico;
 }
 
+/**
+ * Função especial para verificar se um produto pode ter o preço indicado
+ * @param {string} titulo - Título do produto
+ * @param {number} precoDetectado - Preço detectado do produto
+ * @param {number} precoMaximo - Preço máximo do filtro
+ * @returns {boolean} - Verdadeiro se o preço parece válido para este produto
+ */
+function validarPrecoCoerente(titulo, precoDetectado, precoMaximo) {
+  if (!titulo || !precoDetectado) return true;
+  
+  const tituloLower = titulo.toLowerCase();
+  
+  // Lista de produtos com preços mínimos conhecidos
+  const produtosReferencia = [
+    {termos: ['galaxy s22', 'galaxy s23', 'galaxy s21'], precoMinimo: 2500},
+    {termos: ['iphone 13', 'iphone 14', 'iphone 15', 'iphone 12'], precoMinimo: 3000},
+    {termos: ['macbook', 'mac book'], precoMinimo: 5000},
+    {termos: ['notebook dell', 'notebook samsung', 'notebook acer'], precoMinimo: 2000},
+    {termos: ['notebook gamer'], precoMinimo: 3500},
+    {termos: ['laptop'], precoMinimo: 1800},
+    {termos: ['ipad'], precoMinimo: 2500},
+    {termos: ['tablet samsung'], precoMinimo: 800},
+    {termos: ['playstation 5', 'ps5'], precoMinimo: 3000},
+    {termos: ['xbox series x'], precoMinimo: 3000},
+    {termos: ['tv 65', 'smart tv 65'], precoMinimo: 2500},
+    {termos: ['tv 55', 'smart tv 55'], precoMinimo: 1800},
+    {termos: ['tv 50', 'smart tv 50'], precoMinimo: 1500},
+    {termos: ['geladeira', 'refrigerador'], precoMinimo: 1800},
+    {termos: ['máquina de lavar'], precoMinimo: 1200},
+    {termos: ['ar condicionado'], precoMinimo: 1000},
+    {termos: ['smartphone', 'celular'], precoMinimo: 600},
+    {termos: ['smartwatch', 'relógio inteligente'], precoMinimo: 200},
+    {termos: ['fone de ouvido', 'headphone'], precoMinimo: 80},
+    {termos: ['tênis nike', 'tênis adidas'], precoMinimo: 200},
+    {termos: ['perfume importado'], precoMinimo: 150}
+  ];
+  
+  // Verificar se o título contém algum produto de referência
+  for (const produto of produtosReferencia) {
+    for (const termo of produto.termos) {
+      if (tituloLower.includes(termo)) {
+        // Se o preço detectado for muito menor que o preço mínimo conhecido,
+        // provavelmente é um erro de detecção ou um anúncio enganoso
+        if (precoDetectado < produto.precoMinimo * 0.5) {  // 50% do preço mínimo
+          console.log(`⚠️ [VALIDAÇÃO] Preço inconsistente: ${titulo} - R$${precoDetectado} (deveria ser no mínimo R$${produto.precoMinimo})`);
+          return false;
+        }
+        
+        // Se estamos filtrando por um preço máximo muito menor que o preço mínimo conhecido,
+        // este produto provavelmente não é adequado para este filtro
+        if (precoMaximo && precoMaximo < produto.precoMinimo * 0.7) {  // 70% do preço mínimo
+          console.log(`❌ [VALIDAÇÃO] Produto inadequado para faixa de preço: ${titulo} - Preço típico R$${produto.precoMinimo}, filtro máximo R$${precoMaximo}`);
+          return false;
+        }
+        
+        break;
+      }
+    }
+  }
+  
+  return true;
+}
+
 module.exports = {
   searchGoogle,
   buscarPresentesGoogle,
@@ -1809,5 +1954,6 @@ module.exports = {
   detectMarketplace,
   isValidProductLink,
   normalizeProductUrl,
-  filterByPriceRange
+  filterByPriceRange,
+  validarPrecoCoerente
 };
