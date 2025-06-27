@@ -55,6 +55,8 @@ const productRoutes = require('../backend/routes/products');
 const recommendRoutes = require('../backend/routes/recommend');
 const newApisRoutes = require('../backend/routes/newApis');
 const customSearchRoutes = require('../backend/routes/customSearch');
+const customSearchV2Routes = require('../backend/routes/customSearchV2');
+const hybridSearchRoutes = require('../backend/routes/hybridSearch');
 const testRoutes = require('../backend/routes/test');
 
 // Use routes
@@ -62,6 +64,8 @@ app.use('/products', productRoutes);
 app.use('/recommend', recommendRoutes);
 app.use('/newapis', newApisRoutes);
 app.use('/custom-search', customSearchRoutes);
+app.use('/custom-search-v2', customSearchV2Routes);
+app.use('/hybrid-search', hybridSearchRoutes);
 app.use('/test', testRoutes);
 
 // Health check endpoint
