@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teste do Motor de Busca Personalizado</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input, button {
+            padding: 10px;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #3498db;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            border: none;
+            margin-top: 10px;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        .results {
+            margin-top: 30px;
+            border-top: 1px solid #eee;
+            padding-top: 20px;
+        }
+        .product-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 20px;
+        }
+        .product-card {
+            border: 1px solid #eee;
+            border-radius: 8px;
+            overflow: hidden;
+            transition: transform 0.2s;
+        }
+        .product-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        .product-image {
+            height: 150px;
+            background-color: #f9f9f9;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+        .product-image img {
+            max-width: 100%;
+            max-height: 140px;
+            object-fit: contain;
+        }
+        .product-info {
+            padding: 15px;
+        }
+        .product-title {
+            font-weight: bold;
+            margin-bottom: 10px;
+            height: 40px;
+            overflow: hidden;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+        }
+        .product-price {
+            color: #e74c3c;
+            font-weight: bold;
+            font-size: 18px;
+        }
+        .product-marketplace {
+            margin-top: 5px;
+            color: #7f8c8d;
+            font-size: 12px;
+        }
+        .tabs {
+            display: flex;
+            margin-bottom: 20px;
+        }
+        .tab {
+            padding: 10px 20px;
+            background-color: #eee;
+            cursor: pointer;
+            border-radius: 4px 4px 0 0;
+            margin-right: 5px;
+        }
+        .tab.active {
+            background-color: #3498db;
+            color: white;
+        }
+        .spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border-left-color: #3498db;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .error {
+            color: #e74c3c;
+            padding: 10px;
+            background-color: #fadbd8;
+            border-radius: 4px;
+            margin-top: 10px;
+        }
+        .summary {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+        .summary p {
+            margin: 5px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Teste do Motor de Busca Personalizado</h1>
+        
+        <div class="tabs">
+            <div class="tab active" data-tab="custom">Motor Personalizado</div>
+            <div class="tab" data-tab="compare">Comparativo</div>
+        </div>
+        
+        <div class="form-group">
+            <label for="query">O que você está procurando?</label>
+            <input type="text" id="query" placeholder="Ex: fone de ouvido, smartphone, cafeteira...">
+        </div>
+        
+        <div class="form-group">
+            <label for="preco-max">Preço Máximo (R$)</label>
+            <input type="number" id="preco-max" placeholder="Ex: 150">
+        </div>
+        
+        <button id="search-btn">Buscar Produtos</button>
+        
+        <div id="loading" class="spinner" style="display: none;"></div>
+        <div id="error" class="error" style="display: none;"></div>
+        
+        <div id="results" class="results" style="display: none;">
+            <div id="summary" class="summary"></div>
+            <div id="product-grid" class="product-grid"></div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const searchBtn = document.getElementById('search-btn');
+            const queryInput = document.getElementById('query');
+            const precoMaxInput = document.getElementById('preco-max');
+            const resultsDiv = document.getElementById('results');
+            const productGrid = document.getElementById('product-grid');
+            const summaryDiv = document.getElementById('summary');
+            const loadingSpinner = document.getElementById('loading');
+            const errorDiv = document.getElementById('error');
+            const tabs = document.querySelectorAll('.tab');
+            
+            let activeTab = 'custom';
+            
+            // Eventos de abas
+            tabs.forEach(tab => {
+                tab.addEventListener('click', function() {
+                    tabs.forEach(t => t.classList.remove('active'));
+                    this.classList.add('active');
+                    activeTab = this.dataset.tab;
+                });
+            });
+            
+            // Evento de busca
+            searchBtn.addEventListener('click', async function() {
+                const query = queryInput.value.trim();
+                const precoMax = precoMaxInput.value.trim();
+                
+                if (!query) {
+                    showError('Por favor, digite o que você está procurando.');
+                    return;
+                }
+                
+                // Esconder resultados anteriores e mostrar loading
+                resultsDiv.style.display = 'none';
+                errorDiv.style.display = 'none';
+                loadingSpinner.style.display = 'block';
+                
+                try {
+                    let url;
+                    
+                    if (activeTab === 'custom') {
+                        // Motor personalizado
+                        url = `/custom-search/buscar?query=${encodeURIComponent(query)}`;
+                        if (precoMax) {
+                            url += `&precoMax=${precoMax}`;
+                        }
+                    } else {
+                        // Comparativo
+                        url = `/custom-search/comparar?query=${encodeURIComponent(query)}`;
+                        if (precoMax) {
+                            url += `&precoMax=${precoMax}`;
+                        }
+                    }
+                    
+                    const response = await fetch(url);
+                    
+                    if (!response.ok) {
+                        throw new Error(`Erro na requisição: ${response.status}`);
+                    }
+                    
+                    const data = await response.json();
+                    
+                    // Processar e exibir resultados
+                    displayResults(data, activeTab);
+                    
+                } catch (error) {
+                    showError(`Erro ao buscar produtos: ${error.message}`);
+                } finally {
+                    loadingSpinner.style.display = 'none';
+                }
+            });
+            
+            // Função para exibir resultados
+            function displayResults(data, tab) {
+                productGrid.innerHTML = '';
+                summaryDiv.innerHTML = '';
+                
+                if (tab === 'custom') {
+                    // Exibir sumário
+                    summaryDiv.innerHTML = `
+                        <p><strong>Termo de busca:</strong> ${data.query}</p>
+                        <p><strong>Total de resultados:</strong> ${data.totalResultados}</p>
+                        <p><strong>Fonte:</strong> ${data.fonte}</p>
+                    `;
+                    
+                    // Exibir produtos
+                    if (data.produtos && data.produtos.length > 0) {
+                        data.produtos.forEach(product => {
+                            productGrid.appendChild(createProductCard(product));
+                        });
+                    } else {
+                        productGrid.innerHTML = '<p>Nenhum produto encontrado.</p>';
+                    }
+                } else {
+                    // Exibir sumário comparativo
+                    summaryDiv.innerHTML = `
+                        <p><strong>Termo de busca:</strong> ${data.termo_busca}</p>
+                        <p><strong>Google Search:</strong> ${data.google.total} produtos</p>
+                        <p><strong>Motor Personalizado:</strong> ${data.personalizado.total} produtos</p>
+                    `;
+                    
+                    // Exibir produtos do Google
+                    if (data.google.produtos && data.google.produtos.length > 0) {
+                        data.google.produtos.forEach(product => {
+                            const card = createProductCard(product);
+                            card.querySelector('.product-marketplace').textContent = 'Google Search API';
+                            productGrid.appendChild(card);
+                        });
+                    }
+                    
+                    // Exibir produtos do motor personalizado
+                    if (data.personalizado.produtos && data.personalizado.produtos.length > 0) {
+                        data.personalizado.produtos.forEach(product => {
+                            productGrid.appendChild(createProductCard(product));
+                        });
+                    }
+                    
+                    if (productGrid.children.length === 0) {
+                        productGrid.innerHTML = '<p>Nenhum produto encontrado em ambos os motores.</p>';
+                    }
+                }
+                
+                // Mostrar resultados
+                resultsDiv.style.display = 'block';
+            }
+            
+            // Função para criar card de produto
+            function createProductCard(product) {
+                const card = document.createElement('div');
+                card.className = 'product-card';
+                
+                const imgSrc = product.image || 'https://via.placeholder.com/150?text=Sem+Imagem';
+                
+                card.innerHTML = `
+                    <a href="${product.link}" target="_blank">
+                        <div class="product-image">
+                            <img src="${imgSrc}" alt="${product.title}" onerror="this.src='https://via.placeholder.com/150?text=Erro+Imagem'">
+                        </div>
+                        <div class="product-info">
+                            <div class="product-title">${product.title}</div>
+                            <div class="product-price">${product.price || 'Preço não disponível'}</div>
+                            <div class="product-marketplace">${product.marketplace || 'Marketplace desconhecido'}</div>
+                        </div>
+                    </a>
+                `;
+                
+                return card;
+            }
+            
+            // Função para exibir erro
+            function showError(message) {
+                errorDiv.textContent = message;
+                errorDiv.style.display = 'block';
+                loadingSpinner.style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html>
