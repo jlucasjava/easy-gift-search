@@ -54,12 +54,14 @@ try {
 const productRoutes = require('../backend/routes/products');
 const recommendRoutes = require('../backend/routes/recommend');
 const newApisRoutes = require('../backend/routes/newApis');
+const customSearchRoutes = require('../backend/routes/customSearch');
 const testRoutes = require('../backend/routes/test');
 
 // Use routes
 app.use('/products', productRoutes);
 app.use('/recommend', recommendRoutes);
 app.use('/newapis', newApisRoutes);
+app.use('/custom-search', customSearchRoutes);
 app.use('/test', testRoutes);
 
 // Health check endpoint
