@@ -1,13 +1,11 @@
-Correção da Google Search API e ajustes para ambiente de produção
+Melhoria na lógica de filtro de busca e extração de preços
 
-- Melhoria na função constroiQueryGoogle para priorizar marketplaces
-- Expansão da função isValidMarketplace para mais domínios de e-commerce
-- Implementação da função detectMarketplace para identificação correta
-- Otimização da extração de imagens reais de produtos com getMarketplaceImage
-- Priorização de resultados de marketplaces conhecidos
-- Adição de script de teste para validar qualidade dos resultados
-- Correção de erro de sintaxe no arquivo googleSearchService.js
-- Correção da configuração trust proxy no Express para resolver aviso de segurança
+- Implementada extração de preço mais robusta com melhor detecção de formatos
+- Refinada a função de filtro por faixa de preço com estratégias alternativas
+- Aprimorada a validação de links de produto para maior precisão
+- Adicionadas verificações específicas para cada marketplace
+- Criada documentação detalhada das melhorias (MELHORIAS_IMPLEMENTADAS.md)
+- Realizados testes de validação das alterações
 - Configuração das variáveis de ambiente para Google Search API
 - Correção de ReferenceError: domain is not defined no getMarketplaceImage
 - Adição de instruções específicas para configuração no Render

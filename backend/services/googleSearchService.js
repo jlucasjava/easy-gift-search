@@ -103,8 +103,12 @@ async function searchGoogle(query, num = 10, start = 1, useCache = true, filtros
         image: getBestImage(item),
         price: extractPrice(item.title, item.snippet),
         source: 'Google Custom Search',
-        marketplace: detectMarketplace(item.link)
+        marketplace: detectMarketplace(item.link),
+        relevance: 10 // Pontuação inicial de relevância
       })) || [];
+      
+      // Calcular a relevância de cada resultado com base em vários fatores
+      resultados = calcularRelevancia(resultados, query, filtros);
       
       // Primeiro, filtrar links que parecem ser de produtos específicos
       const productLinks = resultados.filter(item => isValidProductLink(item.link));
@@ -118,85 +122,70 @@ async function searchGoogle(query, num = 10, start = 1, useCache = true, filtros
       let filteredResults = validResults;
       if (filtros.precoMin || filtros.precoMax) {
         filteredResults = filterByPriceRange(validResults, filtros);
+        console.log(`💰 Produtos filtrados por preço: ${filteredResults.length}/${validResults.length}`);
       }
       
-      // MODIFICADO: Aceitar todos os links de produtos se não houver resultados válidos suficientes
-      if (filteredResults.length === 0) {
-        if (productLinks.length > 0) {
-          console.log(`⚠️ Nenhum resultado válido dentro dos filtros, usando todos os links de produtos`);
-          
-          // Tentar filtrar por preço nos links de produtos
-          if (filtros.precoMin || filtros.precoMax) {
-            const pricedProducts = filterByPriceRange(productLinks, filtros);
-            if (pricedProducts.length > 0) {
-              console.log(`✅ Encontrados ${pricedProducts.length} links de produtos dentro da faixa de preço`);
-              resultados = pricedProducts;
-            } else {
-              resultados = productLinks;
-            }
-          } else {
-            resultados = productLinks;
-          }
-        } else {
-          console.log(`⚠️ Nenhum link de produto encontrado, usando todos os resultados`);
-          
-          // Como último recurso, tentar filtrar por preço em todos os resultados
-          if (filtros.precoMin || filtros.precoMax) {
-            const pricedResults = filterByPriceRange(resultados, filtros);
-            if (pricedResults.length > 0) {
-              console.log(`✅ Encontrados ${pricedResults.length} resultados dentro da faixa de preço`);
-              resultados = pricedResults;
-            }
-          }
-        }
+      // Se não tivermos resultados suficientes após filtrar por preço
+      if (filteredResults.length < 3) {
+        console.log(`⚠️ Poucos resultados válidos (${filteredResults.length}) após filtrar por preço. Buscando mais opções...`);
         
-        // Armazenar resultados no cache
-        if (useCache && resultados.length > 0) {
-          cache.set(cacheKey, resultados);
-          console.log(`💾 Resultados armazenados em cache para: "${query}"`);
-        }
-        
-        return resultados;
-      }
-      
-      // Se tivermos resultados válidos suficientes, usá-los exclusivamente
-      if (filteredResults.length >= 3) {
-        console.log(`✅ Encontrados ${filteredResults.length} resultados de produtos válidos dentro dos filtros`);
-        resultados = filteredResults;
-      } else {
-        console.log(`⚠️ Poucos resultados válidos dentro dos filtros (${filteredResults.length}). Complementando.`);
-        
-        // Usar resultados filtrados + outros links de produtos dentro da faixa de preço
-        let outrosProdutos = [];
-        
+        // ESTRATÉGIA 1: Buscar em todos os links de produtos com preço válido
         if (filtros.precoMin || filtros.precoMax) {
-          // Filtrar outros produtos por preço
-          const outrosFiltrados = filterByPriceRange(
-            productLinks.filter(item => !isValidMarketplace(item.link)),
+          const maisResultados = filterByPriceRange(
+            productLinks.filter(item => !filteredResults.includes(item)), // Links que ainda não estão nos resultados
             filtros
           );
           
-          outrosProdutos = outrosFiltrados.slice(0, Math.max(num - filteredResults.length, 0));
-          console.log(`✅ Complementando com ${outrosProdutos.length} outros produtos dentro da faixa de preço`);
-        } else {
-          // Sem filtro de preço
-          outrosProdutos = productLinks
-            .filter(item => !isValidMarketplace(item.link))
-            .slice(0, Math.max(num - filteredResults.length, 0));
-          
-          console.log(`✅ Complementando com ${outrosProdutos.length} outros produtos`);
+          if (maisResultados.length > 0) {
+            console.log(`✅ Encontrados mais ${maisResultados.length} produtos dentro da faixa de preço`);
+            filteredResults = [...filteredResults, ...maisResultados];
+          }
         }
         
-        resultados = [...filteredResults, ...outrosProdutos];
+        // ESTRATÉGIA 2: Se ainda não tivermos resultados suficientes, incluir produtos de marketplaces válidos
+        // que não têm preço detectado, mas apenas se estamos procurando produtos baratos (sem preço mínimo)
+        if (filteredResults.length < 3 && (!filtros.precoMin || filtros.precoMin <= 0)) {
+          const produtosSemPreco = validResults.filter(item => 
+            !item.price && !filteredResults.includes(item)
+          ).slice(0, 5); // Limitar a 5 resultados adicionais
+          
+          if (produtosSemPreco.length > 0) {
+            console.log(`✅ Incluindo ${produtosSemPreco.length} produtos sem preço detectado de marketplaces válidos`);
+            filteredResults = [...filteredResults, ...produtosSemPreco];
+          }
+        }
+        
+        // ESTRATÉGIA 3: Se ainda não tivermos resultados suficientes e temos um preço mínimo,
+        // incluir produtos de marketplaces premium que não têm preço detectado
+        if (filteredResults.length < 3 && filtros.precoMin > 0) {
+          const premiumMarketplaces = ['Amazon Brasil', 'Fast Shop', 'Magazine Luiza'];
+          const produtosPremium = validResults.filter(item => 
+            !item.price && 
+            !filteredResults.includes(item) && 
+            premiumMarketplaces.includes(detectMarketplace(item.link))
+          ).slice(0, 5); // Limitar a 5 resultados adicionais
+          
+          if (produtosPremium.length > 0) {
+            console.log(`✅ Incluindo ${produtosPremium.length} produtos sem preço detectado de marketplaces premium`);
+            filteredResults = [...filteredResults, ...produtosPremium];
+          }
+        }
       }
-
+      
+      // Ordenar os resultados finais por relevância
+      filteredResults.sort((a, b) => b.relevance - a.relevance);
+      
+      // Limitar ao número de resultados solicitados
+      const resultadosFinais = filteredResults.slice(0, Math.max(num, 5));
+      console.log(`✅ Retornando ${resultadosFinais.length} resultados finais ordenados por relevância`);
+      
       // Armazenar resultados no cache
-      if (useCache && resultados.length > 0) {
-        cache.set(cacheKey, resultados);
+      if (useCache && resultadosFinais.length > 0) {
+        cache.set(cacheKey, resultadosFinais);
         console.log(`💾 Resultados armazenados em cache para: "${query}"`);
       }
-
-      return resultados;
+      
+      return resultadosFinais;
     } else {
       throw new Error('Resposta vazia da API');
     }
@@ -426,113 +415,136 @@ function extractPrice(title, snippet) {
   
   const fullText = `${title || ''} ${snippet || ''}`;
   
-  // Verificar se o texto contém algum indicador de preço antes de prosseguir
+  // Verificação preliminar para descartar textos sem preço rapidamente
   const precoIndicators = [
     'R$', 'reais', 'por', 'preço', 'custa', 'valor', 'compre',
     'de ', 'a partir de', 'custando', 'apenas'
   ];
   
-  const hasPrecoIndicator = precoIndicators.some(indicator => 
-    fullText.toLowerCase().includes(indicator.toLowerCase())
-  );
+  let hasIndicator = false;
+  for (const indicator of precoIndicators) {
+    if (fullText.toLowerCase().includes(indicator.toLowerCase())) {
+      hasIndicator = true;
+      break;
+    }
+  }
   
-  // Se não encontrar nenhum indicador, retornar null para evitar falsos positivos
-  if (!hasPrecoIndicator) return null;
+  if (!hasIndicator) return null;
   
-  // Padrões para preços brasileiros com variações mais comuns
-  const pricePatterns = [
-    // Padrão com R$ e vírgula como separador decimal (mais comum no Brasil)
-    /R\$\s?(\d{1,3}(?:\.\d{3})*|\d+),(\d{2})/i,
-    
-    // Padrão com R$ e ponto como separador decimal (menos comum no Brasil)
-    /R\$\s?(\d{1,3}(?:,\d{3})*|\d+)\.(\d{2})/i,
-    
-    // Padrão de preço sem R$ mas com formatação de moeda brasileira
-    /(?:^|\s|por|apenas)(\d{1,3}(?:\.\d{3})*|\d+),(\d{2})(?:\s|$|reais)/,
-    
-    // Padrão com "por" ou "de" antes do preço (comum em ofertas)
-    /(?:por|de)\s+R\$\s?(\d{1,3}(?:\.\d{3})*|\d+),(\d{2})/i,
-    
-    // Padrão com "apenas" antes do preço
-    /(?:apenas|somente)\s+R\$\s?(\d{1,3}(?:\.\d{3})*|\d+),(\d{2})/i,
-    
-    // Padrão com valor entre parênteses (comum em títulos)
+  // Estratégia 1: Extrair preços formatados com R$ e formato BR (mais confiável)
+  // Formato: R$ 1.299,99 ou R$1299,99
+  const formatoCompleto = /R\$\s?(\d{1,3}(?:\.\d{3})*|\d+),(\d{2})(?!\d)/i;
+  const match = fullText.match(formatoCompleto);
+  if (match) {
+    const valorInteiro = match[1].replace(/\./g, '');
+    const valor = parseInt(valorInteiro, 10);
+    // Validação de faixa razoável para produtos
+    if (valor >= 5 && valor <= 50000) {
+      return `R$ ${valorInteiro},${match[2]}`;
+    }
+  }
+  
+  // Estratégia 2: Buscar outros formatos comuns de preço
+  const outrosFormatos = [
+    // Preço entre parênteses com R$
     /\(R\$\s?(\d{1,3}(?:\.\d{3})*|\d+),(\d{2})\)/i,
     
-    // Padrão para valores sem centavos explícitos
-    /R\$\s?(\d{1,3}(?:\.\d{3})*|\d+)(?!\d)/i,
+    // Preço após "por" ou "apenas"
+    /(?:por|apenas)\s+R\$\s?(\d{1,3}(?:\.\d{3})*|\d+),(\d{2})/i,
     
-    // Padrão para valores só com número e vírgula centavos (sem R$)
-    /(\d{2,4}),(\d{2})(?!\d)/
+    // Preço com ponto como separador decimal (incomum no Brasil)
+    /R\$\s?(\d{1,3}(?:,\d{3})*|\d+)\.(\d{2})(?!\d)/i,
+    
+    // Preço sem "R$" mas com formato de valor (XX,XX)
+    /(?:^|\s|por|apenas|:)\s*(\d{1,3}(?:\.\d{3})*|\d+),(\d{2})(?!\d)/
   ];
   
-  // Testar cada padrão
-  for (const pattern of pricePatterns) {
-    const match = fullText.match(pattern);
-    if (match) {
-      // Se o padrão incluir reais e centavos
-      if (match.length >= 3) {
-        // Remover pontos de milhar se houver
-        const valorInteiro = match[1].replace(/\./g, '').replace(/,/g, '');
-        // Verificar se o valor está em uma faixa razoável para produtos
-        const valor = parseInt(valorInteiro, 10);
-        if (valor >= 5 && valor <= 20000) {
-          // Se o padrão incluir centavos (match[2])
-          if (match[2] && match[2].length === 2) {
-            return `R$ ${valorInteiro},${match[2]}`;
-          } else {
-            return `R$ ${valorInteiro},00`;
-          }
-        }
-      } 
-      // Se for padrão sem centavos explícitos
-      else if (match.length >= 2) {
-        const valorInteiro = match[1].replace(/\./g, '').replace(/,/g, '');
-        const valor = parseInt(valorInteiro, 10);
-        if (valor >= 5 && valor <= 20000) {
-          return `R$ ${valorInteiro},00`;
-        }
+  for (const formato of outrosFormatos) {
+    const match = fullText.match(formato);
+    if (match && match.length >= 3) {
+      const valorInteiro = match[1].replace(/\./g, '').replace(/,/g, '');
+      const valor = parseInt(valorInteiro, 10);
+      if (valor >= 5 && valor <= 50000) {
+        return `R$ ${valorInteiro},${match[2]}`;
       }
     }
   }
   
-  // Busca avançada por números que possam ser preços
-  // Procurar por números que aparecem após certas palavras-chave
-  const priceKeywordPatterns = [
-    /(?:preço|valor|custa|por)(?:\s+de|\s+é)?(?:\s+R\$)?\s+(\d{1,4})/i,
-    /(?:apenas|somente)\s+(\d{1,4})/i,
+  // Estratégia 3: Preços simplificados (sem centavos)
+  const precoSimples = [
+    // R$ seguido de número
+    /R\$\s?(\d{1,4})(?!\d|,|\.)/, 
+    
+    // Número após "custa" ou "preço"
+    /(?:custa|preço|valor)\s+(?:de\s+)?(?:R\$\s?)?(\d{1,4})(?!\d|,|\.)/i,
+    
+    // Número seguido de "reais"
     /(\d{1,4})\s+reais/i
   ];
   
-  for (const pattern of priceKeywordPatterns) {
-    const match = fullText.match(pattern);
+  for (const formato of precoSimples) {
+    const match = fullText.match(formato);
     if (match && match[1]) {
       const valor = parseInt(match[1], 10);
-      if (valor >= 5 && valor <= 20000) {
+      if (valor >= 5 && valor <= 50000) {
         return `R$ ${match[1]},00`;
       }
     }
   }
   
-  // Procurar por padrões de preço parciais no título
-  // (alguns sites abreviam o preço no título)
+  // Estratégia 4: Extrair preços de títulos de marketplaces específicos
   if (title) {
-    // Buscar por padrões como "149,90", "1.299,90" no título
-    const titlePriceMatch = title.match(/(\d{1,3}(?:\.\d{3})*|\d+),(\d{2})(?!\d)/);
-    if (titlePriceMatch) {
-      const valorInteiro = titlePriceMatch[1].replace(/\./g, '');
-      const valor = parseInt(valorInteiro, 10);
-      if (valor >= 5 && valor <= 20000) {
-        return `R$ ${valorInteiro},${titlePriceMatch[2]}`;
+    // Formatos como "Produto XYZ - R$ 99,90" ou "Produto XYZ | R$ 99,90"
+    const specialFormats = [
+      // Preço após hífen
+      /-\s*R\$\s?(\d{1,3}(?:\.\d{3})*|\d+),(\d{2})(?!\d)/i,
+      
+      // Preço após pipe
+      /\|\s*R\$\s?(\d{1,3}(?:\.\d{3})*|\d+),(\d{2})(?!\d)/i,
+      
+      // Preço no final do título com R$
+      /[\s-]\s*R\$\s?(\d{1,3}(?:\.\d{3})*|\d+),(\d{2})(?!\d)$/i,
+      
+      // Preço após ">"
+      />\s*R\$\s?(\d{1,3}(?:\.\d{3})*|\d+),(\d{2})(?!\d)/i
+    ];
+    
+    for (const formato of specialFormats) {
+      const match = title.match(formato);
+      if (match && match.length >= 3) {
+        const valorInteiro = match[1].replace(/\./g, '');
+        const valor = parseInt(valorInteiro, 10);
+        if (valor >= 5 && valor <= 50000) {
+          return `R$ ${valorInteiro},${match[2]}`;
+        }
       }
     }
     
-    // Buscar por preços no formato "R$ 149"
-    const simplePriceMatch = title.match(/R\$\s?(\d{2,4})(?!\d)/i);
-    if (simplePriceMatch) {
-      const valor = parseInt(simplePriceMatch[1], 10);
-      if (valor >= 5 && valor <= 20000) {
-        return `R$ ${simplePriceMatch[1]},00`;
+    // Buscar qualquer número que pareça um preço no título
+    const titleMatch = title.match(/(?:^|\s|R\$\s?)(\d{2,4})(?:,\d{2})?(?!\d|,|\.)/);
+    if (titleMatch && titleMatch[1]) {
+      const valor = parseInt(titleMatch[1], 10);
+      if (valor >= 10 && valor <= 15000) {
+        // Verificar se tem centavos
+        if (title.includes(titleMatch[1] + ',')) {
+          const centavosMatch = title.match(new RegExp(titleMatch[1] + ',(\\d{2})'));
+          if (centavosMatch && centavosMatch[1]) {
+            return `R$ ${titleMatch[1]},${centavosMatch[1]}`;
+          }
+        }
+        return `R$ ${titleMatch[1]},00`;
+      }
+    }
+  }
+  
+  // Estratégia 5: Verificar valores numéricos em snippet para marketplaces específicos
+  if (snippet && (snippet.includes('mercadolivre') || snippet.includes('amazon') || snippet.includes('magalu'))) {
+    // Buscar valores que pareçam preços para marketplaces confiáveis
+    const snippetMatch = snippet.match(/(\d{2,4}),(\d{2})(?!\d)/);
+    if (snippetMatch && snippetMatch.length >= 3) {
+      const valor = parseInt(snippetMatch[1], 10);
+      if (valor >= 10 && valor <= 15000) {
+        return `R$ ${snippetMatch[1]},${snippetMatch[2]}`;
       }
     }
   }
@@ -562,58 +574,57 @@ function filterByPriceRange(resultados, filtros) {
   const precoMin = filtros.precoMin ? parseFloat(filtros.precoMin) : 0;
   const precoMax = filtros.precoMax ? parseFloat(filtros.precoMax) : Infinity;
   
-  // Função auxiliar para extrair valor numérico de preço formatado
-  const extrairValorNumerico = (textoPreco) => {
-    if (!textoPreco) return null;
-    
-    // Remover símbolo de moeda e espaços
-    const semMoeda = textoPreco.replace(/R\$\s*/g, '');
-    
-    // Tratar diferentes formatos (vírgula ou ponto como separador decimal)
-    let valorNumerico;
-    
-    // Formato brasileiro: 1.299,99 ou 1299,99
-    if (semMoeda.includes(',')) {
-      // Primeiro remove pontos de milhar, depois substitui vírgula por ponto
-      valorNumerico = parseFloat(semMoeda.replace(/\./g, '').replace(',', '.'));
-    } 
-    // Formato internacional: 1,299.99 ou 1299.99
-    else if (semMoeda.includes('.')) {
-      // Remove vírgulas de milhar e mantém ponto como decimal
-      valorNumerico = parseFloat(semMoeda.replace(/,/g, ''));
-    } 
-    // Formato sem decimais: 1299
-    else {
-      valorNumerico = parseFloat(semMoeda);
-    }
-    
-    return isNaN(valorNumerico) ? null : valorNumerico;
-  };
-  
-  // Para itens sem preço, tentar extrair o preço novamente do título/snippet
+  // Primeiro, garantir que todos os resultados tenham chance de ter preço extraído
   const resultadosComPreco = resultados.map(item => {
     if (!item.price && (item.title || item.snippet)) {
       item.price = extractPrice(item.title, item.snippet);
+      
+      // Se ainda não tiver preço, mas for de um marketplace prioritário, tentar extrair com mais força
+      if (!item.price && isValidProductLink(item.link)) {
+        const marketplace = detectMarketplace(item.link);
+        const isPriority = ['Amazon Brasil', 'Mercado Livre', 'Magazine Luiza', 'Americanas'].includes(marketplace);
+        
+        if (isPriority && item.title) {
+          // Buscar números isolados no título que possam ser preços
+          const numMatches = item.title.match(/\b(\d{2,4})\b/g);
+          if (numMatches && numMatches.length > 0) {
+            // Pegar o número mais provável (entre 50 e 5000)
+            const possiblePrices = numMatches
+              .map(n => parseInt(n, 10))
+              .filter(n => n >= 50 && n <= 5000);
+            
+            if (possiblePrices.length > 0) {
+              // Ordenar e pegar o do meio (mais provável)
+              possiblePrices.sort((a, b) => a - b);
+              const midPrice = possiblePrices[Math.floor(possiblePrices.length / 2)];
+              item.price = `R$ ${midPrice},00`;
+              item.priceProbability = 'medium'; // Marcar como preço de confiança média
+            }
+          }
+        }
+      }
     }
     return item;
   });
   
-  // Filtrar produtos que tenham preço e estejam na faixa desejada
-  const filtrados = resultadosComPreco.filter(item => {
-    // Se o item não tiver preço, não podemos filtrar com certeza
+  // Separar os resultados em três grupos: dentro da faixa, sem preço, e fora da faixa
+  const dentroDaFaixa = [];
+  const semPreco = [];
+  const foraDaFaixa = [];
+  
+  resultadosComPreco.forEach(item => {
+    // Se não tem preço, separar para possível uso posterior
     if (!item.price) {
-      console.log(`⚠️ Produto sem preço detectado: "${item.title?.substring(0, 50)}..."`);
-      // Se não estamos filtrando preço mínimo, podemos incluir itens sem preço
-      // Isso é útil quando buscamos itens baratos (precoMax definido)
-      return precoMin === 0;
+      semPreco.push(item);
+      return;
     }
     
     const precoNum = extrairValorNumerico(item.price);
     
-    // Se não conseguimos extrair um valor numérico, não filtramos com certeza
+    // Se não conseguimos extrair um valor numérico válido
     if (precoNum === null) {
-      console.log(`⚠️ Não foi possível extrair valor numérico do preço: ${item.price}`);
-      return precoMin === 0;
+      semPreco.push(item);
+      return;
     }
     
     // Verificar se o preço está dentro da faixa
@@ -621,58 +632,78 @@ function filterByPriceRange(resultados, filtros) {
     
     if (dentroDoRange) {
       console.log(`✅ Produto dentro da faixa de preço: "${item.title?.substring(0, 50)}..." - ${item.price} (${precoNum})`);
+      
+      // Aumentar a relevância para produtos dentro da faixa de preço
+      item.relevance = (item.relevance || 10) + 5;
+      
+      // Aumentar ainda mais a relevância para produtos no meio da faixa
+      if (filtros.precoMin && filtros.precoMax) {
+        const middlePrice = (precoMin + precoMax) / 2;
+        const distanceFromMiddle = Math.abs(precoNum - middlePrice) / (precoMax - precoMin);
+        item.relevance += 5 * (1 - distanceFromMiddle);
+      }
+      
+      // Adicionar indicador de correspondência de preço
+      item.priceMatch = true;
+      
+      dentroDaFaixa.push(item);
     } else {
       console.log(`❌ Produto fora da faixa de preço: "${item.title?.substring(0, 50)}..." - ${item.price} (${precoNum})`);
+      
+      // Adicionar o quanto está fora da faixa para possível ordenação
+      if (precoNum < precoMin) {
+        item.priceDistance = precoMin - precoNum;
+      } else {
+        item.priceDistance = precoNum - precoMax;
+      }
+      
+      foraDaFaixa.push(item);
     }
-    
-    return dentroDoRange;
   });
   
-  console.log(`✅ ${filtrados.length} de ${resultados.length} produtos dentro da faixa de preço`);
+  console.log(`✅ ${dentroDaFaixa.length} de ${resultados.length} produtos dentro da faixa de preço`);
   
-  // Se após filtrar não sobrar nenhum produto, podemos tentar uma estratégia mais flexível
-  if (filtrados.length === 0) {
-    console.log(`⚠️ Nenhum produto dentro da faixa de preço. Tentando estratégia mais flexível.`);
+  // Se temos poucos resultados na faixa, podemos complementar com produtos de marketplaces prioritários sem preço
+  if (dentroDaFaixa.length < 3) {
+    console.log(`⚠️ Poucos produtos na faixa (${dentroDaFaixa.length}). Buscando complementos...`);
     
-    // Se estamos buscando produtos baratos (precoMax definido), retornar produtos sem preço
-    if (precoMax < Infinity && precoMin === 0) {
-      const semPreco = resultadosComPreco.filter(item => !item.price);
-      if (semPreco.length > 0) {
-        console.log(`✅ Retornando ${semPreco.length} produtos sem preço detectado (podem ser baratos).`);
-        return semPreco;
-      }
-    }
-    
-    // Se estamos buscando produtos caros (precoMin definido), tentar produtos de marketplace premium
-    if (precoMin > 0 && precoMax === Infinity) {
-      const premiumMarketplaces = ['Amazon Brasil', 'Fast Shop', 'Ponto', 'Magazine Luiza'];
-      const produtosPremium = resultadosComPreco.filter(item => 
-        !item.price && premiumMarketplaces.includes(detectMarketplace(item.link))
-      );
+    // Primeiro, tentar os que estão ligeiramente fora da faixa (até 20% de diferença)
+    if (foraDaFaixa.length > 0 && (precoMax > 0 || precoMin > 0)) {
+      const tolerancia = Math.max(precoMin * 0.2, precoMax * 0.2, 50); // 20% ou no mínimo 50 reais
       
-      if (produtosPremium.length > 0) {
-        console.log(`✅ Retornando ${produtosPremium.length} produtos de marketplaces premium (podem ser caros).`);
-        return produtosPremium;
+      const proximosDaFaixa = foraDaFaixa
+        .filter(item => item.priceDistance && item.priceDistance <= tolerancia)
+        .sort((a, b) => (a.priceDistance || 0) - (b.priceDistance || 0))
+        .slice(0, 5 - dentroDaFaixa.length);
+      
+      if (proximosDaFaixa.length > 0) {
+        console.log(`✅ Adicionando ${proximosDaFaixa.length} produtos próximos da faixa de preço (tolerância: R$ ${tolerancia.toFixed(2)})`);
+        dentroDaFaixa.push(...proximosDaFaixa);
       }
     }
     
-    // Como último recurso, retornar todos
-    console.log(`⚠️ Nenhuma estratégia alternativa funcionou. Retornando todos os resultados.`);
-    return resultados;
+    // Se ainda precisamos de mais, incluir produtos de marketplaces confiáveis sem preço
+    if (dentroDaFaixa.length < 3) {
+      const marketplacesPrioritarios = ['Amazon Brasil', 'Mercado Livre', 'Magazine Luiza', 'Americanas'];
+      
+      const produtosConfiaveis = semPreco
+        .filter(item => {
+          const marketplace = item.marketplace || detectMarketplace(item.link);
+          return marketplacesPrioritarios.includes(marketplace) && isValidProductLink(item.link);
+        })
+        .slice(0, 5 - dentroDaFaixa.length);
+      
+      if (produtosConfiaveis.length > 0) {
+        console.log(`✅ Adicionando ${produtosConfiaveis.length} produtos de marketplaces confiáveis sem preço detectado`);
+        dentroDaFaixa.push(...produtosConfiaveis);
+      }
+    }
   }
   
-  return filtrados;
-}
-
-/**
- * Limpa o cache armazenado
- * @returns {number} Número de itens removidos do cache
- */
-function clearCache() {
-  const keysCount = cache.keys().length;
-  cache.flushAll();
-  console.log(`🧹 Cache limpo: ${keysCount} itens removidos`);
-  return keysCount;
+  // Ordenar por relevância
+  dentroDaFaixa.sort((a, b) => (b.relevance || 0) - (a.relevance || 0));
+  
+  return dentroDaFaixa;
 }
 
 /**
@@ -1331,7 +1362,16 @@ function isValidProductLink(url) {
   const urlLower = url.toLowerCase();
   const domain = extractDomainFromUrl(url);
   
-  // Lista ampliada de padrões de links que NÃO são de produtos específicos
+  // Verificar se a URL tem tamanho razoável
+  if (url.length > 500) return false; // URLs muito longas geralmente não são de produtos
+  
+  // Verificar se tem parâmetros de rastreamento em excesso
+  const queryParams = url.split('?')[1];
+  if (queryParams && queryParams.split('&').length > 5) {
+    return false; // Muitos parâmetros indicam páginas de busca ou rastreamento
+  }
+  
+  // Lista ampliada e mais restritiva de padrões que NÃO são de produtos específicos
   const invalidPatterns = [
     // Páginas de busca
     /\/busca\//, /\/search\//, /\/s\?k=/, /\/pesquisa\//, 
@@ -1363,20 +1403,28 @@ function isValidProductLink(url) {
     
     // Outros padrões que não são de produtos
     /\/blog\//, /\/noticias\//, /\/news\//, /\/artigos\//,
-    /\/evento\//, /\/events\//, /\/lancamento\//, /\/release\//
+    /\/evento\//, /\/events\//, /\/lancamento\//, /\/release\//,
+    
+    // Padrões adicionais para capturar mais casos
+    /\/whatsapp/, /\/facebook/, /\/instagram/, /\/twitter/,
+    /\/youtube/, /\/tiktok/, /\/pinterest/, /\/linkedin/,
+    /\/contato/, /\/mapa/, /\/map/, /\/como-chegar/,
+    /\/onde-estamos/, /\/trabalhe-conosco/, /\/vagas/,
+    /\/central-de-atendimento/, /\/atendimento/
   ];
   
-  // Verificar padrões inválidos
+  // Verificar padrões inválidos - retornar false rapidamente se encontrar algum
   for (const pattern of invalidPatterns) {
     if (pattern.test(urlLower)) {
       return false;
     }
   }
   
-  // Padrões válidos específicos por marketplace (ampliados e mais precisos)
+  // Marketplace específicos - a validação mais confiável
   
   // Mercado Livre
   if (domain.includes('mercadolivre.com.br') || domain.includes('mercadolibre.com')) {
+    // URL de produto do Mercado Livre deve conter MLB-123456789 ou similar
     return /\/MLB-\d+/.test(url) || 
            /\/p\/MLB\d+/.test(url) || 
            url.includes('produto.mercadolivre') ||
@@ -1385,9 +1433,9 @@ function isValidProductLink(url) {
   
   // Amazon
   if (domain.includes('amazon.com.br') || domain.includes('amazon.com')) {
+    // URLs de produto da Amazon devem conter /dp/ ou /gp/product/ seguido de código ASIN (10 caracteres)
     return /\/dp\/[A-Z0-9]{10}/.test(url) || 
-           /\/gp\/product\/[A-Z0-9]{10}/.test(url) ||
-           /\/product-reviews\/[A-Z0-9]{10}/.test(url);
+           /\/gp\/product\/[A-Z0-9]{10}/.test(url);
   }
   
   // Magazine Luiza
@@ -1402,8 +1450,7 @@ function isValidProductLink(url) {
       domain.includes('submarino.com.br') || 
       domain.includes('shoptime.com.br')) {
     return /\/produto\/\d+/.test(url) || 
-           /\/p\/\d+/.test(url) ||
-           /-[a-z]?\d{5,}[_]?(?:\/|$)/.test(url);
+           /\/p\/\d+/.test(url);
   }
   
   // Shopee
@@ -1419,8 +1466,7 @@ function isValidProductLink(url) {
       domain.includes('extra.com.br') ||
       domain.includes('ponto.com.br')) {
     return /\/p\/\d+/.test(url) || 
-           /\/produto\/\d+/.test(url) ||
-           /-[a-z]?\d{5,}(?:\/|$)/.test(url);
+           /\/produto\/\d+/.test(url);
   }
   
   // KaBuM
@@ -1435,102 +1481,51 @@ function isValidProductLink(url) {
            /\/product\/\d+\.html/.test(url);
   }
   
-  // Netshoes e Zattini
-  if (domain.includes('netshoes.com.br') || domain.includes('zattini.com.br')) {
-    return /\/[^\/]+\/p\//.test(url) || 
-           /\/produto\/\d+/.test(url) ||
-           /-[a-z]?\d{6,}(?:\/|$)/.test(url);
-  }
-  
-  // Centauro
-  if (domain.includes('centauro.com.br')) {
-    return /\/[^\/]+\/p\//.test(url) ||
-           /\d{6,}\.html/.test(url);
-  }
-  
-  // Leroy Merlin
-  if (domain.includes('leroymerlin.com.br')) {
-    return /\/produto\/\d+/.test(url) || 
-           /\/p\/\d+/.test(url);
-  }
-  
-  // Madeira Madeira
-  if (domain.includes('madeiramadeira.com.br')) {
-    return /\/p\/\d+/.test(url) || 
-           /\/prod\/\d+/.test(url) ||
-           /-\d{5,}$/.test(url);
-  }
-  
-  // Fast Shop
-  if (domain.includes('fastshop.com.br')) {
-    return /\/p\/[a-zA-Z0-9-_]+/.test(url) ||
-           /\/produto\/[a-zA-Z0-9-_]+/.test(url);
-  }
-  
-  // Dafiti
-  if (domain.includes('dafiti.com.br')) {
-    return /\-p\-[A-Z0-9]+/.test(url);
-  }
-  
-  // Sephora
-  if (domain.includes('sephora.com.br')) {
-    return /\/product\/[A-Z0-9]+/.test(url) ||
-           /\-P\d+/.test(url);
-  }
-  
-  // Dell
-  if (domain.includes('dell.com')) {
-    return /\/shop\/[^\/]+\/pd\//.test(url) ||
-           /\/p\//.test(url);
-  }
-  
-  // Para outros marketplaces, verificar padrões comuns de produto mais específicos
-  const commonProductPatterns = [
+  // Padrões gerais mais restritos de produtos para marketplaces não específicos
+  const strictProductPatterns = [
     // Padrões comuns de páginas de produto específicas
-    /\/p\/\d+/, /\/produto\/\d+/, /\/product\/\d+/, /\/item\/\d+/,
-    /\/pd\/\d+/, /-p\d+$/, /\/prod\d+/, /\/prod\/\d+/,
-    /\/i\/\d+/, /\/productdetails\/[^\/]+$/, /\/products\/[^\/]+$/,
-    /\/[^\/]+\/pd\/\d+/, /\/pdp\/[^\/]+$/, /\/shop\/[^\/]+\/products\/[^\/]+$/,
+    /\/p\/\d{5,}/, // URL com /p/ seguido de ID numérico longo
+    /\/produto\/\d{5,}/, // URL com /produto/ seguido de ID numérico longo
+    /\/product\/\d{5,}/, // URL com /product/ seguido de ID numérico
+    /\/item\/\d{5,}/, // URL com /item/ seguido de ID numérico
     
-    // IDs de produtos em URLs
-    /-\d{5,}(?:\/|$|\?)/, /\/\d{5,}(?:\/|$|\?)/,
-    /[a-zA-Z]{1,3}\d{5,}(?:\/|$|\?)/, /\d{5,}\.html/
+    // Padrões de ID de produto em URLs
+    /-p-\d{5,}$/, // Termina com -p-12345
+    /\/pd\/\d{5,}$/, // Termina com /pd/12345
+    /\/prod\/\d{5,}$/ // Termina com /prod/12345
   ];
   
-  for (const pattern of commonProductPatterns) {
+  // Se encontrarmos um padrão estrito, é muito provável que seja um produto
+  for (const pattern of strictProductPatterns) {
     if (pattern.test(url)) {
-      // Verificação adicional: URLs de produto geralmente não têm muitos parâmetros
-      // Verificar se não tem mais de 2 parâmetros de query
-      const queryParams = url.split('?')[1];
-      if (queryParams && queryParams.split('&').length > 2) {
-        // URLs com muitos parâmetros são geralmente de busca, não de produto
-        continue;
-      }
-      
       return true;
     }
   }
   
-  // Verificar se a URL é relativamente curta e não parece ser uma categoria
-  // URLs de produto tendem a ser mais curtas que URLs de categoria ou busca
+  // Verificação mais profunda para outros casos
+  // URL deve ter profundidade razoável e não ter muitos parâmetros
   const urlPathOnly = url.split('?')[0]; // Remover query params
   const urlParts = urlPathOnly.split('/').filter(Boolean);
   
+  // Se URL tiver profundidade razoável e um ID que parece ser de produto no final
   if (urlParts.length >= 3 && urlParts.length <= 5) {
-    // Se não detectamos como página de categoria/busca e tem profundidade razoável, 
-    // pode ser um produto
     const lastPart = urlParts[urlParts.length - 1];
     
-    // Se o último segmento contém um código que parece ser de produto
-    // (combinação de letras e números, ou apenas números longos)
-    if (/^[a-zA-Z0-9_-]{6,}$/.test(lastPart) && !lastPart.includes('.')) {
-      // Verificar se é um marketplace conhecido
+    // Verificar se o último segmento parece um ID de produto
+    // (deve ter números e possivelmente letras, mas não ser apenas texto)
+    if (/[0-9]/.test(lastPart) && // Deve conter pelo menos um número
+        /^[a-zA-Z0-9_-]{6,}$/.test(lastPart) && // Deve ter pelo menos 6 caracteres
+        !lastPart.includes('.') && // Não deve ser um arquivo
+        !/^[a-zA-Z]+$/.test(lastPart)) { // Não deve ser apenas letras
+      
+      // Verificação adicional: deve ser de um marketplace válido
       if (isValidMarketplace(url)) {
         return true;
       }
     }
   }
   
+  // Se passar por todas as verificações sem resultado definitivo, não é um link de produto
   return false;
 }
 
@@ -1586,6 +1581,142 @@ function normalizeProductUrl(url) {
     console.error('Erro ao normalizar URL:', e.message);
     return url;
   }
+}
+
+/**
+ * Calcula a pontuação de relevância para cada resultado com base em diversos fatores
+ * @param {Array} resultados - Lista de resultados a classificar
+ * @param {string} query - Termo de busca original
+ * @param {Object} filtros - Filtros aplicados (preço, etc.)
+ * @returns {Array} Resultados com pontuação de relevância
+ */
+function calcularRelevancia(resultados, query, filtros = {}) {
+  if (!resultados || !Array.isArray(resultados)) return resultados;
+  
+  // Extrair palavras-chave da query para correspondência
+  const keywords = query.toLowerCase().split(/\s+/).filter(word => word.length > 2);
+  
+  // Marketplaces em ordem de prioridade
+  const marketplacePriority = {
+    'Amazon Brasil': 10,
+    'Mercado Livre': 9,
+    'Magazine Luiza': 8,
+    'Americanas': 7,
+    'Shopee': 6,
+    'Casas Bahia': 5,
+    'Submarino': 5,
+    'KaBuM!': 5,
+    'Fast Shop': 5
+  };
+  
+  return resultados.map(item => {
+    let relevance = item.relevance || 10; // Pontuação base
+    
+    // 1. Bonus para marketplaces prioritários
+    const marketplace = item.marketplace || detectMarketplace(item.link);
+    if (marketplacePriority[marketplace]) {
+      relevance += marketplacePriority[marketplace];
+    }
+    
+    // 2. Bonus para correspondência de palavras-chave no título
+    if (item.title) {
+      const titleLower = item.title.toLowerCase();
+      keywords.forEach(keyword => {
+        if (titleLower.includes(keyword)) {
+          relevance += 3;
+        }
+      });
+      
+      // Bonus extra para correspondência exata de frases
+      if (titleLower.includes(query.toLowerCase())) {
+        relevance += 10;
+      }
+    }
+    
+    // 3. Bonus para produtos com preço detectado
+    if (item.price) {
+      relevance += 5;
+      
+      // Bonus maior para produtos dentro da faixa de preço
+      if (filtros.precoMin || filtros.precoMax) {
+        const precoNum = extrairValorNumerico(item.price);
+        const precoMin = filtros.precoMin ? parseFloat(filtros.precoMin) : 0;
+        const precoMax = filtros.precoMax ? parseFloat(filtros.precoMax) : Infinity;
+        
+        if (precoNum && precoNum >= precoMin && precoNum <= precoMax) {
+          relevance += 15;
+          
+          // Bonus adicional para preços no meio da faixa (mais relevantes)
+          if (filtros.precoMin && filtros.precoMax) {
+            const middlePrice = (precoMin + precoMax) / 2;
+            // Quanto mais próximo do meio da faixa, maior o bonus
+            const distanceFromMiddle = Math.abs(precoNum - middlePrice) / (precoMax - precoMin);
+            relevance += 5 * (1 - distanceFromMiddle);
+          }
+        }
+      }
+    }
+    
+    // 4. Penalty para URLs muito longas ou com muitos parâmetros
+    // (URLs mais simples geralmente são melhores)
+    if (item.link) {
+      if (item.link.length > 150) relevance -= 3;
+      
+      const queryParams = item.link.split('?')[1];
+      if (queryParams && queryParams.split('&').length > 3) {
+        relevance -= 3;
+      }
+    }
+    
+    // 5. Penalty para descrições que não parecem ser de produtos
+    if (item.snippet) {
+      const snippet = item.snippet.toLowerCase();
+      const nonProductTerms = ['política', 'ajuda', 'contato', 'faq', 'termos', 'sobre nós', 'quem somos'];
+      
+      for (const term of nonProductTerms) {
+        if (snippet.includes(term)) {
+          relevance -= 5;
+          break;
+        }
+      }
+    }
+    
+    // Garantir que a relevância nunca seja negativa
+    item.relevance = Math.max(1, relevance);
+    return item;
+  });
+}
+
+/**
+ * Função auxiliar para extrair valor numérico de preço formatado
+ * @param {string} textoPreco - Texto do preço formatado (ex: "R$ 1.299,90")
+ * @returns {number|null} Valor numérico ou null se não for possível extrair
+ */
+function extrairValorNumerico(textoPreco) {
+  if (!textoPreco) return null;
+  
+  // Remover símbolo de moeda e espaços
+  const semMoeda = textoPreco.replace(/R\$\s*/g, '');
+  
+  // Tratar diferentes formatos (vírgula ou ponto como separador decimal)
+  let valorNumerico;
+  
+  // Formato brasileiro: 1.299,99 ou 1299,99
+  if (semMoeda.includes(',')) {
+    // Primeiro remove pontos de milhar, depois substitui vírgula por ponto
+    valorNumerico = parseFloat(semMoeda.replace(/\./g, '').replace(',', '.'));
+  } 
+  // Formato internacional: 1,299.99 ou 1299.99
+  else if (semMoeda.includes('.')) {
+    // Remove vírgulas de milhar e mantém ponto como decimal
+    valorNumerico = parseFloat(semMoeda.replace(/,/g, ''));
+  } 
+  // Formato sem decimais: 1299
+  else {
+    valorNumerico = parseFloat(semMoeda);
+  }
+  
+  return isNaN(valorNumerico) ? null : valorNumerico;
 }
 
 module.exports = {
