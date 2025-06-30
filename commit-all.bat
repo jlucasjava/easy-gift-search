@@ -1,9 +1,8 @@
 @echo off
-echo ======================================
-echo = COMMIT FINAL - MOTOR PERSONALIZADO =
-echo ======================================
+echo ======================================================
+echo = COMMIT FINAL - FERRAMENTAS DE DIAGNÓSTICO E ANALISE =
+echo ======================================================
 
-cd ..
 echo.
 echo Verificando status do repositório...
 git status
@@ -14,7 +13,7 @@ git add .
 
 echo.
 echo Criando commit...
-git commit -m "Implementação completa do motor de busca personalizado com scraping de marketplaces"
+git commit -m "Implementação de ferramentas de diagnóstico, monitoramento e benchmark para motores de busca"
 
 echo.
 echo Realizando push para o repositório remoto...

@@ -1,0 +1,707 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Easy Gift Search - Motor Selector</title>
+  <style>
+    :root {
+      --primary: #0a68f5;
+      --secondary: #3498db;
+      --success: #2ecc71;
+      --warning: #f39c12;
+      --danger: #e74c3c;
+      --light: #f8f9fa;
+      --dark: #343a40;
+      --gray: #6c757d;
+    }
+    
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      line-height: 1.6;
+      color: var(--dark);
+      background-color: #f4f7fa;
+      padding: 20px;
+    }
+    
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    
+    .dashboard {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 20px;
+    }
+    
+    @media (min-width: 768px) {
+      .dashboard {
+        grid-template-columns: 300px 1fr;
+      }
+    }
+    
+    .card {
+      background: white;
+      border-radius: 8px;
+      padding: 20px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    
+    .header {
+      margin-bottom: 20px;
+      padding-bottom: 15px;
+      border-bottom: 1px solid #eee;
+    }
+    
+    h1 {
+      color: var(--primary);
+      margin-bottom: 5px;
+      font-size: 24px;
+    }
+    
+    .subtitle {
+      color: var(--gray);
+      font-size: 14px;
+    }
+    
+    .search-form {
+      margin-bottom: 20px;
+    }
+    
+    .form-group {
+      margin-bottom: 15px;
+    }
+    
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: 500;
+      color: var(--dark);
+    }
+    
+    input, select {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 16px;
+    }
+    
+    input:focus, select:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(10, 104, 245, 0.1);
+    }
+    
+    button {
+      background-color: var(--primary);
+      color: white;
+      border: none;
+      padding: 12px 20px;
+      font-size: 16px;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: background-color 0.2s;
+      width: 100%;
+      font-weight: 600;
+    }
+    
+    button:hover {
+      background-color: #0853c4;
+    }
+    
+    .results {
+      min-height: 300px;
+    }
+    
+    .tabs {
+      display: flex;
+      margin-bottom: 20px;
+      border-bottom: 1px solid #eee;
+    }
+    
+    .tab {
+      padding: 10px 20px;
+      cursor: pointer;
+      border-bottom: 3px solid transparent;
+      font-weight: 500;
+    }
+    
+    .tab.active {
+      border-bottom-color: var(--primary);
+      color: var(--primary);
+    }
+    
+    .product-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 20px;
+    }
+    
+    .product-card {
+      background: white;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      transition: transform 0.2s, box-shadow 0.2s;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .product-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+    
+    .product-image {
+      height: 180px;
+      background-color: #f9f9f9;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+    
+    .product-image img {
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+    }
+    
+    .product-details {
+      padding: 15px;
+      flex-grow: 1;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .product-title {
+      font-weight: 600;
+      margin-bottom: 10px;
+      font-size: 14px;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      flex-grow: 1;
+    }
+    
+    .product-price {
+      font-weight: 700;
+      font-size: 18px;
+      color: var(--primary);
+      margin-bottom: 10px;
+    }
+    
+    .product-source {
+      font-size: 12px;
+      color: var(--gray);
+      margin-bottom: 10px;
+    }
+    
+    .product-link {
+      background-color: var(--light);
+      color: var(--dark);
+      text-decoration: none;
+      padding: 8px 12px;
+      border-radius: 4px;
+      font-size: 14px;
+      text-align: center;
+      transition: background-color 0.2s;
+      display: block;
+    }
+    
+    .product-link:hover {
+      background-color: #e9ecef;
+    }
+    
+    .loader {
+      display: none;
+      text-align: center;
+      padding: 20px;
+    }
+    
+    .loader.active {
+      display: block;
+    }
+    
+    .spinner {
+      border: 4px solid rgba(0, 0, 0, 0.1);
+      border-radius: 50%;
+      border-top: 4px solid var(--primary);
+      width: 30px;
+      height: 30px;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 10px;
+    }
+    
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    
+    .metrics {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+    
+    .metric {
+      background-color: white;
+      border-radius: 8px;
+      padding: 15px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      flex: 1;
+      min-width: 150px;
+      margin: 0 5px 10px;
+      text-align: center;
+    }
+    
+    .metric-value {
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--primary);
+      margin-bottom: 5px;
+    }
+    
+    .metric-label {
+      font-size: 12px;
+      color: var(--gray);
+      text-transform: uppercase;
+    }
+    
+    .error-message {
+      background-color: #fdeaea;
+      color: var(--danger);
+      padding: 15px;
+      border-radius: 4px;
+      margin-bottom: 20px;
+      font-size: 14px;
+      display: none;
+    }
+    
+    .engine-tag {
+      display: inline-block;
+      padding: 3px 8px;
+      font-size: 11px;
+      border-radius: 12px;
+      margin-right: 5px;
+      font-weight: 600;
+    }
+    
+    .engine-google {
+      background-color: #e8f0fe;
+      color: #4285F4;
+    }
+    
+    .engine-custom {
+      background-color: #fce8e6;
+      color: #EA4335;
+    }
+    
+    .engine-customv2 {
+      background-color: #fef6e6;
+      color: #FBBC05;
+    }
+    
+    .engine-hybrid {
+      background-color: #e6f4ea;
+      color: #34A853;
+    }
+    
+    .no-results {
+      text-align: center;
+      padding: 40px 0;
+      color: var(--gray);
+    }
+    
+    .cache-status {
+      font-size: 12px;
+      color: var(--gray);
+      text-align: right;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>Easy Gift Search - Teste de Motores</h1>
+      <div class="subtitle">Comparação e integração de múltiplos motores de busca</div>
+    </div>
+    
+    <div class="dashboard">
+      <div class="card">
+        <div class="search-form">
+          <div class="form-group">
+            <label for="search-query">O que você está procurando?</label>
+            <input type="text" id="search-query" placeholder="Ex: fone de ouvido, smartphone, etc">
+          </div>
+          
+          <div class="form-group">
+            <label for="max-price">Preço máximo (R$)</label>
+            <input type="number" id="max-price" value="500">
+          </div>
+          
+          <div class="form-group">
+            <label for="num-results">Número de resultados</label>
+            <input type="number" id="num-results" value="10" min="1" max="20">
+          </div>
+          
+          <div class="form-group">
+            <label for="search-engine">Motor de busca</label>
+            <select id="search-engine">
+              <option value="all">Todos os motores</option>
+              <option value="google">Google Custom Search</option>
+              <option value="custom">Motor personalizado</option>
+              <option value="customv2">Motor personalizado V2</option>
+              <option value="hybrid">Motor híbrido (recomendado)</option>
+            </select>
+          </div>
+          
+          <button id="search-button">Buscar produtos</button>
+        </div>
+        
+        <div id="error-message" class="error-message"></div>
+        
+        <div class="cache-status">
+          Cache: <span id="cache-status">Desativado</span>
+          <button id="toggle-cache" style="width: auto; padding: 4px 8px; font-size: 12px; margin-left: 5px;">Ativar</button>
+        </div>
+      </div>
+      
+      <div class="card results">
+        <div id="metrics" class="metrics" style="display: none;">
+          <div class="metric">
+            <div id="total-results" class="metric-value">0</div>
+            <div class="metric-label">Resultados</div>
+          </div>
+          
+          <div class="metric">
+            <div id="response-time" class="metric-value">0ms</div>
+            <div class="metric-label">Tempo</div>
+          </div>
+          
+          <div class="metric">
+            <div id="unique-stores" class="metric-value">0</div>
+            <div class="metric-label">Lojas</div>
+          </div>
+        </div>
+        
+        <div class="tabs">
+          <div class="tab active" data-tab="all">Todos</div>
+          <div class="tab" data-tab="google">Google</div>
+          <div class="tab" data-tab="custom">Personalizado</div>
+          <div class="tab" data-tab="customv2">Personalizado V2</div>
+          <div class="tab" data-tab="hybrid">Híbrido</div>
+        </div>
+        
+        <div id="loader" class="loader">
+          <div class="spinner"></div>
+          <p>Buscando produtos...</p>
+        </div>
+        
+        <div id="no-results" class="no-results" style="display: none;">
+          <p>Nenhum produto encontrado. Tente outra consulta ou selecione um motor de busca diferente.</p>
+        </div>
+        
+        <div id="product-grid" class="product-grid"></div>
+      </div>
+    </div>
+  </div>
+  
+  <script>
+    // Cache para armazenar resultados de buscas anteriores
+    const resultsCache = {};
+    let cacheEnabled = false;
+    
+    // Elementos da UI
+    const searchButton = document.getElementById('search-button');
+    const searchQuery = document.getElementById('search-query');
+    const maxPrice = document.getElementById('max-price');
+    const numResults = document.getElementById('num-results');
+    const searchEngine = document.getElementById('search-engine');
+    const productGrid = document.getElementById('product-grid');
+    const loader = document.getElementById('loader');
+    const errorMessage = document.getElementById('error-message');
+    const noResults = document.getElementById('no-results');
+    const metrics = document.getElementById('metrics');
+    const totalResultsEl = document.getElementById('total-results');
+    const responseTimeEl = document.getElementById('response-time');
+    const uniqueStoresEl = document.getElementById('unique-stores');
+    const tabs = document.querySelectorAll('.tab');
+    const toggleCacheBtn = document.getElementById('toggle-cache');
+    const cacheStatusEl = document.getElementById('cache-status');
+    
+    // URLs dos endpoints de API
+    const API_ENDPOINTS = {
+      google: '/api/search',
+      custom: '/api/custom-search',
+      customv2: '/api/custom-search-v2',
+      hybrid: '/api/hybrid-search'
+    };
+    
+    // Função para buscar produtos
+    async function searchProducts() {
+      const query = searchQuery.value.trim();
+      const maxPriceValue = parseFloat(maxPrice.value);
+      const numResultsValue = parseInt(numResults.value);
+      const selectedEngine = searchEngine.value;
+      
+      if (!query) {
+        showError('Por favor, digite o que você está procurando.');
+        return;
+      }
+      
+      if (isNaN(maxPriceValue) || maxPriceValue <= 0) {
+        showError('Por favor, insira um preço máximo válido.');
+        return;
+      }
+      
+      // Limpar erros anteriores
+      hideError();
+      
+      // Mostrar loader
+      loader.classList.add('active');
+      productGrid.innerHTML = '';
+      noResults.style.display = 'none';
+      metrics.style.display = 'none';
+      
+      // Definir chave de cache
+      const cacheKey = `${query}-${maxPriceValue}-${numResultsValue}-${selectedEngine}`;
+      
+      // Verificar cache
+      if (cacheEnabled && resultsCache[cacheKey]) {
+        console.log('Usando resultados em cache');
+        displayResults(resultsCache[cacheKey]);
+        return;
+      }
+      
+      // Resultados de todos os motores
+      const allResults = [];
+      const engines = selectedEngine === 'all' ? Object.keys(API_ENDPOINTS) : [selectedEngine];
+      const startTime = performance.now();
+      
+      try {
+        // Para cada motor selecionado
+        for (const engine of engines) {
+          try {
+            const response = await fetch(`${API_ENDPOINTS[engine]}?q=${encodeURIComponent(query)}&maxPrice=${maxPriceValue}&num=${numResultsValue}`);
+            
+            if (!response.ok) {
+              throw new Error(`Erro na API ${engine}: ${response.status}`);
+            }
+            
+            const data = await response.json();
+            
+            // Adicionar informação sobre qual motor encontrou o resultado
+            const products = data.map(product => ({
+              ...product,
+              engine
+            }));
+            
+            allResults.push(...products);
+          } catch (engineError) {
+            console.error(`Erro ao buscar com motor ${engine}:`, engineError);
+            // Continuar com os outros motores se um falhar
+          }
+        }
+        
+        const endTime = performance.now();
+        const responseTime = Math.round(endTime - startTime);
+        
+        // Deduplica resultados (baseado na URL)
+        const uniqueResults = deduplicateResults(allResults);
+        
+        // Preparar objeto de resultados
+        const results = {
+          products: uniqueResults,
+          metrics: {
+            total: uniqueResults.length,
+            responseTime: responseTime,
+            uniqueStores: getUniqueStores(uniqueResults).length
+          }
+        };
+        
+        // Armazenar no cache
+        if (cacheEnabled) {
+          resultsCache[cacheKey] = results;
+        }
+        
+        // Exibir resultados
+        displayResults(results);
+      } catch (error) {
+        console.error('Erro ao buscar produtos:', error);
+        showError('Ocorreu um erro ao buscar os produtos. Por favor, tente novamente.');
+        loader.classList.remove('active');
+      }
+    }
+    
+    // Função para exibir resultados
+    function displayResults(results) {
+      loader.classList.remove('active');
+      
+      const { products, metrics: resultMetrics } = results;
+      
+      if (products.length === 0) {
+        noResults.style.display = 'block';
+        metrics.style.display = 'none';
+        return;
+      }
+      
+      // Atualizar métricas
+      totalResultsEl.textContent = resultMetrics.total;
+      responseTimeEl.textContent = `${resultMetrics.responseTime}ms`;
+      uniqueStoresEl.textContent = resultMetrics.uniqueStores;
+      metrics.style.display = 'flex';
+      
+      // Limpar grid e adicionar produtos
+      productGrid.innerHTML = '';
+      
+      // Filtrar produtos pela tab ativa
+      const activeTab = document.querySelector('.tab.active').dataset.tab;
+      const filteredProducts = activeTab === 'all' 
+        ? products 
+        : products.filter(product => product.engine === activeTab);
+      
+      if (filteredProducts.length === 0) {
+        noResults.style.display = 'block';
+        return;
+      }
+      
+      noResults.style.display = 'none';
+      
+      // Renderizar cada produto
+      filteredProducts.forEach(product => {
+        const engineClass = `engine-${product.engine}`;
+        const engineName = getEngineName(product.engine);
+        
+        const productCard = document.createElement('div');
+        productCard.className = 'product-card';
+        productCard.innerHTML = `
+          <div class="product-image">
+            <img src="${product.image || 'https://via.placeholder.com/150'}" alt="${product.title}">
+          </div>
+          <div class="product-details">
+            <div class="product-title">${product.title}</div>
+            <div class="product-price">R$ ${formatPrice(product.price)}</div>
+            <div class="product-source">
+              <span class="engine-tag ${engineClass}">${engineName}</span>
+              ${product.domain || 'Desconhecido'}
+            </div>
+            <a href="${product.link}" target="_blank" class="product-link">Ver produto</a>
+          </div>
+        `;
+        
+        productGrid.appendChild(productCard);
+      });
+    }
+    
+    // Função para deduplica resultados (baseado na URL)
+    function deduplicateResults(results) {
+      const uniqueUrls = new Set();
+      return results.filter(product => {
+        // Normalizar URL para comparação
+        const normalizedUrl = normalizeUrl(product.link);
+        
+        if (!uniqueUrls.has(normalizedUrl)) {
+          uniqueUrls.add(normalizedUrl);
+          return true;
+        }
+        return false;
+      });
+    }
+    
+    // Função para normalizar URLs para comparação
+    function normalizeUrl(url) {
+      try {
+        // Remover parâmetros de tracking e sessão
+        const urlObj = new URL(url);
+        urlObj.search = '';
+        return urlObj.toString().toLowerCase();
+      } catch (e) {
+        return url.toLowerCase();
+      }
+    }
+    
+    // Função para obter lojas únicas
+    function getUniqueStores(products) {
+      const domains = products.map(product => product.domain || '').filter(Boolean);
+      return [...new Set(domains)];
+    }
+    
+    // Função para mostrar mensagem de erro
+    function showError(message) {
+      errorMessage.textContent = message;
+      errorMessage.style.display = 'block';
+    }
+    
+    // Função para esconder mensagem de erro
+    function hideError() {
+      errorMessage.style.display = 'none';
+    }
+    
+    // Formatar preço
+    function formatPrice(price) {
+      return typeof price === 'number' ? price.toFixed(2).replace('.', ',') : price;
+    }
+    
+    // Obter nome amigável do motor
+    function getEngineName(engine) {
+      const names = {
+        google: 'Google',
+        custom: 'Custom',
+        customv2: 'Custom V2',
+        hybrid: 'Híbrido'
+      };
+      return names[engine] || engine;
+    }
+    
+    // Event Listeners
+    searchButton.addEventListener('click', searchProducts);
+    
+    // Pesquisar ao pressionar Enter no campo de busca
+    searchQuery.addEventListener('keypress', function(e) {
+      if (e.key === 'Enter') {
+        searchProducts();
+      }
+    });
+    
+    // Alternar entre as tabs
+    tabs.forEach(tab => {
+      tab.addEventListener('click', function() {
+        // Remover classe active de todas as tabs
+        tabs.forEach(t => t.classList.remove('active'));
+        
+        // Adicionar classe active à tab clicada
+        this.classList.add('active');
+        
+        // Se já temos resultados, filtrá-los pela tab selecionada
+        const productsInGrid = productGrid.querySelectorAll('.product-card');
+        if (productsInGrid.length > 0) {
+          const cacheKey = `${searchQuery.value.trim()}-${parseFloat(maxPrice.value)}-${parseInt(numResults.value)}-${searchEngine.value}`;
+          if (cacheEnabled && resultsCache[cacheKey]) {
+            displayResults(resultsCache[cacheKey]);
+          }
+        }
+      });
+    });
+    
+    // Alternar cache
+    toggleCacheBtn.addEventListener('click', function() {
+      cacheEnabled = !cacheEnabled;
+      cacheStatusEl.textContent = cacheEnabled ? 'Ativado' : 'Desativado';
+      toggleCacheBtn.textContent = cacheEnabled ? 'Desativar' : 'Ativar';
+    });
+  </script>
+</body>
+</html>
