@@ -265,10 +265,11 @@ app.use((error, req, res, next) => {
 
 // 📡 SERVER STARTUP
 const PORT = process.env.PORT || 3000;
+const HOST = process.env.HOST || '0.0.0.0'; // Render requires 0.0.0.0
 
-server.listen(PORT, () => {
+server.listen(PORT, HOST, () => {
   console.log(`\n🚀 Easy Gift Search Server v3.0 - Worker ${process.pid}`.cyan.bold);
-  console.log(`📡 Server running on port ${PORT}`.green);
+  console.log(`📡 Server running on ${HOST}:${PORT}`.green);
   console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`.yellow);
   console.log(`⚡ Performance optimizations: ACTIVE`.green.bold);
   console.log(`🗄️ Cache service: ${advancedCache.redisAvailable ? 'Redis + Local' : 'Local only'}`.cyan);
@@ -285,6 +286,7 @@ server.listen(PORT, () => {
   // Log startup
   advancedLogger.logSystem('Server started', {
     port: PORT,
+    host: HOST,
     environment: process.env.NODE_ENV || 'development',
     pid: process.pid,
     features: {

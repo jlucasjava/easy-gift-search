@@ -20,13 +20,13 @@ class AlertSystem {
     // Configurar Slack webhook (se disponível)
     this.slackWebhookUrl = process.env.SLACK_WEBHOOK_URL || null;
 
-    // Thresholds configuráveis
+    // Thresholds configuráveis (ajustados para Render.com)
     this.thresholds = {
       apiFailures: 5,           // Falhas consecutivas
       slowRequestTime: 3000,    // 3 segundos
       slowRequestCount: 10,     // 10 requests lentas em 5 min
       cpuUsage: 80,             // 80% CPU
-      memoryUsage: 85,          // 85% memória
+      memoryUsage: 95,          // 95% memória (ajustado para Render)
       errorRate: 5,             // 5% de erro
       diskSpace: 90,            // 90% disco
       responseTime: 2000        // 2 segundos
