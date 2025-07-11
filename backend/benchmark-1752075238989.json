@@ -1,0 +1,110 @@
+{
+  "endpoints": {
+    "Health Check": {
+      "endpoint": "/api/health",
+      "total": 20,
+      "successes": 0,
+      "errors": 20,
+      "successRate": "0.00%",
+      "avgResponseTime": "0.00ms",
+      "minResponseTime": "0.00ms",
+      "maxResponseTime": "0.00ms",
+      "requestsPerSecond": "0.00",
+      "totalTime": "158ms"
+    },
+    "Metrics": {
+      "endpoint": "/api/metrics",
+      "total": 10,
+      "successes": 0,
+      "errors": 10,
+      "successRate": "0.00%",
+      "avgResponseTime": "0.00ms",
+      "minResponseTime": "0.00ms",
+      "maxResponseTime": "0.00ms",
+      "requestsPerSecond": "0.00",
+      "totalTime": "80ms"
+    },
+    "Search - iPhone": {
+      "endpoint": "/api/search?q=iphone&limit=5",
+      "total": 30,
+      "successes": 0,
+      "errors": 30,
+      "successRate": "0.00%",
+      "avgResponseTime": "0.00ms",
+      "minResponseTime": "0.00ms",
+      "maxResponseTime": "0.00ms",
+      "requestsPerSecond": "0.00",
+      "totalTime": "170ms"
+    },
+    "Search - Laptop": {
+      "endpoint": "/api/search?q=laptop&limit=10",
+      "total": 30,
+      "successes": 0,
+      "errors": 30,
+      "successRate": "0.00%",
+      "avgResponseTime": "0.00ms",
+      "minResponseTime": "0.00ms",
+      "maxResponseTime": "0.00ms",
+      "requestsPerSecond": "0.00",
+      "totalTime": "45ms"
+    },
+    "Search - Books": {
+      "endpoint": "/api/search?q=livros&limit=8",
+      "total": 20,
+      "successes": 0,
+      "errors": 20,
+      "successRate": "0.00%",
+      "avgResponseTime": "0.00ms",
+      "minResponseTime": "0.00ms",
+      "maxResponseTime": "0.00ms",
+      "requestsPerSecond": "0.00",
+      "totalTime": "49ms"
+    },
+    "Cache Test 1": {
+      "endpoint": "/api/search?q=smartphone&limit=5",
+      "total": 50,
+      "successes": 0,
+      "errors": 50,
+      "successRate": "0.00%",
+      "avgResponseTime": "0.00ms",
+      "minResponseTime": "0.00ms",
+      "maxResponseTime": "0.00ms",
+      "requestsPerSecond": "0.00",
+      "totalTime": "116ms"
+    },
+    "Cache Test 2": {
+      "endpoint": "/api/search?q=smartphone&limit=5",
+      "total": 50,
+      "successes": 0,
+      "errors": 50,
+      "successRate": "0.00%",
+      "avgResponseTime": "0.00ms",
+      "minResponseTime": "0.00ms",
+      "maxResponseTime": "0.00ms",
+      "requestsPerSecond": "0.00",
+      "totalTime": "94ms"
+    },
+    "Load Test": {
+      "endpoint": "/api/search?q=test&limit=3",
+      "total": 100,
+      "successes": 0,
+      "errors": 100,
+      "successRate": "0.00%",
+      "avgResponseTime": "0.00ms",
+      "minResponseTime": "0.00ms",
+      "maxResponseTime": "0.00ms",
+      "requestsPerSecond": "0.00",
+      "totalTime": "145ms"
+    }
+  },
+  "summary": {
+    "totalRequests": 310,
+    "totalSuccesses": 0,
+    "totalErrors": 310,
+    "overallSuccessRate": "0.00%",
+    "overallAvgResponseTime": "0.00ms",
+    "maxRequestsPerSecond": "0.00",
+    "endpointsTested": 8
+  },
+  "timestamp": "2025-07-09T15:33:57.975Z"
+}

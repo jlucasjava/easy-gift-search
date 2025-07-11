@@ -19,6 +19,11 @@ const NodeCache = require('node-cache');
 const path = require('path');
 const fs = require('fs');
 
+// Importar serviços adicionais
+const priceExtractor = require('./priceExtractor');
+const shopeeAPIService = require('./shopeeAPIService');
+const googleSearchService = require('./googleSearchService');
+
 // Cache com diferentes TTLs dependendo da origem dos dados
 const buscaCache = new NodeCache({ 
   stdTTL: 3600,  // 1 hora para resultados normais
@@ -34,8 +39,8 @@ const MARKETPLACES = {
   },
   'shopee': {
     nome: 'Shopee',
-    confiabilidade: 0.8,
-    temAPI: false
+    confiabilidade: 0.85,
+    temAPI: true // Atualizado para true com a nova API
   },
   'americanas': {
     nome: 'Americanas',
@@ -51,6 +56,11 @@ const MARKETPLACES = {
     nome: 'Amazon',
     confiabilidade: 0.8,
     temAPI: false
+  },
+  'google': {
+    nome: 'Google Search API',
+    confiabilidade: 0.95,
+    temAPI: true
   }
 };
 
@@ -180,16 +190,16 @@ function selecionarMarketplaces(filtros) {
   
   // Para preços baixos, priorizar Shopee
   if (filtros.precoMax && filtros.precoMax <= 100) {
-    return ['shopee', 'mercadolivre', 'magazineluiza'];
+    return ['shopee', 'mercadolivre', 'magazineluiza', 'google'];
   }
   
   // Para preços médios, priorizar Mercado Livre e Amazon
   if (filtros.precoMax && filtros.precoMax <= 500) {
-    return ['mercadolivre', 'magazineluiza', 'americanas', 'shopee'];
+    return ['mercadolivre', 'magazineluiza', 'americanas', 'shopee', 'google'];
   }
   
   // Para preços altos, incluir todos
-  return todosMarketplaces;
+  return [...todosMarketplaces, 'google'];
 }
 
 /**
@@ -239,6 +249,8 @@ async function buscarEmMarketplace(marketplace, termo, filtros, buscaId) {
         return await buscarNaMagazineLuiza(termo, filtros);
       case 'amazon':
         return await buscarNaAmazon(termo, filtros);
+      case 'google':
+        return await buscarNoGoogle(termo, filtros);
       default:
         throw new Error(`Marketplace não implementado: ${marketplace}`);
     }
@@ -327,22 +339,73 @@ async function buscarNoMercadoLivre(termo, filtros) {
 
 /**
  * Busca na Shopee
- * Nota: A Shopee usa JavaScript para renderizar conteúdo, então essa função
- * pode precisar de ferramentas como Puppeteer na implementação completa
+ * Usa a nova API oficial da Shopee para obter resultados mais precisos
  */
 async function buscarNaShopee(termo, filtros) {
   try {
     console.log(`🔍 Buscando na Shopee para: ${termo}`);
     
-    // Para esta demonstração, vamos usar dados simulados
-    // Em produção, seria necessário implementar com Puppeteer ou similar
-    const produtos = gerarResultadosSimulados(filtros, 'Shopee');
+    // Usar a nova API da Shopee para busca
+    const produtos = await shopeeAPIService.searchProducts(termo, filtros.num);
     
-    console.log(`✅ Shopee: Retornando ${produtos.length} produtos (simulados)`);
+    console.log(`✅ Shopee: Encontrados ${produtos.length} produtos via API`);
     return produtos;
   } catch (error) {
-    console.error('❌ Erro ao buscar na Shopee:', error.message);
-    return [];
+    console.error('❌ Erro ao buscar na Shopee via API:', error.message);
+    
+    // Fallback para scraping tradicional
+    try {
+      console.log('⚠️ Tentando fallback para scraping na Shopee...');
+      const url = `https://shopee.com.br/search?keyword=${encodeURIComponent(termo)}`;
+      
+      const userAgent = USER_AGENTS[Math.floor(Math.random() * USER_AGENTS.length)];
+      const response = await axios.get(url, {
+        headers: {
+          'User-Agent': userAgent,
+          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+          'Accept-Language': 'pt-BR,pt;q=0.8,en-US;q=0.5,en;q=0.3'
+        },
+        timeout: 10000
+      });
+      
+      // Analisar resultado com Cheerio
+      const $ = cheerio.load(response.data);
+      const produtos = [];
+      
+      // Tentar extrair produtos do HTML
+      $('.shopee-search-item-result__item').each((i, el) => {
+        try {
+          const title = $(el).find('.shopee-item-card__text-name').text().trim();
+          const link = 'https://shopee.com.br' + $(el).find('a').attr('href');
+          const image = $(el).find('img').attr('src') || '';
+          const priceText = $(el).find('.shopee-item-card__current-price').text().trim();
+          
+          // Extrair preço usando o novo extrator
+          const price = priceExtractor.extractAndNormalizePrice(priceText);
+          
+          // Adicionar produto se tiver título e link
+          if (title && link) {
+            produtos.push({
+              title,
+              price: price || 0,
+              link,
+              image,
+              domain: 'shopee.com.br',
+              marketplace: 'Shopee',
+              source: 'shopee-scraping'
+            });
+          }
+        } catch (err) {
+          // Ignorar erros em produtos individuais
+        }
+      });
+      
+      console.log(`✅ Shopee (Fallback): Encontrados ${produtos.length} produtos via scraping`);
+      return produtos;
+    } catch (fallbackError) {
+      console.error('❌ Erro no fallback para scraping na Shopee:', fallbackError.message);
+      return [];
+    }
   }
 }
 
@@ -407,6 +470,126 @@ async function buscarNaAmazon(termo, filtros) {
 }
 
 /**
+ * Busca no Google Search API
+ */
+async function buscarNoGoogle(termo, filtros) {
+  try {
+    console.log(`🔍 Buscando no Google Search API para: ${termo}`);
+    
+    // Usar o serviço do Google para buscar
+    const resultado = await googleSearchService.searchGoogle(
+      termo, 
+      filtros.num || 10, 
+      1, 
+      true,  // usar cache
+      {
+        precoMin: filtros.precoMin,
+        precoMax: filtros.precoMax
+      }
+    );
+    
+    // Verificar se temos resultados válidos
+    if (!resultado || !resultado.items || resultado.items.length === 0) {
+      console.log('⚠️ Nenhum resultado encontrado via Google Search API');
+      return [];
+    }
+    
+    // Processar os resultados para o formato padrão
+    const produtos = resultado.items.map(item => {
+      // Garantir que temos um objeto de preço padronizado
+      const preco = item.price ? priceExtractor.extractAndNormalizePrice(item.price) : null;
+      
+      return {
+        title: item.title,
+        link: item.link,
+        price: preco,
+        originalPrice: item.price,
+        image: item.image,
+        marketplace: item.marketplace || detectMarketplace(item.link),
+        domain: extractDomainFromUrl(item.link),
+        source: 'google-api'
+      };
+    });
+    
+    // Filtrar resultados sem preço ou com preço inválido
+    const produtosValidos = produtos.filter(produto => {
+      if (!produto.price || isNaN(produto.price)) {
+        console.log(`⚠️ Produto sem preço válido: ${produto.title}`);
+        return false;
+      }
+      
+      // Filtrar por preço se necessário
+      if (filtros.precoMax && produto.price > filtros.precoMax) {
+        console.log(`⚠️ Produto acima do preço máximo: ${produto.title} - ${produto.price}`);
+        return false;
+      }
+      
+      if (filtros.precoMin && produto.price < filtros.precoMin) {
+        console.log(`⚠️ Produto abaixo do preço mínimo: ${produto.title} - ${produto.price}`);
+        return false;
+      }
+      
+      return true;
+    });
+    
+    console.log(`✅ Google Search API: Encontrados ${produtosValidos.length}/${produtos.length} produtos válidos`);
+    return produtosValidos;
+  } catch (error) {
+    console.error('❌ Erro ao buscar no Google Search API:', error.message);
+    return [];
+  }
+}
+
+/**
+ * Extrai o domínio de uma URL
+ */
+function extractDomainFromUrl(url) {
+  try {
+    if (!url) return '';
+    const matches = url.match(/^https?:\/\/([^/?#]+)(?:[/?#]|$)/i);
+    const domain = matches && matches[1];
+    return domain || '';
+  } catch (error) {
+    return '';
+  }
+}
+
+/**
+ * Detecta o marketplace a partir da URL
+ */
+function detectMarketplace(url) {
+  if (!url) return 'Desconhecido';
+  
+  url = url.toLowerCase();
+  
+  if (url.includes('mercadolivre.com.br') || url.includes('mercadolibre.com.br')) {
+    return 'Mercado Livre';
+  } else if (url.includes('shopee.com.br')) {
+    return 'Shopee';
+  } else if (url.includes('americanas.com.br')) {
+    return 'Americanas';
+  } else if (url.includes('magazineluiza.com.br') || url.includes('magazinevoce.com.br')) {
+    return 'Magazine Luiza';
+  } else if (url.includes('amazon.com.br')) {
+    return 'Amazon';
+  } else if (url.includes('casasbahia.com.br')) {
+    return 'Casas Bahia';
+  } else if (url.includes('pontofrio.com.br')) {
+    return 'Ponto Frio';
+  } else if (url.includes('extra.com.br')) {
+    return 'Extra';
+  } else if (url.includes('fastshop.com.br')) {
+    return 'Fast Shop';
+  } else if (url.includes('kabum.com.br')) {
+    return 'KaBuM';
+  } else if (url.includes('aliexpress.com')) {
+    return 'AliExpress';
+  }
+  
+  return 'Outro';
+}
+
+/**
  * Estratégia de fallback quando todas as buscas falham
  */
 async function buscarFallback(filtros, buscaId) {
@@ -418,12 +601,32 @@ async function buscarFallback(filtros, buscaId) {
  * Filtra resultados por preço e qualidade
  */
 function filtrarResultados(produtos, filtros) {
-  // Filtrar por preço
-  return produtos.filter(produto => {
-    // Extrair valor do preço se for string
-    let preco = produto.priceValue;
+  console.log(`🔍 Filtrando ${produtos.length} produtos por preço e qualidade...`);
+  
+  // Usar o extrator de preços para normalizar
+  const produtosComPrecoNormalizado = produtos.map(produto => {
+    // Se já tiver preço normalizado, manter
+    if (typeof produto.price === 'number' && !isNaN(produto.price)) {
+      return produto;
+    }
     
-    if (!preco && produto.price) {
+    // Tentar extrair e normalizar o preço
+    const precoNormalizado = priceExtractor.extractAndNormalizePrice(produto.price);
+    
+    return {
+      ...produto,
+      price: precoNormalizado !== null ? precoNormalizado : produto.price,
+      originalPrice: produto.price // Guardar o preço original
+    };
+  });
+  
+  // Filtrar por preço usando os valores normalizados
+  return produtosComPrecoNormalizado.filter(produto => {
+    // Extrair valor do preço após normalização
+    let preco = typeof produto.price === 'number' ? produto.price : produto.priceValue;
+    
+    // Se ainda não tiver preço, tentar extrair de strings
+    if ((!preco || isNaN(preco)) && produto.price && typeof produto.price === 'string') {
       // Extrair valor numérico de strings como "R$ 99,90"
       const match = produto.price.match(/[\d.,]+/);
       if (match) {
@@ -431,10 +634,20 @@ function filtrarResultados(produtos, filtros) {
       }
     }
     
+    // Se não conseguir extrair preço, logar e descartar
+    if (!preco || isNaN(preco)) {
+      console.log(`⚠️ Produto sem preço extraível: ${produto.title}`);
+      return false;
+    }
+    
     // Verificar se está dentro dos limites de preço
     const precoValido = preco > 0 && 
                         (!filtros.precoMin || preco >= filtros.precoMin) &&
                         (!filtros.precoMax || preco <= filtros.precoMax);
+    
+    if (!precoValido) {
+      console.log(`⚠️ Produto fora da faixa de preço: ${produto.title} - R$ ${preco}`);
+    }
     
     // Garantir que tem informações mínimas
     const temInfoBasica = produto.title && produto.link;

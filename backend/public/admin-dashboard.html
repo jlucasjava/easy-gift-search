@@ -1,0 +1,920 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Easy Gift Search - Admin Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.socket.io/4.7.0/socket.io.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .header h1 {
+            color: white;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+        }
+
+        .header .status {
+            color: #4ade80;
+            font-weight: 500;
+        }
+
+        .login-form {
+            background: white;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            max-width: 400px;
+            margin: 50px auto;
+        }
+
+        .login-form h2 {
+            margin-bottom: 30px;
+            color: #333;
+            text-align: center;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+            font-weight: 500;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: transform 0.2s;
+            width: 100%;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .dashboard {
+            display: none;
+        }
+
+        .dashboard.active {
+            display: block;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .metric-card {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            transition: transform 0.3s;
+        }
+
+        .metric-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .metric-value {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+
+        .metric-label {
+            color: #6b7280;
+            font-size: 0.9em;
+        }
+
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .chart-container {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .chart-title {
+            font-size: 1.2em;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        .tabs {
+            display: flex;
+            background: white;
+            border-radius: 15px;
+            padding: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .tab {
+            flex: 1;
+            padding: 15px;
+            text-align: center;
+            cursor: pointer;
+            border-radius: 10px;
+            transition: all 0.3s;
+            font-weight: 500;
+            color: #6b7280;
+        }
+
+        .tab.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .alerts-container {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+
+        .alert-item {
+            padding: 15px;
+            border-left: 4px solid #ef4444;
+            background: #fef2f2;
+            margin-bottom: 10px;
+            border-radius: 0 8px 8px 0;
+        }
+
+        .alert-item.warning {
+            border-left-color: #f59e0b;
+            background: #fffbeb;
+        }
+
+        .alert-item.success {
+            border-left-color: #10b981;
+            background: #f0fdf4;
+        }
+
+        .alert-item.info {
+            border-left-color: #3b82f6;
+            background: #eff6ff;
+        }
+
+        .real-time-indicator {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            background: #10b981;
+            border-radius: 50%;
+            margin-right: 10px;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        .connection-status {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: white;
+            padding: 10px 20px;
+            border-radius: 25px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            font-size: 0.9em;
+            z-index: 1000;
+        }
+
+        .connection-status.connected {
+            color: #10b981;
+        }
+
+        .connection-status.disconnected {
+            color: #ef4444;
+        }
+
+        .error-message {
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            color: #b91c1c;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #6b7280;
+        }
+
+        .spinner {
+            border: 4px solid #f3f4f6;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .logout-btn {
+            position: fixed;
+            top: 20px;
+            right: 200px;
+            background: #ef4444;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 0.9em;
+            z-index: 1000;
+        }
+
+        .logout-btn:hover {
+            background: #dc2626;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+
+            .header h1 {
+                font-size: 2em;
+            }
+
+            .metrics-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .charts-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .tabs {
+                flex-direction: column;
+            }
+
+            .tab {
+                margin-bottom: 5px;
+            }
+
+            .connection-status,
+            .logout-btn {
+                position: relative;
+                top: auto;
+                right: auto;
+                margin-bottom: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="connection-status" id="connectionStatus">
+        <span class="real-time-indicator"></span>
+        Connecting...
+    </div>
+
+    <div class="container">
+        <!-- Login Form -->
+        <div class="login-form" id="loginForm">
+            <h2>🔐 Admin Login</h2>
+            <div class="error-message" id="loginError" style="display: none;"></div>
+            <form id="authForm">
+                <div class="form-group">
+                    <label for="email">Email:</label>
+                    <input type="email" id="email" required>
+                </div>
+                <div class="form-group">
+                    <label for="password">Password:</label>
+                    <input type="password" id="password" required>
+                </div>
+                <button type="submit" class="btn">Login</button>
+            </form>
+        </div>
+
+        <!-- Dashboard -->
+        <div class="dashboard" id="dashboard">
+            <button class="logout-btn" onclick="logout()">Logout</button>
+            
+            <div class="header">
+                <h1>🚀 Easy Gift Search Dashboard</h1>
+                <p class="status">System Status: <span id="systemStatus">Healthy</span></p>
+            </div>
+
+            <!-- Real-time Metrics -->
+            <div class="metrics-grid">
+                <div class="metric-card">
+                    <div class="metric-value" id="activeUsers">0</div>
+                    <div class="metric-label">Active Users</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value" id="currentSearches">0</div>
+                    <div class="metric-label">Current Searches</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value" id="serverLoad">0ms</div>
+                    <div class="metric-label">Server Response</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value" id="errorRate">0</div>
+                    <div class="metric-label">Error Rate</div>
+                </div>
+            </div>
+
+            <!-- Navigation Tabs -->
+            <div class="tabs">
+                <div class="tab active" onclick="showTab('analytics')">📊 Analytics</div>
+                <div class="tab" onclick="showTab('performance')">⚡ Performance</div>
+                <div class="tab" onclick="showTab('errors')">🚨 Errors</div>
+                <div class="tab" onclick="showTab('users')">👥 Users</div>
+                <div class="tab" onclick="showTab('system')">🔧 System</div>
+            </div>
+
+            <!-- Analytics Tab -->
+            <div class="tab-content active" id="analytics">
+                <div class="charts-grid">
+                    <div class="chart-container">
+                        <h3 class="chart-title">Searches Over Time</h3>
+                        <canvas id="searchChart"></canvas>
+                    </div>
+                    <div class="chart-container">
+                        <h3 class="chart-title">Response Time Trends</h3>
+                        <canvas id="responseChart"></canvas>
+                    </div>
+                    <div class="chart-container">
+                        <h3 class="chart-title">Top Search Queries</h3>
+                        <canvas id="queriesChart"></canvas>
+                    </div>
+                    <div class="chart-container">
+                        <h3 class="chart-title">Success Rate</h3>
+                        <canvas id="successChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Performance Tab -->
+            <div class="tab-content" id="performance">
+                <div class="charts-grid">
+                    <div class="chart-container">
+                        <h3 class="chart-title">Memory Usage</h3>
+                        <canvas id="memoryChart"></canvas>
+                    </div>
+                    <div class="chart-container">
+                        <h3 class="chart-title">CPU Usage</h3>
+                        <canvas id="cpuChart"></canvas>
+                    </div>
+                    <div class="chart-container">
+                        <h3 class="chart-title">Cache Performance</h3>
+                        <canvas id="cacheChart"></canvas>
+                    </div>
+                    <div class="chart-container">
+                        <h3 class="chart-title">API Response Times</h3>
+                        <canvas id="apiChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Errors Tab -->
+            <div class="tab-content" id="errors">
+                <div class="alerts-container">
+                    <h3 class="chart-title">Recent Errors</h3>
+                    <div id="errorsList">
+                        <div class="loading">
+                            <div class="spinner"></div>
+                            Loading errors...
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Users Tab -->
+            <div class="tab-content" id="users">
+                <div class="charts-grid">
+                    <div class="chart-container">
+                        <h3 class="chart-title">User Activity</h3>
+                        <canvas id="userChart"></canvas>
+                    </div>
+                    <div class="chart-container">
+                        <h3 class="chart-title">User Engagement</h3>
+                        <canvas id="engagementChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- System Tab -->
+            <div class="tab-content" id="system">
+                <div class="charts-grid">
+                    <div class="chart-container">
+                        <h3 class="chart-title">System Health</h3>
+                        <div id="systemInfo">
+                            <div class="loading">
+                                <div class="spinner"></div>
+                                Loading system information...
+                            </div>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <h3 class="chart-title">Cache Statistics</h3>
+                        <div id="cacheInfo">
+                            <div class="loading">
+                                <div class="spinner"></div>
+                                Loading cache information...
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Alerts -->
+            <div class="alerts-container">
+                <h3 class="chart-title">Recent Alerts</h3>
+                <div id="alertsList">
+                    <div class="loading">
+                        <div class="spinner"></div>
+                        Loading alerts...
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let socket;
+        let authToken = localStorage.getItem('adminToken');
+        let charts = {};
+        let realTimeData = {};
+
+        // Initialize dashboard
+        document.addEventListener('DOMContentLoaded', function() {
+            if (authToken) {
+                showDashboard();
+            } else {
+                showLogin();
+            }
+        });
+
+        // Authentication
+        document.getElementById('authForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            
+            try {
+                const response = await fetch('/api/admin/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ email, password })
+                });
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    authToken = data.accessToken;
+                    localStorage.setItem('adminToken', authToken);
+                    localStorage.setItem('refreshToken', data.refreshToken);
+                    showDashboard();
+                } else {
+                    showError('loginError', data.error);
+                }
+            } catch (error) {
+                showError('loginError', 'Login failed. Please try again.');
+            }
+        });
+
+        function showLogin() {
+            document.getElementById('loginForm').style.display = 'block';
+            document.getElementById('dashboard').classList.remove('active');
+            if (socket) {
+                socket.disconnect();
+            }
+        }
+
+        function showDashboard() {
+            document.getElementById('loginForm').style.display = 'none';
+            document.getElementById('dashboard').classList.add('active');
+            initializeWebSocket();
+            loadInitialData();
+        }
+
+        function logout() {
+            localStorage.removeItem('adminToken');
+            localStorage.removeItem('refreshToken');
+            authToken = null;
+            showLogin();
+        }
+
+        function showError(elementId, message) {
+            const errorElement = document.getElementById(elementId);
+            errorElement.textContent = message;
+            errorElement.style.display = 'block';
+            setTimeout(() => {
+                errorElement.style.display = 'none';
+            }, 5000);
+        }
+
+        // WebSocket connection
+        function initializeWebSocket() {
+            socket = io({
+                auth: {
+                    token: authToken
+                }
+            });
+
+            socket.on('connect', function() {
+                document.getElementById('connectionStatus').textContent = 'Connected';
+                document.getElementById('connectionStatus').className = 'connection-status connected';
+                socket.emit('subscribe-dashboard');
+            });
+
+            socket.on('disconnect', function() {
+                document.getElementById('connectionStatus').textContent = 'Disconnected';
+                document.getElementById('connectionStatus').className = 'connection-status disconnected';
+            });
+
+            socket.on('realtime-update', function(data) {
+                updateRealTimeMetrics(data);
+            });
+
+            socket.on('dashboard-data', function(data) {
+                updateDashboardData(data);
+            });
+
+            socket.on('search-update', function(data) {
+                updateSearchData(data);
+            });
+
+            socket.on('performance-update', function(data) {
+                updatePerformanceData(data);
+            });
+
+            socket.on('error-update', function(data) {
+                updateErrorData(data);
+            });
+
+            socket.on('alert', function(data) {
+                addAlert(data);
+            });
+        }
+
+        // Update real-time metrics
+        function updateRealTimeMetrics(data) {
+            document.getElementById('activeUsers').textContent = data.activeUsers;
+            document.getElementById('currentSearches').textContent = data.currentSearches;
+            document.getElementById('serverLoad').textContent = data.serverLoad + 'ms';
+            document.getElementById('errorRate').textContent = data.errorRate;
+        }
+
+        // Load initial data
+        async function loadInitialData() {
+            try {
+                const response = await fetch('/api/admin/system', {
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`
+                    }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    updateSystemInfo(data);
+                }
+            } catch (error) {
+                console.error('Failed to load initial data:', error);
+            }
+        }
+
+        // Update dashboard data
+        function updateDashboardData(data) {
+            updateSearchAnalytics(data.searches);
+            updatePerformanceAnalytics(data.performance);
+            updateErrorAnalytics(data.errors);
+        }
+
+        // Chart creation and updates
+        function createChart(canvasId, type, data, options = {}) {
+            const ctx = document.getElementById(canvasId).getContext('2d');
+            
+            if (charts[canvasId]) {
+                charts[canvasId].destroy();
+            }
+
+            charts[canvasId] = new Chart(ctx, {
+                type: type,
+                data: data,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    ...options
+                }
+            });
+        }
+
+        function updateSearchAnalytics(data) {
+            if (!data) return;
+
+            // Search trends chart
+            createChart('searchChart', 'line', {
+                labels: data.searchesByHour?.map(h => h.hour) || [],
+                datasets: [{
+                    label: 'Searches',
+                    data: data.searchesByHour?.map(h => h.count) || [],
+                    borderColor: 'rgb(75, 192, 192)',
+                    backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                    fill: true
+                }]
+            });
+
+            // Top queries chart
+            createChart('queriesChart', 'bar', {
+                labels: data.topQueries?.map(q => q.query?.substring(0, 20)) || [],
+                datasets: [{
+                    label: 'Frequency',
+                    data: data.topQueries?.map(q => q.count) || [],
+                    backgroundColor: 'rgba(54, 162, 235, 0.8)'
+                }]
+            });
+
+            // Success rate chart
+            createChart('successChart', 'doughnut', {
+                labels: ['Successful', 'Failed'],
+                datasets: [{
+                    data: [data.successful || 0, data.failed || 0],
+                    backgroundColor: ['#10b981', '#ef4444']
+                }]
+            });
+        }
+
+        function updatePerformanceAnalytics(data) {
+            if (!data) return;
+
+            // Response time chart
+            createChart('responseChart', 'line', {
+                labels: data.performanceByHour?.map(h => h.hour) || [],
+                datasets: [{
+                    label: 'Response Time (ms)',
+                    data: data.performanceByHour?.map(h => h.value) || [],
+                    borderColor: 'rgb(255, 99, 132)',
+                    backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                    fill: true
+                }]
+            });
+        }
+
+        function updateErrorAnalytics(data) {
+            if (!data) return;
+
+            const errorsList = document.getElementById('errorsList');
+            errorsList.innerHTML = '';
+
+            if (data.errorsByHour && data.errorsByHour.length > 0) {
+                data.errorsByHour.forEach(error => {
+                    const errorItem = document.createElement('div');
+                    errorItem.className = 'alert-item';
+                    errorItem.innerHTML = `
+                        <strong>${error.hour}</strong>
+                        <p>Errors: ${error.count}</p>
+                    `;
+                    errorsList.appendChild(errorItem);
+                });
+            } else {
+                errorsList.innerHTML = '<div class="alert-item success">No errors in the selected time period</div>';
+            }
+        }
+
+        function updateSystemInfo(data) {
+            const systemInfo = document.getElementById('systemInfo');
+            systemInfo.innerHTML = `
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+                    <div>
+                        <strong>Uptime:</strong><br>
+                        ${Math.floor(data.server.uptime / 3600)}h ${Math.floor((data.server.uptime % 3600) / 60)}m
+                    </div>
+                    <div>
+                        <strong>Memory:</strong><br>
+                        ${Math.round(data.server.memory.heapUsed / 1024 / 1024)}MB / ${Math.round(data.server.memory.heapTotal / 1024 / 1024)}MB
+                    </div>
+                    <div>
+                        <strong>Platform:</strong><br>
+                        ${data.server.platform}
+                    </div>
+                    <div>
+                        <strong>Node Version:</strong><br>
+                        ${data.server.version}
+                    </div>
+                </div>
+            `;
+
+            const cacheInfo = document.getElementById('cacheInfo');
+            cacheInfo.innerHTML = `
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+                    <div>
+                        <strong>Cache Status:</strong><br>
+                        ${data.cache.healthy ? 'Healthy' : 'Unhealthy'}
+                    </div>
+                    <div>
+                        <strong>Hit Rate:</strong><br>
+                        ${data.cache.hitRate || 0}%
+                    </div>
+                    <div>
+                        <strong>Total Keys:</strong><br>
+                        ${data.cache.totalKeys || 0}
+                    </div>
+                    <div>
+                        <strong>Memory Usage:</strong><br>
+                        ${data.cache.memoryUsage || 'N/A'}
+                    </div>
+                </div>
+            `;
+        }
+
+        function addAlert(alert) {
+            const alertsList = document.getElementById('alertsList');
+            const alertItem = document.createElement('div');
+            alertItem.className = `alert-item ${alert.data.severity || 'info'}`;
+            alertItem.innerHTML = `
+                <strong>${alert.data.type || 'Alert'}</strong>
+                <p>${alert.data.message}</p>
+                <small>${new Date(alert.timestamp).toLocaleString()}</small>
+            `;
+            alertsList.insertBefore(alertItem, alertsList.firstChild);
+        }
+
+        // Tab navigation
+        function showTab(tabName) {
+            // Remove active class from all tabs and contents
+            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+
+            // Add active class to selected tab and content
+            event.target.classList.add('active');
+            document.getElementById(tabName).classList.add('active');
+
+            // Load tab-specific data
+            loadTabData(tabName);
+        }
+
+        async function loadTabData(tabName) {
+            try {
+                switch (tabName) {
+                    case 'analytics':
+                        await loadAnalyticsData();
+                        break;
+                    case 'performance':
+                        await loadPerformanceData();
+                        break;
+                    case 'errors':
+                        await loadErrorData();
+                        break;
+                    case 'users':
+                        await loadUserData();
+                        break;
+                    case 'system':
+                        await loadSystemData();
+                        break;
+                }
+            } catch (error) {
+                console.error(`Failed to load ${tabName} data:`, error);
+            }
+        }
+
+        async function loadAnalyticsData() {
+            const response = await fetch('/api/admin/analytics/searches?timeRange=24h', {
+                headers: { 'Authorization': `Bearer ${authToken}` }
+            });
+            if (response.ok) {
+                const data = await response.json();
+                updateSearchAnalytics(data);
+            }
+        }
+
+        async function loadPerformanceData() {
+            const response = await fetch('/api/admin/analytics/performance?timeRange=24h', {
+                headers: { 'Authorization': `Bearer ${authToken}` }
+            });
+            if (response.ok) {
+                const data = await response.json();
+                updatePerformanceAnalytics(data);
+            }
+        }
+
+        async function loadErrorData() {
+            const response = await fetch('/api/admin/analytics/errors?timeRange=24h', {
+                headers: { 'Authorization': `Bearer ${authToken}` }
+            });
+            if (response.ok) {
+                const data = await response.json();
+                updateErrorAnalytics(data);
+            }
+        }
+
+        async function loadUserData() {
+            const response = await fetch('/api/admin/analytics/users?timeRange=24h', {
+                headers: { 'Authorization': `Bearer ${authToken}` }
+            });
+            if (response.ok) {
+                const data = await response.json();
+                // Update user analytics charts
+            }
+        }
+
+        async function loadSystemData() {
+            const response = await fetch('/api/admin/system', {
+                headers: { 'Authorization': `Bearer ${authToken}` }
+            });
+            if (response.ok) {
+                const data = await response.json();
+                updateSystemInfo(data);
+            }
+        }
+
+        // Initialize with analytics tab
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(() => {
+                if (authToken) {
+                    loadTabData('analytics');
+                }
+            }, 1000);
+        });
+    </script>
+</body>
+</html>

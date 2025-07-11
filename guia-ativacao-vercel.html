@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Guia de Ativação - Easy Gift Search</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #eee;
+        }
+        
+        .header h1 {
+            color: #333;
+            font-size: 2.2em;
+            margin-bottom: 10px;
+        }
+        
+        .step-card {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 25px;
+            margin: 20px 0;
+            border-left: 5px solid #007bff;
+        }
+        
+        .step-card.active {
+            border-left-color: #28a745;
+            background: #f0f8f0;
+        }
+        
+        .step-title {
+            font-size: 1.3em;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 15px;
+        }
+        
+        .step-content {
+            color: #666;
+            line-height: 1.6;
+        }
+        
+        .env-vars {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            margin: 15px 0;
+            overflow-x: auto;
+        }
+        
+        .env-var-line {
+            margin: 5px 0;
+            display: flex;
+            align-items: center;
+        }
+        
+        .env-key {
+            color: #68d391;
+            font-weight: bold;
+            min-width: 200px;
+        }
+        
+        .env-value {
+            color: #fbb6ce;
+        }
+        
+        .copy-button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 10px 0;
+            font-weight: bold;
+        }
+        
+        .copy-button:hover {
+            background: #0056b3;
+        }
+        
+        .copy-button.success {
+            background: #28a745;
+        }
+        
+        .screenshot-placeholder {
+            background: #e9ecef;
+            border: 2px dashed #adb5bd;
+            border-radius: 10px;
+            padding: 40px;
+            text-align: center;
+            color: #6c757d;
+            margin: 15px 0;
+        }
+        
+        .progress-bar {
+            background: #e9ecef;
+            border-radius: 10px;
+            height: 8px;
+            margin: 20px 0;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            background: linear-gradient(90deg, #28a745, #20c997);
+            height: 100%;
+            width: 25%;
+            transition: width 0.3s ease;
+        }
+        
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        
+        .status-pending {
+            background: #ffc107;
+        }
+        
+        .status-active {
+            background: #28a745;
+        }
+        
+        .status-complete {
+            background: #007bff;
+        }
+        
+        .test-section {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        
+        .test-button {
+            background: #ffc107;
+            color: #333;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            margin: 5px;
+        }
+        
+        .test-button:hover {
+            background: #e0a800;
+        }
+        
+        .test-result {
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+        }
+        
+        .test-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .test-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 Guia de Ativação - Easy Gift Search</h1>
+            <div style="color: #666; font-size: 1.1em;">Configure o Vercel em 4 passos simples</div>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressBar"></div>
+            </div>
+        </div>
+        
+        <div class="step-card active" id="step1">
+            <div class="step-title">
+                <span class="status-indicator status-active"></span>
+                Passo 1: Acessar Dashboard Vercel
+            </div>
+            <div class="step-content">
+                <p><strong>1. Abra o link:</strong> <a href="https://vercel.com/dashboard" target="_blank">https://vercel.com/dashboard</a></p>
+                <p><strong>2. Faça login</strong> com sua conta</p>
+                <p><strong>3. Encontre o projeto:</strong> <code>easy-gift-search</code></p>
+                <p><strong>4. Clique no projeto</strong> para abrir</p>
+                
+                <div class="screenshot-placeholder">
+                    📸 Screenshot: Dashboard do Vercel mostrando o projeto easy-gift-search
+                </div>
+                
+                <button class="copy-button" onclick="markStepComplete(1)">✅ Passo 1 Concluído</button>
+            </div>
+        </div>
+        
+        <div class="step-card" id="step2">
+            <div class="step-title">
+                <span class="status-indicator status-pending"></span>
+                Passo 2: Acessar Configurações
+            </div>
+            <div class="step-content">
+                <p><strong>1. No projeto aberto, clique em:</strong> <code>Settings</code> (aba superior)</p>
+                <p><strong>2. No menu lateral, clique em:</strong> <code>Environment Variables</code></p>
+                <p><strong>3. Você verá a tela para adicionar variáveis</strong></p>
+                
+                <div class="screenshot-placeholder">
+                    📸 Screenshot: Página Settings → Environment Variables
+                </div>
+                
+                <button class="copy-button" onclick="markStepComplete(2)">✅ Passo 2 Concluído</button>
+            </div>
+        </div>
+        
+        <div class="step-card" id="step3">
+            <div class="step-title">
+                <span class="status-indicator status-pending"></span>
+                Passo 3: Adicionar Variáveis de Ambiente
+            </div>
+            <div class="step-content">
+                <p><strong>Copie e cole cada variável abaixo:</strong></p>
+                <p style="font-size: 0.9em; color: #666; margin-bottom: 15px;">
+                    Para cada variável: clique "Add New" → cole a KEY → cole o VALUE → selecione "Production" → clique "Save"
+                </p>
+                
+                <div class="env-vars" id="envVars">
+                    <div class="env-var-line">
+                        <span class="env-key">GOOGLE_SEARCH_API_KEY</span>
+                        <span style="margin: 0 10px;">=</span>
+                        <span class="env-value">AIzaSyBs07nRYL0fYREou8gwDkS7fruBydwXfvI</span>
+                    </div>
+                    <div class="env-var-line">
+                        <span class="env-key">GOOGLE_SEARCH_CX</span>
+                        <span style="margin: 0 10px;">=</span>
+                        <span class="env-value">e17d0e713876e4dca</span>
+                    </div>
+                    <div class="env-var-line">
+                        <span class="env-key">USE_GOOGLE_SEARCH_API</span>
+                        <span style="margin: 0 10px;">=</span>
+                        <span class="env-value">true</span>
+                    </div>
+                    <div class="env-var-line">
+                        <span class="env-key">NODE_ENV</span>
+                        <span style="margin: 0 10px;">=</span>
+                        <span class="env-value">production</span>
+                    </div>
+                    <div class="env-var-line">
+                        <span class="env-key">PORT</span>
+                        <span style="margin: 0 10px;">=</span>
+                        <span class="env-value">10000</span>
+                    </div>
+                    <div class="env-var-line">
+                        <span class="env-key">CACHE_TTL</span>
+                        <span style="margin: 0 10px;">=</span>
+                        <span class="env-value">3600</span>
+                    </div>
+                    <div class="env-var-line">
+                        <span class="env-key">USE_REAL_APIS</span>
+                        <span style="margin: 0 10px;">=</span>
+                        <span class="env-value">true</span>
+                    </div>
+                    <div class="env-var-line">
+                        <span class="env-key">USE_REAL_AMAZON_API</span>
+                        <span style="margin: 0 10px;">=</span>
+                        <span class="env-value">true</span>
+                    </div>
+                    <div class="env-var-line">
+                        <span class="env-key">USE_REAL_SHOPEE_API</span>
+                        <span style="margin: 0 10px;">=</span>
+                        <span class="env-value">true</span>
+                    </div>
+                </div>
+                
+                <button class="copy-button" onclick="copyAllEnvVars()">📋 Copiar Todas as Variáveis</button>
+                <button class="copy-button" onclick="markStepComplete(3)">✅ Passo 3 Concluído</button>
+                
+                <p style="margin-top: 15px; color: #28a745; font-weight: bold;">
+                    ⚠️ Importante: Após adicionar todas as variáveis, o Vercel fará redeploy automático (2-3 minutos)
+                </p>
+            </div>
+        </div>
+        
+        <div class="step-card" id="step4">
+            <div class="step-title">
+                <span class="status-indicator status-pending"></span>
+                Passo 4: Testar Produção
+            </div>
+            <div class="step-content">
+                <p><strong>Aguarde o redeploy terminar e teste os endpoints:</strong></p>
+                
+                <div class="test-section">
+                    <h4>🧪 Testes Automáticos:</h4>
+                    
+                    <button class="test-button" onclick="testEndpoint('/api/status', 'status')">
+                        🔍 Testar Status da API
+                    </button>
+                    
+                    <button class="test-button" onclick="testEndpoint('/api/products?q=smartphone&age=adulto&maxPrice=1000', 'search')">
+                        🛍️ Testar Busca de Produtos
+                    </button>
+                    
+                    <button class="test-button" onclick="testEndpoint('/api/recommend?budget=500&interests=tecnologia', 'recommend')">
+                        🤖 Testar Recomendações IA
+                    </button>
+                    
+                    <div id="testResults"></div>
+                </div>
+                
+                <button class="copy-button" onclick="markStepComplete(4)">🎉 Ativação Completa!</button>
+            </div>
+        </div>
+        
+        <div style="margin-top: 30px; padding: 20px; background: #e8f5e8; border-radius: 10px; text-align: center;">
+            <h3 style="color: #28a745; margin-bottom: 10px;">🎯 Resultado Final</h3>
+            <p>Após completar todos os passos, você terá:</p>
+            <ul style="text-align: left; margin: 15px 0; color: #333;">
+                <li>✅ Sistema de busca em 6 marketplaces</li>
+                <li>✅ IA para recomendações personalizadas</li>
+                <li>✅ Comparação de preços em tempo real</li>
+                <li>✅ Interface moderna e responsiva</li>
+                <li>✅ Sistema de fallback robusto</li>
+            </ul>
+            <p style="font-weight: bold; color: #28a745;">
+                🚀 Easy Gift Search 100% funcional em produção!
+            </p>
+        </div>
+    </div>
+    
+    <script>
+        let completedSteps = 0;
+        
+        function markStepComplete(stepNumber) {
+            completedSteps = Math.max(completedSteps, stepNumber);
+            
+            // Atualizar visual dos passos
+            for (let i = 1; i <= stepNumber; i++) {
+                const step = document.getElementById(`step${i}`);
+                const indicator = step.querySelector('.status-indicator');
+                step.classList.add('active');
+                indicator.classList.remove('status-pending');
+                indicator.classList.add('status-complete');
+            }
+            
+            // Ativar próximo passo
+            if (stepNumber < 4) {
+                const nextStep = document.getElementById(`step${stepNumber + 1}`);
+                nextStep.classList.add('active');
+                const nextIndicator = nextStep.querySelector('.status-indicator');
+                nextIndicator.classList.remove('status-pending');
+                nextIndicator.classList.add('status-active');
+            }
+            
+            // Atualizar barra de progresso
+            const progressBar = document.getElementById('progressBar');
+            progressBar.style.width = `${(completedSteps / 4) * 100}%`;
+            
+            if (stepNumber === 4) {
+                alert('🎉 Parabéns! Easy Gift Search está 100% funcional em produção!\\n\\n🌐 Acesse: https://seu-projeto.vercel.app');
+            }
+        }
+        
+        function copyAllEnvVars() {
+            const envText = \`GOOGLE_SEARCH_API_KEY=AIzaSyBs07nRYL0fYREou8gwDkS7fruBydwXfvI
+GOOGLE_SEARCH_CX=e17d0e713876e4dca
+USE_GOOGLE_SEARCH_API=true
+NODE_ENV=production
+PORT=10000
+CACHE_TTL=3600
+USE_REAL_APIS=true
+USE_REAL_AMAZON_API=true
+USE_REAL_SHOPEE_API=true\`;
+            
+            navigator.clipboard.writeText(envText).then(() => {
+                const button = event.target;
+                const originalText = button.textContent;
+                button.textContent = '✅ Copiado!';
+                button.classList.add('success');
+                
+                setTimeout(() => {
+                    button.textContent = originalText;
+                    button.classList.remove('success');
+                }, 2000);
+            });
+        }
+        
+        async function testEndpoint(endpoint, testName) {
+            const resultsDiv = document.getElementById('testResults');
+            const testDiv = document.createElement('div');
+            testDiv.className = 'test-result';
+            testDiv.innerHTML = `🔄 Testando ${testName}...`;
+            resultsDiv.appendChild(testDiv);
+            
+            try {
+                // Substitua pela URL real do seu projeto Vercel
+                const response = await fetch(\`https://easy-gift-search.vercel.app\${endpoint}\`);
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    testDiv.className = 'test-result test-success';
+                    testDiv.innerHTML = \`✅ \${testName}: OK\\n\${JSON.stringify(data, null, 2).substring(0, 200)}...\`;
+                } else {
+                    testDiv.className = 'test-result test-error';
+                    testDiv.innerHTML = \`❌ \${testName}: Erro \${response.status}\`;
+                }
+            } catch (error) {
+                testDiv.className = 'test-result test-error';
+                testDiv.innerHTML = \`❌ \${testName}: \${error.message}\`;
+            }
+        }
+    </script>
+</body>
+</html>

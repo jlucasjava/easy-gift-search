@@ -74,3 +74,116 @@ Um script de teste foi criado para validar as melhorias:
 2. **Análise de Clicks**: Verificar se as taxas de conversão de clicks aumentam
 3. **Feedback de Usuários**: Coletar feedback sobre a relevância dos resultados
 4. **Melhorias Adicionais**: Considerar a adição de mais marketplaces confiáveis na busca
+
+# TESTE COMPLETO DE TODAS AS APIs (03/07/2025)
+
+## 📊 Visão Geral
+
+Realizamos um teste completo e abrangente de todas as APIs integradas no sistema Easy Gift Search para comparar seu desempenho, precisão e confiabilidade. Este teste nos permite fazer escolhas baseadas em dados sobre qual motor utilizar em diferentes cenários.
+
+## 🔍 APIs Testadas
+
+O teste incluiu todas as seguintes APIs e motores de busca:
+
+1. **Google Search API**
+   - API oficial do Google Custom Search
+   - Usa o arquivo `backend/services/googleSearchService.js`
+
+2. **Shopee API**
+   - Integração oficial com a API da Shopee
+   - Usa o arquivo `backend/services/shopeeAPIService.js`
+
+3. **Motor Híbrido (Google + Shopee)**
+   - Combina resultados de múltiplas fontes
+   - Implementa fallbacks automáticos
+   - Usa o arquivo `backend/services/hybridSearchService.js`
+
+4. **Custom Search V1**
+   - Primeiro motor de busca personalizado
+   - Usa web scraping para várias lojas
+   - Usa o arquivo `backend/services/customSearchService.js`
+
+5. **Custom Search V2**
+   - Versão melhorada do motor personalizado
+   - Implementa cache, rotação de proxies e técnicas anti-bloqueio
+   - Usa o arquivo `backend/services/customSearchServiceV2.js`
+
+## 📈 Métricas Analisadas
+
+Para cada API, o teste coleta e analisa as seguintes métricas:
+
+- **Tempo de resposta**: Tempo médio, mínimo e máximo para cada busca
+- **Taxa de sucesso**: Percentual de buscas bem-sucedidas sem erros
+- **Número de resultados**: Média de produtos retornados por busca
+- **Precisão do filtro de preço**: Percentual de produtos que respeitam os filtros de preço aplicados
+- **Distribuição por marketplace**: De quais lojas vêm os resultados de cada API
+- **Qualidade dos resultados**: Presença de URLs válidas, imagens e informações completas
+
+## 🧪 Metodologia de Teste
+
+O teste utiliza:
+
+- **10 termos de busca** diferentes, incluindo categorias variadas e consultas específicas
+- **6 configurações de filtro** de preço diferentes, desde sem filtro até faixas específicas
+- **10 resultados** solicitados por busca
+- Total de **300 testes** (10 termos × 6 filtros × 5 APIs)
+
+## 📋 Saídas do Teste
+
+O teste gera dois arquivos principais:
+
+1. **`resultado-teste-apis-completo.json`**
+   - Dados brutos completos de todos os testes
+   - Estatísticas detalhadas para cada API
+   - Resultados individuais de cada busca
+
+2. **`relatorio-teste-apis-completo.html`**
+   - Relatório visual interativo com gráficos
+   - Tabelas comparativas entre as APIs
+   - Detalhamento por API com estatísticas específicas
+   - Visualização da distribuição de marketplaces
+
+## 🚀 Como Executar o Teste
+
+Para executar o teste completo:
+
+```bash
+# Usando o script batch
+testar-todas-apis.bat
+
+# Ou diretamente com Node.js
+cd backend
+node testar-todas-apis.js
+```
+
+O teste pode levar vários minutos para ser concluído, pois realiza múltiplas chamadas a APIs externas com intervalo entre elas para evitar bloqueios.
+
+## 🔄 Interpretação dos Resultados
+
+Ao analisar os resultados, considere:
+
+1. **Taxa de sucesso vs. Tempo de resposta**
+   - Uma API com alta taxa de sucesso mas tempo de resposta lento pode ser boa para buscas não críticas
+   - Uma API rápida mas com menor taxa de sucesso pode ser melhor para experiências interativas
+
+2. **Precisão do filtro de preço**
+   - Crítico para usuários que têm orçamento limitado
+   - APIs com baixa conformidade podem frustrar usuários
+
+3. **Número de resultados vs. Qualidade**
+   - Mais resultados não necessariamente significam melhor experiência
+   - Verifique se os resultados são realmente relevantes para a busca
+
+4. **Distribuição de marketplaces**
+   - Uma boa diversidade de lojas oferece mais opções ao usuário
+   - Concentração em poucos marketplaces pode limitar as opções
+
+## 📊 Recomendações Baseadas em Cenários
+
+Com base nos resultados típicos:
+
+- **Para buscas rápidas e interativas**: Motor Híbrido ou Google Search API
+- **Para máxima variedade de produtos**: Custom Search V2
+- **Para produtos de baixo custo**: Shopee API
+- **Para alta precisão de filtros de preço**: Motor Híbrido
+- **Para máxima confiabilidade**: Combinação de Motor Híbrido com fallback para Google Search API

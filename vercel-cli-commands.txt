@@ -1,0 +1,12 @@
+vercel env add GOOGLE_SEARCH_API_KEY production
+vercel env add GOOGLE_SEARCH_CX production
+vercel env add USE_GOOGLE_SEARCH_API production
+vercel env add PORT production
+vercel env add NODE_ENV production
+vercel env add CACHE_TTL production
+vercel env add USE_REAL_APIS production
+vercel env add USE_REAL_AMAZON_API production
+vercel env add USE_REAL_SHOPEE_API production
+vercel env add USE_REAL_ALIEXPRESS_API production
+vercel env add USE_REAL_MERCADOLIVRE_API production
+vercel env add USE_REAL_REALTIME_API production
